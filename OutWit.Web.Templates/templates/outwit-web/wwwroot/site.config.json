@@ -5,15 +5,27 @@
   "logoDark": "/images/logo-dark.svg",
   "defaultTheme": "dark",
   "navigation": [
-    { "title": "Home", "href": "/" },
-    { "title": "Blog", "href": "/blog" },
-    { "title": "Contact", "href": "/contact" }
+    {
+      "title": "Home",
+      "href": "/"
+    },
+    {
+      "title": "Blog",
+      "href": "/blog"
+    },
+    {
+      "title": "Contact",
+      "href": "/contact"
+    }
   ],
   "footer": {
     "copyright": "{{AuthorName}}",
     "linkGroups": [],
     "socialLinks": [
-      { "platform": "github", "url": "{{GitHubUrl}}" }
+      {
+        "platform": "github",
+        "url": "{{GitHubUrl}}"
+      }
     ]
   },
   "contact": {
@@ -28,5 +40,6 @@
   "seo": {
     "defaultImage": "/images/social-card.png",
     "twitterHandle": "{{TwitterHandle}}"
-  }
+  },
+  "contentSections": []
 }
