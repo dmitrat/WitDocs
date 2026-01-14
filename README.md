@@ -7,6 +7,7 @@ A Blazor WebAssembly platform for building content-driven static websites with m
 | Package | Description | NuGet |
 |---------|-------------|-------|
 | [OutWit.Web.Framework](OutWit.Web.Framework/) | Core framework with components, services, and build tools | [![NuGet](https://img.shields.io/nuget/v/OutWit.Web.Framework.svg)](https://www.nuget.org/packages/OutWit.Web.Framework/) |
+| [OutWit.Web.Generator](OutWit.Web.Generator/) | CLI tool for content generation (sitemap, RSS, search, OG images) | [![NuGet](https://img.shields.io/nuget/v/OutWit.Web.Generator.svg)](https://www.nuget.org/packages/OutWit.Web.Generator/) |
 | [OutWit.Web.Templates](OutWit.Web.Templates/) | dotnet new templates for creating new sites | [![NuGet](https://img.shields.io/nuget/v/OutWit.Web.Templates.svg)](https://www.nuget.org/packages/OutWit.Web.Templates/) |
 
 ## Quick Start
@@ -145,11 +146,19 @@ dotnet run
 
 ### Production Build
 
+**Prerequisite:** Install the Generator tool:
+
 ```bash
-dotnet publish -c Release -o publish
+dotnet tool install -g OutWit.Web.Generator
 ```
 
-On Release build, the framework automatically generates:
+Then build in Release mode:
+
+```bash
+dotnet build -c Release
+```
+
+The framework automatically runs the Generator to create:
 - `content/index.json` - Content manifest
 - `sitemap.xml` - SEO sitemap
 - `robots.txt` - Crawler rules
@@ -193,6 +202,7 @@ jobs:
 ## Documentation
 
 - [OutWit.Web.Framework README](OutWit.Web.Framework/README.md) - Detailed framework documentation
+- [OutWit.Web.Generator README](OutWit.Web.Generator/README.md) - Generator CLI documentation
 - [OutWit.Web.Templates README](OutWit.Web.Templates/README.md) - Template usage guide
 
 ## License
