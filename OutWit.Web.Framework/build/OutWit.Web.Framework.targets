@@ -2,10 +2,10 @@
   
   <!--
     OutWit.Web.Framework MSBuild Targets
-    Automatically generates content index, sitemap, robots.txt, search index, RSS feed, and static HTML pages after build
+    Automatically generates content index, sitemap, robots.txt, search index, RSS feed, and static HTML pages after publish
     
     Usage:
-      - Automatically runs on Release builds
+      - Automatically runs on Release builds after Publish
       - Set <OutWitGenerateContent>true</OutWitGenerateContent> to force generation
       - Set <OutWitSiteUrl>https://example.com</OutWitSiteUrl> to specify site URL
       - Set <OutWitGenerateStaticPages>false</OutWitGenerateStaticPages> to disable SSG
@@ -47,17 +47,8 @@
     <!-- Site URL (read from site.config.json if not specified) -->
     <OutWitSiteUrl Condition="'$(OutWitSiteUrl)' == ''"></OutWitSiteUrl>
     
-    <!-- 
-      Path to the generate-content script
-      - For NuGet package: scripts folder is next to this .targets file in build\
-      - For project reference: scripts folder is sibling to build\ folder
-    -->
-    <_OutWitScriptPath Condition="Exists('$(MSBuildThisFileDirectory)scripts\generate-content.ps1')">$(MSBuildThisFileDirectory)scripts\generate-content.ps1</_OutWitScriptPath>
-    <_OutWitScriptPath Condition="'$(_OutWitScriptPath)' == '' AND Exists('$(MSBuildThisFileDirectory)..\scripts\generate-content.ps1')">$(MSBuildThisFileDirectory)..\scripts\generate-content.ps1</_OutWitScriptPath>
-    
-    <!-- PowerShell executable: use pwsh if available, otherwise powershell (Windows) -->
-    <_OutWitPowerShell Condition="'$(OS)' == 'Windows_NT'">powershell</_OutWitPowerShell>
-    <_OutWitPowerShell Condition="'$(OS)' != 'Windows_NT'">pwsh</_OutWitPowerShell>
+    <!-- Site Name (read from site.config.json if not specified) -->
+    <OutWitSiteName Condition="'$(OutWitSiteName)' == ''"></OutWitSiteName>
   </PropertyGroup>
 
   <!--
@@ -76,7 +67,7 @@
     <!-- Create empty index.json if it doesn't exist -->
     <WriteLinesToFile 
         File="$(_IndexJsonPath)"
-        Lines='{"projects":[],"docs":[],"articles":[],"blog":[],"features":[]}'
+        Lines='{"projects":[],"docs":[],"articles":[],"blog":[],"features":[],"sections":{}}'
         Overwrite="false"
         Condition="!Exists('$(_IndexJsonPath)')" />
     
@@ -110,50 +101,39 @@
   </Target>
 
   <!-- 
-    Target: OutWitGenerateContentIndex
-    Runs after build to generate all content files
+    Target: OutWitGenerateContentAfterBuild
+    Runs after Build (in Release mode) to generate all content files using the .NET Generator
   -->
-  <Target Name="OutWitGenerateContentIndex" 
+  <Target Name="OutWitGenerateContentAfterBuild" 
           AfterTargets="Build" 
-          Condition="'$(OutWitGenerateContent)' == 'true' AND Exists('$(OutWitWwwRootPath)')">
+          Condition="'$(OutWitGenerateContent)' == 'true' AND Exists('$(OutWitContentPath)')">
     
-    <Message Importance="high" Text="OutWit.Web.Framework: Generating content index..." />
+    <Message Importance="high" Text="OutWit.Web.Framework: Running content generator..." />
     
-    <!-- Check if script exists -->
-    <Error Text="OutWit.Web.Framework: generate-content.ps1 script not found. Checked paths: $(MSBuildThisFileDirectory)scripts\ and $(MSBuildThisFileDirectory)..\scripts\"
-           Condition="'$(_OutWitScriptPath)' == '' OR !Exists('$(_OutWitScriptPath)')" />
-    
-    <!-- Check if site.config.json exists -->
+    <!-- Check if site.config.json exists to get site URL -->
     <PropertyGroup>
       <_SiteConfigPath>$(OutWitWwwRootPath)\site.config.json</_SiteConfigPath>
-      <_HasSiteConfig>false</_HasSiteConfig>
-      <_HasSiteConfig Condition="Exists('$(_SiteConfigPath)')">true</_HasSiteConfig>
     </PropertyGroup>
     
-    <!-- Read SiteUrl from site.config.json if not provided -->
-    <Exec Command="$(_OutWitPowerShell) -NoProfile -Command &quot;(Get-Content '$(_SiteConfigPath)' -Raw | ConvertFrom-Json).baseUrl&quot;"
-          ConsoleToMSBuild="true"
-          Condition="'$(OutWitSiteUrl)' == '' AND '$(_HasSiteConfig)' == 'true'"
-          IgnoreExitCode="true">
-      <Output TaskParameter="ConsoleOutput" PropertyName="OutWitSiteUrl" />
-    </Exec>
-    
-    <!-- Trim whitespace from URL -->
+    <!-- Build CLI arguments -->
     <PropertyGroup>
-      <OutWitSiteUrl>$(OutWitSiteUrl.Trim())</OutWitSiteUrl>
+      <_GeneratorArgs>--content-path "$(OutWitContentPath)" --output-path "$(OutWitWwwRootPath)"</_GeneratorArgs>
+      <_GeneratorArgs Condition="'$(OutWitSiteUrl)' != ''">$(_GeneratorArgs) --site-url "$(OutWitSiteUrl)"</_GeneratorArgs>
+      <_GeneratorArgs Condition="'$(OutWitSiteName)' != ''">$(_GeneratorArgs) --site-name "$(OutWitSiteName)"</_GeneratorArgs>
+      <_GeneratorArgs>$(_GeneratorArgs) --hosting "$(OutWitHostingProvider)"</_GeneratorArgs>
+      <_GeneratorArgs Condition="'$(OutWitGenerateStaticPages)' != 'true'">$(_GeneratorArgs) --no-static</_GeneratorArgs>
+      <_GeneratorArgs Condition="'$(OutWitGenerateSearchIndex)' != 'true'">$(_GeneratorArgs) --no-search</_GeneratorArgs>
+      <_GeneratorArgs Condition="'$(OutWitGenerateRssFeed)' != 'true'">$(_GeneratorArgs) --no-rss</_GeneratorArgs>
+      <_GeneratorArgs Condition="'$(OutWitGenerateOgImages)' != 'true'">$(_GeneratorArgs) --no-og</_GeneratorArgs>
     </PropertyGroup>
     
-    <!-- Warn if no site URL -->
-    <Warning Text="OutWit.Web.Framework: No SiteUrl found. Set OutWitSiteUrl property or add baseUrl to site.config.json. Skipping content generation."
-             Condition="'$(OutWitSiteUrl)' == ''" />
-    
-    <!-- Run the content generation script with all parameters -->
-    <Exec Command="$(_OutWitPowerShell) -NoProfile -ExecutionPolicy Bypass -File &quot;$(_OutWitScriptPath)&quot; -ContentPath &quot;$(OutWitContentPath)&quot; -OutputPath &quot;$(OutWitWwwRootPath)&quot; -SiteUrl &quot;$(OutWitSiteUrl)&quot; -GenerateStaticPages $(OutWitGenerateStaticPages) -GenerateSearchIndex $(OutWitGenerateSearchIndex) -GenerateRssFeed $(OutWitGenerateRssFeed) -GenerateOgImages $(OutWitGenerateOgImages) -HostingProvider &quot;$(OutWitHostingProvider)&quot;"
-          Condition="'$(OutWitSiteUrl)' != ''" 
+    <!-- Run the .NET Generator tool -->
+    <Exec Command="dotnet outwit-generate $(_GeneratorArgs)"
           WorkingDirectory="$(MSBuildProjectDirectory)"
-          IgnoreExitCode="false" />
+          IgnoreExitCode="false"
+          ContinueOnError="ErrorAndStop" />
     
-    <Message Importance="high" Text="OutWit.Web.Framework: Content generation complete." Condition="'$(OutWitSiteUrl)' != ''" />
+    <Message Importance="high" Text="OutWit.Web.Framework: Content generation complete." />
   </Target>
 
 </Project>

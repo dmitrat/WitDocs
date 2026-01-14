@@ -200,7 +200,7 @@ wwwroot/content/
 
 ### Automatic Generation
 
-On Release build, the framework automatically generates:
+On Release build, the framework automatically runs the [OutWit.Web.Generator](../OutWit.Web.Generator/) tool to generate:
 
 - `content/index.json` - Content manifest
 - `sitemap.xml` - SEO sitemap
@@ -210,16 +210,33 @@ On Release build, the framework automatically generates:
 - `*/index.html` - Static HTML pages for SEO
 - `_headers`, `_redirects` - Hosting provider config
 
+**Prerequisite:** Install the Generator tool globally:
+
+```bash
+dotnet tool install -g OutWit.Web.Generator
+```
+
+Then simply build in Release mode:
+
+```bash
+dotnet build -c Release
+```
+
 ### Manual Generation
 
-```powershell
-# Generate all content
-./scripts/generate-content.ps1 -SitePath "path/to/your-site"
+```bash
+outwit-generate \
+  --content-path ./wwwroot/content \
+  --output-path ./wwwroot \
+  --site-url https://example.com \
+  --site-name "My Site"
+```
 
-# Generate OG images (requires Playwright)
-npm install -D playwright
+For OG images (requires Playwright):
+
+```bash
 npx playwright install chromium
-./scripts/generate-og-images.ps1 -SitePath "path/to/your-site"
+outwit-generate --content-path ./wwwroot/content --output-path ./wwwroot
 ```
 
 ## Open Graph Images
