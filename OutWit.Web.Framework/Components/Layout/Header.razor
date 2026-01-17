@@ -8,7 +8,7 @@
             @* Two logos - switch based on theme via CSS *@
             <img src="@(Config?.LogoDark ?? "/images/logo-dark.svg")" alt="@Config?.SiteName" class="header__logo-image header__logo-dark" />
             <img src="@(Config?.LogoLight ?? "/images/logo-light.svg")" alt="@Config?.SiteName" class="header__logo-image header__logo-light" />
-            <span class="header__site-name">@(Config?.SiteName?.ToUpperInvariant() ?? "OUTWIT")</span>
+            <span class="header__site-name">@(Config?.SiteName ?? "OutWit")</span>
         </a>
 
         <nav class="header__nav" role="navigation">

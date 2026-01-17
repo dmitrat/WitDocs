@@ -46,8 +46,7 @@
 .header__site-name {
     font-size: 1.5rem;
     font-weight: 800;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+    letter-spacing: 0.02em;
     color: var(--color-text-heading);
 }
 
