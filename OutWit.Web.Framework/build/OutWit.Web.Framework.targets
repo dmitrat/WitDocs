@@ -110,21 +110,16 @@
     
     <Message Importance="high" Text="OutWit.Web.Framework: Running content generator..." />
     
-    <!-- Check if site.config.json exists to get site URL -->
+    <!-- Build CLI arguments to match Generator 1.0.1 interface -->
     <PropertyGroup>
-      <_SiteConfigPath>$(OutWitWwwRootPath)\site.config.json</_SiteConfigPath>
-    </PropertyGroup>
-    
-    <!-- Build CLI arguments -->
-    <PropertyGroup>
-      <_GeneratorArgs>--content-path "$(OutWitContentPath)" --output-path "$(OutWitWwwRootPath)"</_GeneratorArgs>
-      <_GeneratorArgs Condition="'$(OutWitSiteUrl)' != ''">$(_GeneratorArgs) --site-url "$(OutWitSiteUrl)"</_GeneratorArgs>
-      <_GeneratorArgs Condition="'$(OutWitSiteName)' != ''">$(_GeneratorArgs) --site-name "$(OutWitSiteName)"</_GeneratorArgs>
+      <_GeneratorArgs>--site "$(MSBuildProjectDirectory)"</_GeneratorArgs>
+      <_GeneratorArgs Condition="'$(OutWitWwwRootPath)' != ''">$(_GeneratorArgs) --output "$(OutWitWwwRootPath)"</_GeneratorArgs>
+      <_GeneratorArgs Condition="'$(OutWitSiteUrl)' != ''">$(_GeneratorArgs) --url "$(OutWitSiteUrl)"</_GeneratorArgs>
       <_GeneratorArgs>$(_GeneratorArgs) --hosting "$(OutWitHostingProvider)"</_GeneratorArgs>
-      <_GeneratorArgs Condition="'$(OutWitGenerateStaticPages)' != 'true'">$(_GeneratorArgs) --no-static</_GeneratorArgs>
-      <_GeneratorArgs Condition="'$(OutWitGenerateSearchIndex)' != 'true'">$(_GeneratorArgs) --no-search</_GeneratorArgs>
-      <_GeneratorArgs Condition="'$(OutWitGenerateRssFeed)' != 'true'">$(_GeneratorArgs) --no-rss</_GeneratorArgs>
-      <_GeneratorArgs Condition="'$(OutWitGenerateOgImages)' != 'true'">$(_GeneratorArgs) --no-og</_GeneratorArgs>
+      <_GeneratorArgs Condition="'$(OutWitGenerateStaticPages)' != 'true'">$(_GeneratorArgs) --skip-static</_GeneratorArgs>
+      <_GeneratorArgs Condition="'$(OutWitGenerateSearchIndex)' != 'true'">$(_GeneratorArgs) --skip-search</_GeneratorArgs>
+      <_GeneratorArgs Condition="'$(OutWitGenerateRssFeed)' != 'true'">$(_GeneratorArgs) --skip-rss</_GeneratorArgs>
+      <_GeneratorArgs Condition="'$(OutWitGenerateOgImages)' == 'true'">$(_GeneratorArgs) --og-images</_GeneratorArgs>
     </PropertyGroup>
     
     <!-- Run the .NET Generator tool -->
