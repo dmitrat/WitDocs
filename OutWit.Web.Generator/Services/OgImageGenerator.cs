@@ -305,8 +305,11 @@ public partial class OgImageGenerator : IAsyncDisposable
     private string GetLogoHtml()
     {
         // Try to find logo in site directory
+        // Prioritize dark versions since OG images use dark background
         var logoPaths = new[]
         {
+            Path.Combine(m_config.OutputPath, "images", "logo-dark.png"),
+            Path.Combine(m_config.OutputPath, "images", "logo-dark.svg"),
             Path.Combine(m_config.OutputPath, "images", "logo.png"),
             Path.Combine(m_config.OutputPath, "images", "logo.svg"),
             Path.Combine(m_config.OutputPath, "images", "logo-light.png"),

@@ -292,9 +292,15 @@ public partial class StaticPageGenerator
 
         // Build OG image URL (auto-detect based on URL pattern, like PS version)
         var ogImageUrl = GetOgImageUrl(canonicalUrl);
+        
+        // Get logo URL for og:logo
+        var logoUrl = !string.IsNullOrEmpty(m_siteConfig.LogoDark) 
+            ? $"{m_siteUrl}{m_siteConfig.LogoDark}" 
+            : null;
 
         // Build OG tags
         var ogImageTag = string.IsNullOrEmpty(ogImageUrl) ? "" : $"\n        <meta property=\"og:image\" content=\"{ogImageUrl}\" />";
+        var ogLogoTag = string.IsNullOrEmpty(logoUrl) ? "" : $"\n        <meta property=\"og:logo\" content=\"{logoUrl}\" />";
         var ogTags = $"""
             
                 <!-- Open Graph (SSG) -->
@@ -302,7 +308,7 @@ public partial class StaticPageGenerator
                 <meta property="og:description" content="{metaDescription}" />
                 <meta property="og:type" content="{ogType}" />
                 <meta property="og:url" content="{canonicalUrl}" />
-                <meta property="og:locale" content="en_US" />{ogImageTag}
+                <meta property="og:locale" content="en_US" />{ogImageTag}{ogLogoTag}
                 <link rel="canonical" href="{canonicalUrl}" />
             """;
 
