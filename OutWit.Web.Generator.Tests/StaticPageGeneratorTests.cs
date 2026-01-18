@@ -19,7 +19,7 @@ public class StaticPageGeneratorTests
         // Arrange
         var tempDir = CreateTempDirectory();
         var config = new GeneratorConfig { OutputPath = tempDir };
-        var generator = new StaticPageGenerator(config, "https://example.com", "Test Site");
+        var generator = new StaticPageGenerator(config, null, "https://example.com", "Test Site");
         var index = new ContentIndex { Blog = ["test.md"] };
 
         try
@@ -60,7 +60,7 @@ public class StaticPageGeneratorTests
             """);
 
         var config = new GeneratorConfig { OutputPath = tempDir };
-        var generator = new StaticPageGenerator(config, "https://example.com", "Test Site");
+        var generator = new StaticPageGenerator(config, null, "https://example.com", "Test Site");
         var index = new ContentIndex { Blog = ["2024-01-15-test-post.md"] };
 
         try
@@ -90,7 +90,7 @@ public class StaticPageGeneratorTests
         CreateTemplate(tempDir);
 
         var config = new GeneratorConfig { OutputPath = tempDir };
-        var generator = new StaticPageGenerator(config, "https://example.com", "Test Site");
+        var generator = new StaticPageGenerator(config, null, "https://example.com", "Test Site");
         var index = new ContentIndex();
 
         try

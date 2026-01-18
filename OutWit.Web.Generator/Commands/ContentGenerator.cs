@@ -84,7 +84,7 @@ public class ContentGenerator
         if (m_config.GenerateStaticPages)
         {
             Console.WriteLine("Generating static HTML pages...");
-            var staticPageGenerator = new StaticPageGenerator(m_config, siteUrl, siteConfig?.SiteName ?? "OutWit Web");
+            var staticPageGenerator = new StaticPageGenerator(m_config, siteConfig, siteUrl, siteConfig?.SiteName ?? "OutWit Web");
             await staticPageGenerator.GenerateAsync(contentIndex, cancellationToken);
         }
 

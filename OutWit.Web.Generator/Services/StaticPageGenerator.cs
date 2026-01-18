@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using Markdig;
 using OutWit.Web.Generator.Commands;
 using OutWit.Web.Framework.Content;
+using OutWit.Web.Framework.Configuration;
 
 namespace OutWit.Web.Generator.Services;
 
@@ -14,6 +15,7 @@ public partial class StaticPageGenerator
     #region Fields
 
     private readonly GeneratorConfig m_config;
+    private readonly SiteConfig? m_siteConfig;
     private readonly string m_siteUrl;
     private readonly string m_siteName;
     private readonly MarkdownPipeline m_markdownPipeline;
@@ -23,9 +25,10 @@ public partial class StaticPageGenerator
 
     #region Constructors
 
-    public StaticPageGenerator(GeneratorConfig config, string siteUrl, string siteName)
+    public StaticPageGenerator(GeneratorConfig config, SiteConfig? siteConfig, string siteUrl, string siteName)
     {
         m_config = config;
+        m_siteConfig = siteConfig;
         m_siteUrl = siteUrl.TrimEnd('/');
         m_siteName = siteName;
         
@@ -294,7 +297,7 @@ public partial class StaticPageGenerator
         var ogImageUrl = GetOgImageUrl(canonicalUrl);
         
         // Get logo URL for og:logo
-        var logoUrl = !string.IsNullOrEmpty(m_siteConfig.LogoDark) 
+        var logoUrl = m_siteConfig != null && !string.IsNullOrEmpty(m_siteConfig.LogoDark) 
             ? $"{m_siteUrl}{m_siteConfig.LogoDark}" 
             : null;
 
