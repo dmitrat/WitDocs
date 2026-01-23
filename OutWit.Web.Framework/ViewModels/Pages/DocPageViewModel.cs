@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using OutWit.Common.MVVM.Blazor.ViewModels;
+using OutWit.Web.Framework.Content;
 using OutWit.Web.Framework.Models;
 using OutWit.Web.Framework.Services;
 
@@ -14,6 +15,8 @@ public class DocPageViewModel : ViewModelBase
     private bool m_loading = true;
     private string m_activeHeadingId = string.Empty;
     private string m_lastLoadedSlug = string.Empty;
+    private string m_processedContent = string.Empty;
+    private List<EmbeddedComponent> m_embeddedComponents = [];
 
     #endregion
 
@@ -40,10 +43,16 @@ public class DocPageViewModel : ViewModelBase
         try
         {
             m_doc = await ContentService.GetDocAsync(Slug);
-            
-            if (m_doc != null && m_doc.TableOfContents.Count > 0)
+
+            if (m_doc != null)
             {
-                m_activeHeadingId = m_doc.TableOfContents[0].Id;
+                m_processedContent = m_doc.HtmlContent;
+                m_embeddedComponents = m_doc.EmbeddedComponents;
+
+                if (m_doc.TableOfContents.Count > 0)
+                {
+                    m_activeHeadingId = m_doc.TableOfContents[0].Id;
+                }
             }
         }
         catch (Exception ex)
@@ -54,7 +63,7 @@ public class DocPageViewModel : ViewModelBase
 
         m_loading = false;
     }
-    
+
     protected async Task ScrollToHeading(string headingId)
     {
         m_activeHeadingId = headingId;
@@ -66,10 +75,14 @@ public class DocPageViewModel : ViewModelBase
     #region Properties
 
     protected Models.DocPage? Doc => m_doc;
-    
+
     protected bool Loading => m_loading;
-    
+
     protected string ActiveHeadingId => m_activeHeadingId;
+
+    protected string ProcessedContent => m_processedContent;
+
+    protected List<EmbeddedComponent> EmbeddedComponents => m_embeddedComponents;
 
     #endregion
 

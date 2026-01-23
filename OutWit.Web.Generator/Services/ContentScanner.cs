@@ -38,39 +38,41 @@ public class ContentScanner
         var index = new ContentIndex();
 
         // Scan hardcoded sections
-        
+        // All sections support both file-based (post.md) and folder-based (post/index.md) content
+
         // Blog posts (sorted by name descending for date-based posts)
         var blogPath = Path.Combine(m_contentPath, "blog");
         if (Directory.Exists(blogPath))
         {
-            index.Blog = ScanFolder(blogPath, "*.md", sortDescending: true);
+            index.Blog = ScanContentFolder(blogPath, sortDescending: true);
         }
 
-        // Projects (special folder structure)
+        // Projects (sorted by order prefix)
         var projectsPath = Path.Combine(m_contentPath, "projects");
         if (Directory.Exists(projectsPath))
         {
-            index.Projects = ScanProjectsFolder(projectsPath);
+            index.Projects = ScanContentFolder(projectsPath, sortDescending: false);
         }
 
-        // Features (sorted by order prefix)
+        // Features (sorted by order prefix, typically flat files)
         var featuresPath = Path.Combine(m_contentPath, "features");
         if (Directory.Exists(featuresPath))
         {
-            index.Features = ScanFolder(featuresPath, "*.md", sortDescending: false);
+            index.Features = ScanContentFolder(featuresPath, sortDescending: false);
         }
 
-        // Legacy hardcoded sections (for backward compatibility)
+        // Articles (sorted by order prefix)
         var articlesPath = Path.Combine(m_contentPath, "articles");
         if (Directory.Exists(articlesPath))
         {
-            index.Articles = ScanFolder(articlesPath, "*.md", sortDescending: false);
+            index.Articles = ScanContentFolder(articlesPath, sortDescending: false);
         }
 
+        // Docs (sorted by order prefix)
         var docsPath = Path.Combine(m_contentPath, "docs");
         if (Directory.Exists(docsPath))
         {
-            index.Docs = ScanFolder(docsPath, "*.md", sortDescending: false);
+            index.Docs = ScanContentFolder(docsPath, sortDescending: false);
         }
 
         // Scan dynamic sections from site.config.json
@@ -86,7 +88,7 @@ public class ContentScanner
                 var sectionPath = Path.Combine(m_contentPath, section.Folder);
                 if (Directory.Exists(sectionPath))
                 {
-                    index.Sections[section.Folder] = ScanFolder(sectionPath, "*.md", sortDescending: false);
+                    index.Sections[section.Folder] = ScanContentFolder(sectionPath, sortDescending: false);
                 }
             }
         }
@@ -126,38 +128,43 @@ public class ContentScanner
         }
     }
 
-    private static List<string> ScanFolder(string path, string pattern, bool sortDescending)
-    {
-        var files = Directory.GetFiles(path, pattern)
-            .Select(Path.GetFileName)
-            .Where(f => f != null)
-            .Cast<string>();
-
-        return sortDescending
-            ? files.OrderByDescending(f => f).ToList()
-            : files.OrderBy(f => f).ToList();
-    }
-
-    private static List<string> ScanProjectsFolder(string path)
+    /// <summary>
+    /// Scan a content folder supporting both file-based and folder-based content.
+    /// File-based: post.md -> "post.md"
+    /// Folder-based: post/index.md -> "post/index.md"
+    /// </summary>
+    private static List<string> ScanContentFolder(string path, bool sortDescending)
     {
         var results = new List<string>();
 
-        foreach (var item in Directory.GetFileSystemEntries(path).OrderBy(p => p))
+        var entries = Directory.GetFileSystemEntries(path);
+        var sorted = sortDescending
+            ? entries.OrderByDescending(p => Path.GetFileName(p))
+            : entries.OrderBy(p => Path.GetFileName(p));
+
+        foreach (var item in sorted)
         {
             var name = Path.GetFileName(item);
-            
+
             if (Directory.Exists(item))
             {
-                // Folder-based project: look for index.md
-                var indexFile = Path.Combine(item, "index.md");
-                if (File.Exists(indexFile))
+                // Folder-based content: look for index.md or index.mdx
+                var indexMd = Path.Combine(item, "index.md");
+                var indexMdx = Path.Combine(item, "index.mdx");
+
+                if (File.Exists(indexMd))
                 {
                     results.Add($"{name}/index.md");
                 }
+                else if (File.Exists(indexMdx))
+                {
+                    results.Add($"{name}/index.mdx");
+                }
             }
-            else if (item.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+            else if (item.EndsWith(".md", StringComparison.OrdinalIgnoreCase) ||
+                     item.EndsWith(".mdx", StringComparison.OrdinalIgnoreCase))
             {
-                // File-based project
+                // File-based content
                 results.Add(name);
             }
         }

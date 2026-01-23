@@ -2,6 +2,7 @@ using OutWit.Common.Abstract;
 using OutWit.Common.Attributes;
 using OutWit.Common.Values;
 using OutWit.Common.Collections;
+using OutWit.Web.Framework.Content;
 
 namespace OutWit.Web.Framework.Models;
 
@@ -27,7 +28,8 @@ public class DocPage : ModelBase
             && HtmlContent.Is(other.HtmlContent)
             && TableOfContents.Is(other.TableOfContents)
             && PreviousPage.Check(other.PreviousPage)
-            && NextPage.Check(other.NextPage);
+            && NextPage.Check(other.NextPage)
+            && EmbeddedComponents.Is(other.EmbeddedComponents);
     }
 
     public override DocPage Clone()
@@ -44,7 +46,8 @@ public class DocPage : ModelBase
             HtmlContent = HtmlContent,
             TableOfContents = TableOfContents.Select(toc => toc.Clone()).ToList(),
             PreviousPage = PreviousPage?.Clone(),
-            NextPage = NextPage?.Clone()
+            NextPage = NextPage?.Clone(),
+            EmbeddedComponents = EmbeddedComponents.Select(c => c.Clone()).ToList()
         };
     }
 
@@ -107,6 +110,11 @@ public class DocPage : ModelBase
     /// Next page in navigation order.
     /// </summary>
     public DocNavLink? NextPage { get; set; }
+
+    /// <summary>
+    /// Embedded components extracted from content.
+    /// </summary>
+    public List<EmbeddedComponent> EmbeddedComponents { get; set; } = [];
 
     #endregion
 

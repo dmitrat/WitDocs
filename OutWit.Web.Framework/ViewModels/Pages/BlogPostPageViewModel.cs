@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using OutWit.Common.MVVM.Blazor.ViewModels;
+using OutWit.Web.Framework.Content;
 using OutWit.Web.Framework.Models;
 using OutWit.Web.Framework.Services;
 
@@ -11,6 +12,8 @@ public class BlogPostPageViewModel : ViewModelBase
 
     private BlogPost? m_post;
     private bool m_loading = true;
+    private string m_processedContent = string.Empty;
+    private List<EmbeddedComponent> m_embeddedComponents = [];
 
     #endregion
 
@@ -20,6 +23,13 @@ public class BlogPostPageViewModel : ViewModelBase
     {
         m_loading = true;
         m_post = await ContentService.GetBlogPostAsync(Slug);
+
+        if (m_post != null)
+        {
+            m_processedContent = m_post.HtmlContent;
+            m_embeddedComponents = m_post.EmbeddedComponents;
+        }
+
         m_loading = false;
     }
 
@@ -28,11 +38,15 @@ public class BlogPostPageViewModel : ViewModelBase
     #region Properties
 
     protected BlogPost? Post => m_post;
-    
+
     protected bool Loading => m_loading;
-    
-    protected string PageTitle => m_post?.Title != null 
-        ? $"{m_post.Title} - {SiteName}" 
+
+    protected string ProcessedContent => m_processedContent;
+
+    protected List<EmbeddedComponent> EmbeddedComponents => m_embeddedComponents;
+
+    protected string PageTitle => m_post?.Title != null
+        ? $"{m_post.Title} - {SiteName}"
         : $"Blog Post - {SiteName}";
 
     #endregion

@@ -19,9 +19,9 @@
                         BackLinkUrl="@BackUrl"
                         BackLinkText="@BackLinkText"
                         CssClass="blog-post__header" />
-            
+
             <div class="prose blog-post__content">
-                @((MarkupString)Post.HtmlContent)
+                <ContentWithComponents HtmlContent="@ProcessedContent" Components="@EmbeddedComponents" />
             </div>
         }
     </LoadingState>

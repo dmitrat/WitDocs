@@ -103,11 +103,24 @@ public class ContentService
     
     private BlogPost? ParseBlogPost(string filename, string markdown)
     {
-        var (frontmatter, html) = MarkdownService.ParseWithFrontmatter<FrontmatterData>(markdown);
+        var (frontmatter, _) = MarkdownService.ParseWithFrontmatter<FrontmatterData>(markdown);
         if (frontmatter == null) return null;
 
         var slug = SlugGenerator.GetSlugFromFilename(filename);
         var content = ExtractContentWithoutFrontmatter(markdown);
+
+        // Extract embedded components [[Component ...]] and get processed content
+        var (processedContent, components) = ContentParser.Transform(content);
+
+        // Set base path for relative URL resolution
+        var basePath = GetBasePathForBlogPost(filename);
+        foreach (var component in components)
+        {
+            component.BasePath = basePath;
+        }
+
+        // Render processed markdown (with component placeholders) to HTML
+        var html = MarkdownService.ToHtml(processedContent);
 
         return new BlogPost
         {
@@ -121,7 +134,8 @@ public class ContentService
             Author = frontmatter.Author ?? "",
             RawContent = content,
             HtmlContent = html,
-            ReadingTimeMinutes = MarkdownService.CalculateReadingTime(content)
+            ReadingTimeMinutes = MarkdownService.CalculateReadingTime(content),
+            EmbeddedComponents = components
         };
     }
 
@@ -552,12 +566,27 @@ public class ContentService
     
     private DocPage? ParseDocPage(string filename, string markdown)
     {
-        var (frontmatter, html) = MarkdownService.ParseWithFrontmatter<FrontmatterData>(markdown);
+        var (frontmatter, _) = MarkdownService.ParseWithFrontmatter<FrontmatterData>(markdown);
         if (frontmatter == null) return null;
 
         var (order, slug) = SlugGenerator.GetOrderAndSlugFromFilename(filename);
         var content = ExtractContentWithoutFrontmatter(markdown);
+
+        // Extract embedded components [[Component ...]] and get processed content
+        var (processedContent, components) = ContentParser.Transform(content);
+
+        // Set base path for relative URL resolution
+        var basePath = GetBasePathForDocs(filename);
+        foreach (var component in components)
+        {
+            component.BasePath = basePath;
+        }
+
+        // Extract TOC from original content (before component placeholders)
         var toc = MarkdownService.ExtractTableOfContents(content);
+
+        // Render processed markdown (with component placeholders) to HTML
+        var html = MarkdownService.ToHtml(processedContent);
 
         return new DocPage
         {
@@ -568,7 +597,8 @@ public class ContentService
             ParentSlug = frontmatter.Parent ?? "",
             RawContent = content,
             HtmlContent = html,
-            TableOfContents = toc
+            TableOfContents = toc,
+            EmbeddedComponents = components
         };
     }
 
@@ -665,6 +695,34 @@ public class ContentService
         }
 
         return m_contentIndex ?? new ContentIndex();
+    }
+
+    /// <summary>
+    /// Get base path for docs relative URL resolution.
+    /// </summary>
+    private static string GetBasePathForDocs(string filename)
+    {
+        var lastSlash = filename.LastIndexOf('/');
+        if (lastSlash > 0)
+        {
+            var folder = filename[..lastSlash];
+            return $"content/docs/{folder}";
+        }
+        return "content/docs";
+    }
+
+    /// <summary>
+    /// Get base path for blog post relative URL resolution.
+    /// </summary>
+    private static string GetBasePathForBlogPost(string filename)
+    {
+        var lastSlash = filename.LastIndexOf('/');
+        if (lastSlash > 0)
+        {
+            var folder = filename[..lastSlash];
+            return $"content/blog/{folder}";
+        }
+        return "content/blog";
     }
 
     /// <summary>

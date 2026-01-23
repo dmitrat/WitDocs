@@ -63,7 +63,7 @@
                                 CssClass="article-content__header" />
 
                     <div class="article-content__body prose">
-                        @((MarkupString)Doc.HtmlContent)
+                        <ContentWithComponents HtmlContent="@ProcessedContent" Components="@EmbeddedComponents" />
                     </div>
                     
                     @* Navigation to prev/next doc *@

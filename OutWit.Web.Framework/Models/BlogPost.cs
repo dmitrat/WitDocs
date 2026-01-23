@@ -2,6 +2,7 @@ using OutWit.Common.Abstract;
 using OutWit.Common.Attributes;
 using OutWit.Common.Values;
 using OutWit.Common.Collections;
+using OutWit.Web.Framework.Content;
 
 namespace OutWit.Web.Framework.Models;
 
@@ -29,7 +30,8 @@ public class BlogPost : ModelBase
             && FeaturedImage.Is(other.FeaturedImage)
             && RawContent.Is(other.RawContent)
             && HtmlContent.Is(other.HtmlContent)
-            && IsDraft.Is(other.IsDraft);
+            && IsDraft.Is(other.IsDraft)
+            && EmbeddedComponents.Is(other.EmbeddedComponents);
     }
 
     public override BlogPost Clone()
@@ -48,8 +50,8 @@ public class BlogPost : ModelBase
             FeaturedImage = FeaturedImage,
             RawContent = RawContent,
             HtmlContent = HtmlContent,
-            IsDraft = IsDraft
-
+            IsDraft = IsDraft,
+            EmbeddedComponents = EmbeddedComponents.Select(c => c.Clone()).ToList()
         };
     }
 
@@ -122,6 +124,11 @@ public class BlogPost : ModelBase
     /// Indicates if the post is a draft.
     /// </summary>
     public bool IsDraft { get; set; }
+
+    /// <summary>
+    /// Embedded components extracted from content.
+    /// </summary>
+    public List<EmbeddedComponent> EmbeddedComponents { get; set; } = [];
 
     #endregion
 }
