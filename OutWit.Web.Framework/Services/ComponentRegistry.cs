@@ -21,7 +21,8 @@ public class ComponentRegistry
         // Register built-in components
         Register("YouTube", typeof(YouTube));
         Register("FloatingImage", typeof(FloatingImage));
-        
+        Register("Svg", typeof(Svg));
+
         // Add more components here:
         // Register("PowerPoint", typeof(PowerPoint));
         // Register("Model3D", typeof(Model3D));

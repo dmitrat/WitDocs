@@ -143,3 +143,33 @@
         max-width: 100% !important;
     }
 }
+
+/* Inline SVG Component */
+.svg-inline {
+    display: inline-block;
+    vertical-align: middle;
+    max-width: 100%;
+    height: auto;
+}
+
+.svg-inline--loading,
+.svg-inline--error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100px;
+    background: var(--color-bg-secondary);
+    border-radius: 8px;
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+}
+
+.svg-inline--error {
+    border: 1px dashed var(--color-border);
+}
+
+@media (max-width: 768px) {
+    .svg-inline {
+        max-width: 100% !important;
+    }
+}
