@@ -19,7 +19,7 @@
             
             <h3 class="blog-card__title">@Post.Title</h3>
             
-            <p class="blog-card__summary">@Post.Summary</p>
+            <p class="blog-card__summary">@((MarkupString)Post.Summary)</p>
             
             @if (Post.Tags.Count > 0)
             {

@@ -79,6 +79,26 @@ public partial class MarkdownService
     }
 
     /// <summary>
+    /// Render markdown to HTML without paragraph wrapper.
+    /// Useful for short inline content like summaries and descriptions.
+    /// </summary>
+    public string ToHtmlInline(string markdown)
+    {
+        if (string.IsNullOrEmpty(markdown))
+            return string.Empty;
+
+        var html = ToHtml(markdown).Trim();
+
+        // Remove wrapping <p> tags if present (for single-line content)
+        if (html.StartsWith("<p>") && html.EndsWith("</p>") && html.IndexOf("<p>", 3) == -1)
+        {
+            html = html[3..^4];
+        }
+
+        return html;
+    }
+
+    /// <summary>
     /// Extract table of contents from markdown.
     /// </summary>
     public List<TocEntry> ExtractTableOfContents(string markdown)

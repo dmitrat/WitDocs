@@ -126,8 +126,12 @@ public class ContentService
         {
             Slug = slug,
             Title = frontmatter.Title ?? slug,
-            Description = frontmatter.Description ?? "",
-            Summary = frontmatter.Summary ?? "",
+            Description = !string.IsNullOrEmpty(frontmatter.Description)
+                ? MarkdownService.ToHtmlInline(frontmatter.Description)
+                : "",
+            Summary = !string.IsNullOrEmpty(frontmatter.Summary)
+                ? MarkdownService.ToHtmlInline(frontmatter.Summary)
+                : "",
             PublishDate = frontmatter.PublishDate,
             Tags = frontmatter.Tags ?? new List<string>(),
             FeaturedImage = frontmatter.FeaturedImage ?? "",
