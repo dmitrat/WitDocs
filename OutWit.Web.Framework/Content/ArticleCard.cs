@@ -15,7 +15,7 @@ public class ArticleCard : ModelBase
     {
         if (modelBase is not ArticleCard other)
             return false;
-        
+
         return Slug.Is(other.Slug)
             && Order.Is(other.Order)
             && Title.Is(other.Title)
@@ -27,7 +27,8 @@ public class ArticleCard : ModelBase
             && RawContent.Is(other.RawContent)
             && HtmlContent.Is(other.HtmlContent)
             && TableOfContents.Is(other.TableOfContents)
-            && EmbeddedComponents.Is(other.EmbeddedComponents);
+            && EmbeddedComponents.Is(other.EmbeddedComponents)
+            && TocDepth.Is(other.TocDepth);
     }
 
     public override ArticleCard Clone()
@@ -45,7 +46,8 @@ public class ArticleCard : ModelBase
             RawContent = RawContent,
             HtmlContent = HtmlContent,
             TableOfContents = TableOfContents.Select(toc => toc.Clone()).ToList(),
-            EmbeddedComponents = EmbeddedComponents.Select(component => component.Clone()).ToList()
+            EmbeddedComponents = EmbeddedComponents.Select(component => component.Clone()).ToList(),
+            TocDepth = TocDepth
         };
     }
 
@@ -65,6 +67,11 @@ public class ArticleCard : ModelBase
     public string HtmlContent { get; set; } = "";
     public List<TocItem> TableOfContents { get; set; } = new();
     public List<EmbeddedComponent> EmbeddedComponents { get; set; } = new();
+
+    /// <summary>
+    /// Maximum depth used for table of contents extraction.
+    /// </summary>
+    public int TocDepth { get; set; } = 3;
 
     #endregion
 

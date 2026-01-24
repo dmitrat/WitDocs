@@ -16,7 +16,7 @@ public class FrontmatterData : ModelBase
     {
         if (modelBase is not FrontmatterData other)
             return false;
-        
+
         return Title.Is(other.Title)
             && Description.Is(other.Description)
             && Summary.Is(other.Summary)
@@ -31,7 +31,8 @@ public class FrontmatterData : ModelBase
             && IsFirstProject.Is(other.IsFirstProject)
             && Parent.Is(other.Parent)
             && Icon.Is(other.Icon)
-            && IconSvg.Is(other.IconSvg);
+            && IconSvg.Is(other.IconSvg)
+            && TocDepth.Is(other.TocDepth);
     }
 
     public override FrontmatterData Clone()
@@ -52,7 +53,8 @@ public class FrontmatterData : ModelBase
             IsFirstProject = IsFirstProject,
             Parent = Parent,
             Icon = Icon,
-            IconSvg = IconSvg
+            IconSvg = IconSvg,
+            TocDepth = TocDepth
         };
     }
 
@@ -79,11 +81,17 @@ public class FrontmatterData : ModelBase
     /// Emoji or path to SVG icon file.
     /// </summary>
     public string? Icon { get; set; }
-    
+
     /// <summary>
     /// Inline SVG content for custom icons (multiline YAML).
     /// </summary>
     public string? IconSvg { get; set; }
+
+    /// <summary>
+    /// Maximum depth for table of contents (1=H1 only, 2=H1-H2, 3=H1-H3, etc.).
+    /// Default is 3 if not specified.
+    /// </summary>
+    public int? TocDepth { get; set; }
 
     #endregion
  

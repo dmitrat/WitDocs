@@ -390,20 +390,21 @@ public class ContentService
 
         var (order, slug) = SlugGenerator.GetOrderAndSlugFromFilename(filename);
         var content = ExtractContentWithoutFrontmatter(markdown);
-        
+
         // Extract embedded components [[Component ...]] and get processed content
         var (processedContent, components) = ContentParser.Transform(content);
-        
+
         // Set base path for relative URL resolution
         var basePath = GetBasePathForArticle(filename, contentFolder);
         foreach (var component in components)
         {
             component.BasePath = basePath;
         }
-        
-        // Extract table of contents from headings
-        var toc = ExtractHeadings(content);
-        
+
+        // Extract table of contents from headings (use frontmatter depth or default to 3)
+        var tocDepth = frontmatter.TocDepth ?? 3;
+        var toc = ExtractHeadings(content, tocDepth);
+
         // Render processed markdown (with component placeholders) to HTML
         var html = MarkdownService.ToHtml(processedContent);
 
@@ -420,62 +421,67 @@ public class ContentService
             RawContent = content,
             HtmlContent = html,
             TableOfContents = toc,
-            EmbeddedComponents = components
+            EmbeddedComponents = components,
+            TocDepth = tocDepth
         };
     }
     
     /// <summary>
-    /// Extract headings (H1-H2) from markdown content for TOC generation.
+    /// Extract headings from markdown content for TOC generation.
+    /// Builds hierarchical structure with parent-child relationships.
     /// Skips headings inside code blocks.
     /// Handles duplicate headings by adding numeric suffixes like Markdig.
     /// </summary>
-    private static List<TocItem> ExtractHeadings(string markdown)
+    /// <param name="markdown">Markdown content to extract headings from</param>
+    /// <param name="maxDepth">Maximum heading depth to include (1=H1 only, 2=H1-H2, 3=H1-H3, etc.). Default is 3.</param>
+    private static List<TocItem> ExtractHeadings(string markdown, int maxDepth = 3)
     {
-        var headings = new List<TocItem>();
+        var flatHeadings = new List<TocItem>();
         var lines = markdown.Split('\n');
         bool inCodeBlock = false;
         var slugCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-        
+
+        // First pass: extract all headings as flat list
         foreach (var line in lines)
         {
             var trimmed = line.TrimStart();
-            
+
             // Track code block state (``` fenced code blocks)
             if (trimmed.StartsWith("```"))
             {
                 inCodeBlock = !inCodeBlock;
                 continue;
             }
-            
+
             // Skip lines inside code blocks
             if (inCodeBlock)
                 continue;
-                
+
             if (!trimmed.StartsWith('#'))
                 continue;
-            
+
             // Must have space after # to be a valid markdown heading
             // This filters out #include, #pragma, etc.
             int level = 0;
             while (level < trimmed.Length && trimmed[level] == '#')
                 level++;
-            
-            // Only include H1, H2 (skip H3 for cleaner TOC)
-            if (level < 1 || level > 2)
+
+            // Apply max depth filter
+            if (level < 1 || level > maxDepth)
                 continue;
-            
+
             // Must have space after the #'s for valid heading
             if (level >= trimmed.Length || trimmed[level] != ' ')
                 continue;
-                
+
             // Extract heading text (remove #'s and space, then trim)
             var text = trimmed[(level + 1)..].Trim();
             if (string.IsNullOrEmpty(text))
                 continue;
-            
+
             // Generate slug ID from text using shared utility
             var baseSlug = SlugGenerator.GenerateSlug(text);
-            
+
             // Handle duplicates by adding suffix like Markdig does
             string id;
             if (slugCounts.TryGetValue(baseSlug, out int count))
@@ -488,16 +494,49 @@ public class ContentService
                 slugCounts[baseSlug] = 1;
                 id = baseSlug;
             }
-            
-            headings.Add(new TocItem
+
+            flatHeadings.Add(new TocItem
             {
                 Level = level,
                 Id = id,
                 Text = text
             });
         }
-        
-        return headings;
+
+        // Second pass: build hierarchical structure
+        return BuildTocHierarchy(flatHeadings);
+    }
+
+    /// <summary>
+    /// Build hierarchical TOC structure from flat list of headings.
+    /// Uses stack-based algorithm to create parent-child relationships.
+    /// </summary>
+    private static List<TocItem> BuildTocHierarchy(List<TocItem> flatHeadings)
+    {
+        var result = new List<TocItem>();
+        var stack = new Stack<TocItem>();
+
+        foreach (var heading in flatHeadings)
+        {
+            // Pop entries with equal or higher level (lower in hierarchy)
+            while (stack.Count > 0 && stack.Peek().Level >= heading.Level)
+                stack.Pop();
+
+            if (stack.Count == 0)
+            {
+                // Top-level heading
+                result.Add(heading);
+            }
+            else
+            {
+                // Add as child of current parent
+                stack.Peek().Children.Add(heading);
+            }
+
+            stack.Push(heading);
+        }
+
+        return result;
     }
 
     #endregion
