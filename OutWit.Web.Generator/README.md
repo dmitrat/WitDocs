@@ -65,13 +65,36 @@ When using the Framework, configure generation via MSBuild properties in your `.
   
   <!-- Force generation even in Debug mode -->
   <OutWitGenerateContent>true</OutWitGenerateContent>
+  
+  <!-- Enable generation in Debug mode (v1.2.0+) -->
+  <OutWitGenerateInDebug>true</OutWitGenerateInDebug>
 </PropertyGroup>
 ```
+
+## Generated Files
+
+| File | Description |
+|------|-------------|
+| `content/index.json` | Content manifest listing all files |
+| `navigation-index.json` | Pre-built navigation menu data |
+| `content-metadata.json` | Pre-built content metadata for fast list rendering (v1.2.0+) |
+| `sitemap.xml` | SEO sitemap |
+| `robots.txt` | Crawler rules |
+| `search-index.json` | Pre-built search index |
+| `feed.xml` | RSS feed for blog |
+| `*/index.html` | Static HTML pages |
+| `_headers`, `_redirects` | Hosting provider config |
 
 ## Features
 
 ### Content Index
 Generates `index.json` listing all content files by category (blog, projects, docs, articles, features) and dynamic sections.
+
+### Navigation Index (v1.1.0+)
+Generates `navigation-index.json` for instant menu rendering without parsing markdown files.
+
+### Content Metadata Index (v1.2.0+)
+Generates `content-metadata.json` for fast list page rendering (BlogListPage, HomePage) without parsing all markdown files.
 
 ### Sitemap
 Creates `sitemap.xml` and `robots.txt` with proper lastmod dates.
@@ -119,6 +142,11 @@ Example workflow step:
       --site-url https://example.com \
       --site-name "My Site"
 ```
+
+## What's New in v1.2.0
+
+- **Content Metadata Index**: Generate `content-metadata.json` for fast list rendering
+- **Debug Mode Support**: Works with `OutWitGenerateInDebug` for development builds
 
 ## License
 

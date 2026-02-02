@@ -10,7 +10,7 @@ namespace OutWit.Web.Framework.Services;
 /// Service for loading content from markdown files in wwwroot/content folder.
 /// Enables dynamic content loading without hardcoding - just add .md files to the content folder.
 /// </summary>
-public class ContentService
+public partial class ContentService
 {
     #region Fields
 
@@ -94,11 +94,48 @@ public class ContentService
 
     /// <summary>
     /// Get a specific blog post by slug.
+    /// Uses cached data if available, otherwise loads directly from file.
     /// </summary>
     public async Task<BlogPost?> GetBlogPostAsync(string slug)
     {
-        var posts = await GetBlogPostsAsync();
-        return posts.FirstOrDefault(p => p.Slug.Equals(slug, StringComparison.OrdinalIgnoreCase));
+        // Check cache first
+        if (m_blogPosts != null)
+        {
+            return m_blogPosts.FirstOrDefault(p => p.Slug.Equals(slug, StringComparison.OrdinalIgnoreCase));
+        }
+
+        // Direct load: find and load only the requested file
+        return await GetBlogPostDirectAsync(slug);
+    }
+
+    /// <summary>
+    /// Load a specific blog post directly by slug without loading all posts.
+    /// This is the fast path for single post pages.
+    /// </summary>
+    public async Task<BlogPost?> GetBlogPostDirectAsync(string slug)
+    {
+        try
+        {
+            var index = await GetContentIndexAsync();
+            
+            // Find the file that matches the slug
+            var matchingFile = index.Blog.FirstOrDefault(file => 
+            {
+                var fileSlug = SlugGenerator.GetSlugFromFilename(file);
+                return fileSlug.Equals(slug, StringComparison.OrdinalIgnoreCase);
+            });
+
+            if (matchingFile == null)
+                return null;
+
+            var markdown = await Http.GetStringAsync($"content/blog/{matchingFile}");
+            return ParseBlogPost(matchingFile, markdown);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading blog post {slug}: {ex.Message}");
+            return null;
+        }
     }
     
     private BlogPost? ParseBlogPost(string filename, string markdown)
@@ -198,11 +235,48 @@ public class ContentService
 
     /// <summary>
     /// Get a specific project by slug.
+    /// Uses cached data if available, otherwise loads directly from file.
     /// </summary>
     public async Task<ProjectCard?> GetProjectAsync(string slug)
     {
-        var projects = await GetProjectsAsync();
-        return projects.FirstOrDefault(p => p.Slug.Equals(slug, StringComparison.OrdinalIgnoreCase));
+        // Check cache first
+        if (m_projects != null)
+        {
+            return m_projects.FirstOrDefault(p => p.Slug.Equals(slug, StringComparison.OrdinalIgnoreCase));
+        }
+
+        // Direct load: find and load only the requested file
+        return await GetProjectDirectAsync(slug);
+    }
+
+    /// <summary>
+    /// Load a specific project directly by slug without loading all projects.
+    /// This is the fast path for single project pages.
+    /// </summary>
+    public async Task<ProjectCard?> GetProjectDirectAsync(string slug)
+    {
+        try
+        {
+            var index = await GetContentIndexAsync();
+            
+            // Find the file that matches the slug
+            var matchingFile = index.Projects.FirstOrDefault(file => 
+            {
+                var (_, fileSlug) = SlugGenerator.GetOrderAndSlugFromFilename(file);
+                return fileSlug.Equals(slug, StringComparison.OrdinalIgnoreCase);
+            });
+
+            if (matchingFile == null)
+                return null;
+
+            var markdown = await Http.GetStringAsync($"content/projects/{matchingFile}");
+            return ParseProject(matchingFile, markdown);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading project {slug}: {ex.Message}");
+            return null;
+        }
     }
     
     private ProjectCard? ParseProject(string filename, string markdown)
@@ -298,11 +372,18 @@ public class ContentService
 
     /// <summary>
     /// Get a specific article by slug.
+    /// Uses cached data if available, otherwise loads directly from file.
     /// </summary>
     public async Task<ArticleCard?> GetArticleAsync(string slug)
     {
-        var articles = await GetArticlesAsync();
-        return articles.FirstOrDefault(a => a.Slug.Equals(slug, StringComparison.OrdinalIgnoreCase));
+        // Check cache first
+        if (m_articles != null)
+        {
+            return m_articles.FirstOrDefault(a => a.Slug.Equals(slug, StringComparison.OrdinalIgnoreCase));
+        }
+
+        // Direct load: find and load only the requested file
+        return await GetArticleDirectAsync(slug, "articles");
     }
     
     /// <summary>
@@ -317,32 +398,51 @@ public class ContentService
             return await GetArticleAsync(slug);
         }
         
+        return await GetArticleDirectAsync(slug, contentFolder);
+    }
+
+    /// <summary>
+    /// Load a specific article directly by slug without loading all articles.
+    /// This is the fast path for single article pages.
+    /// </summary>
+    public async Task<ArticleCard?> GetArticleDirectAsync(string slug, string contentFolder)
+    {
         try
         {
             var index = await GetContentIndexAsync();
-            if (index.Sections == null || !index.Sections.TryGetValue(contentFolder, out var files))
-            {
-                return null;
-            }
             
-            foreach (var file in files)
+            // Get files from the appropriate source
+            List<string>? files = null;
+            if (contentFolder == "articles")
             {
-                var filePath = $"content/{contentFolder}/{file}";
-                var markdown = await Http.GetStringAsync(filePath);
-                var article = ParseArticle(file, markdown, contentFolder);
-                
-                if (article?.Slug.Equals(slug, StringComparison.OrdinalIgnoreCase) == true)
-                {
-                    return article;
-                }
+                files = index.Articles;
             }
+            else if (index.Sections?.TryGetValue(contentFolder, out var sectionFiles) == true)
+            {
+                files = sectionFiles;
+            }
+
+            if (files == null)
+                return null;
+            
+            // Find the file that matches the slug
+            var matchingFile = files.FirstOrDefault(file => 
+            {
+                var (_, fileSlug) = SlugGenerator.GetOrderAndSlugFromFilename(file);
+                return fileSlug.Equals(slug, StringComparison.OrdinalIgnoreCase);
+            });
+
+            if (matchingFile == null)
+                return null;
+
+            var markdown = await Http.GetStringAsync($"content/{contentFolder}/{matchingFile}");
+            return ParseArticle(matchingFile, markdown, contentFolder);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading article from {contentFolder}: {ex.Message}");
+            Console.WriteLine($"Error loading article {slug} from {contentFolder}: {ex.Message}");
+            return null;
         }
-        
-        return null;
     }
     
     /// <summary>
@@ -600,11 +700,49 @@ public class ContentService
 
     /// <summary>
     /// Get a specific documentation page by slug.
+    /// Uses cached data if available, otherwise loads directly from file.
     /// </summary>
     public async Task<DocPage?> GetDocAsync(string slug)
     {
-        var docs = await GetDocsAsync();
-        return docs.FirstOrDefault(d => d.Slug.Equals(slug, StringComparison.OrdinalIgnoreCase));
+        // Check cache first
+        if (m_docs != null && m_docs.TryGetValue(slug, out var cachedDoc))
+        {
+            return cachedDoc;
+        }
+
+        // Direct load: find and load only the requested file
+        return await GetDocDirectAsync(slug);
+    }
+
+    /// <summary>
+    /// Load a specific doc page directly by slug without loading all docs.
+    /// This is the fast path for single doc pages.
+    /// Note: Previous/Next links won't be available in direct mode.
+    /// </summary>
+    public async Task<DocPage?> GetDocDirectAsync(string slug)
+    {
+        try
+        {
+            var index = await GetContentIndexAsync();
+            
+            // Find the file that matches the slug
+            var matchingFile = index.Docs.FirstOrDefault(file => 
+            {
+                var (_, fileSlug) = SlugGenerator.GetOrderAndSlugFromFilename(file);
+                return fileSlug.Equals(slug, StringComparison.OrdinalIgnoreCase);
+            });
+
+            if (matchingFile == null)
+                return null;
+
+            var markdown = await Http.GetStringAsync($"content/docs/{matchingFile}");
+            return ParseDocPage(matchingFile, markdown);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading doc {slug}: {ex.Message}");
+            return null;
+        }
     }
     
     private DocPage? ParseDocPage(string filename, string markdown)
@@ -785,7 +923,7 @@ public class ContentService
     private static string ExtractContentWithoutFrontmatter(string markdown)
     {
         // Remove YAML frontmatter
-        var match = Regex.Match(markdown, @"^---[\s\S]*?---\s*", RegexOptions.Multiline);
+        var match = FrontmatterRegex().Match(markdown);
         if (match.Success)
             return markdown.Substring(match.Length).TrimStart();
         return markdown;
@@ -807,6 +945,9 @@ public class ContentService
         }
         return "content/projects";
     }
+
+    [GeneratedRegex(@"^---[\s\S]*?---\s*", RegexOptions.Multiline)]
+    private static partial Regex FrontmatterRegex();
 
     #endregion
 

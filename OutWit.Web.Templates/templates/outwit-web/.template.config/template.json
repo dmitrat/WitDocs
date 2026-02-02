@@ -5,7 +5,7 @@
   "identity": "OutWit.Web.Site",
   "name": "OutWit Web Site",
   "shortName": "outwit-web",
-  "description": "A Blazor WebAssembly static site using OutWit.Web.Framework with markdown content, SEO optimization, and automatic content generation.",
+  "description": "A Blazor WebAssembly static site using OutWit.Web.Framework with markdown content, skeleton loading, SEO optimization, and automatic content generation.",
   "tags": {
     "language": "C#",
     "type": "project"
@@ -76,6 +76,12 @@
       "description": "Include projects section",
       "defaultValue": "true"
     },
+    "enableDebugGeneration": {
+      "type": "parameter",
+      "datatype": "bool",
+      "description": "Enable content generation in Debug mode (faster development)",
+      "defaultValue": "false"
+    },
     "hostingProvider": {
       "type": "parameter",
       "datatype": "choice",
@@ -89,6 +95,18 @@
         { "choice": "none", "description": "No specific provider" }
       ],
       "replaces": "{{HostingProvider}}"
+    },
+    "enableDebugGenerationValue": {
+      "type": "generated",
+      "generator": "switch",
+      "parameters": {
+        "evaluator": "C++",
+        "cases": [
+          { "condition": "(enableDebugGeneration)", "value": "true" },
+          { "condition": "(!enableDebugGeneration)", "value": "false" }
+        ]
+      },
+      "replaces": "{{EnableDebugGeneration}}"
     }
   },
   "sources": [

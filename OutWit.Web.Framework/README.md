@@ -192,6 +192,9 @@ wwwroot/content/
   <!-- Force content generation (default: Release only) -->
   <OutWitGenerateContent>true</OutWitGenerateContent>
   
+  <!-- Enable generation in Debug mode (default: false) -->
+  <OutWitGenerateInDebug>true</OutWitGenerateInDebug>
+  
   <!-- Disable specific generators -->
   <OutWitGenerateStaticPages>true</OutWitGenerateStaticPages>
   <OutWitGenerateSearchIndex>true</OutWitGenerateSearchIndex>
@@ -202,6 +205,23 @@ wwwroot/content/
   <OutWitHostingProvider>cloudflare</OutWitHostingProvider>
 </PropertyGroup>
 ```
+
+### Development Mode
+
+For faster development experience, enable content generation in Debug mode:
+
+```xml
+<PropertyGroup>
+  <OutWitGenerateInDebug>true</OutWitGenerateInDebug>
+</PropertyGroup>
+```
+
+This generates navigation and metadata indices during Debug builds, providing:
+- Instant menu rendering (no markdown parsing)
+- Fast list pages (BlogListPage, HomePage)
+- Static HTML pages are NOT generated in Debug mode by default
+
+Without this option, the framework falls back to loading content directly (slower but works).
 
 ### Automatic Generation
 

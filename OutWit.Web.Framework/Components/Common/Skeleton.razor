@@ -1,0 +1,100 @@
+@* Skeleton - Placeholder component for loading states *@
+
+<div class="skeleton @CssClass" style="@StyleString">
+    @if (Type == SkeletonType.Text)
+    {
+        @for (int i = 0; i < Lines; i++)
+        {
+            <div class="skeleton__line @(i == Lines - 1 && !FullWidth ? "skeleton__line--short" : "")"></div>
+        }
+    }
+    else if (Type == SkeletonType.Card)
+    {
+        <div class="skeleton__card">
+            @if (ShowImage)
+            {
+                <div class="skeleton__image"></div>
+            }
+            <div class="skeleton__card-content">
+                <div class="skeleton__line skeleton__line--title"></div>
+                <div class="skeleton__line"></div>
+                <div class="skeleton__line skeleton__line--short"></div>
+            </div>
+        </div>
+    }
+    else if (Type == SkeletonType.Avatar)
+    {
+        <div class="skeleton__avatar"></div>
+    }
+    else if (Type == SkeletonType.Button)
+    {
+        <div class="skeleton__button"></div>
+    }
+    else if (Type == SkeletonType.Custom)
+    {
+        @ChildContent
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// Type of skeleton to display.
+    /// </summary>
+    [Parameter]
+    public SkeletonType Type { get; set; } = SkeletonType.Text;
+
+    /// <summary>
+    /// Number of text lines for Text type.
+    /// </summary>
+    [Parameter]
+    public int Lines { get; set; } = 3;
+
+    /// <summary>
+    /// Whether last line should be full width.
+    /// </summary>
+    [Parameter]
+    public bool FullWidth { get; set; } = false;
+
+    /// <summary>
+    /// Whether to show image placeholder for Card type.
+    /// </summary>
+    [Parameter]
+    public bool ShowImage { get; set; } = true;
+
+    /// <summary>
+    /// Additional CSS classes.
+    /// </summary>
+    [Parameter]
+    public string CssClass { get; set; } = "";
+
+    /// <summary>
+    /// Width of the skeleton.
+    /// </summary>
+    [Parameter]
+    public string? Width { get; set; }
+
+    /// <summary>
+    /// Height of the skeleton.
+    /// </summary>
+    [Parameter]
+    public string? Height { get; set; }
+
+    /// <summary>
+    /// Custom content for Custom type.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private string StyleString
+    {
+        get
+        {
+            var styles = new List<string>();
+            if (!string.IsNullOrEmpty(Width))
+                styles.Add($"width: {Width}");
+            if (!string.IsNullOrEmpty(Height))
+                styles.Add($"height: {Height}");
+            return string.Join("; ", styles);
+        }
+    }
+}

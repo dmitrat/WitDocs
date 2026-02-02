@@ -24,7 +24,8 @@ dotnet new outwit-web -n MySite \
   --accent-color "#FF6B6B" \
   --github-url "https://github.com/johndoe" \
   --twitter-handle "@johndoe" \
-  --hosting-provider cloudflare
+  --hosting-provider cloudflare \
+  --enable-debug-generation
 ```
 
 ### Available Options
@@ -41,6 +42,7 @@ dotnet new outwit-web -n MySite \
 | `--include-docs-section` | Include docs pages | false |
 | `--include-blog-section` | Include blog pages | true |
 | `--include-projects-section` | Include projects pages | true |
+| `--enable-debug-generation` | Enable content generation in Debug mode (v1.3.0+) | false |
 
 ### Run your site
 
@@ -86,6 +88,13 @@ MySite/
 2. **Navigation**: Edit `wwwroot/site.config.json`
 3. **Content**: Add markdown files to `wwwroot/content/` folders
 4. **Logo**: Replace `wwwroot/images/logo.svg`
+
+## What's New in v1.3.0
+
+- **Skeleton Loading**: Built-in skeleton components for better loading UX
+- **Content Metadata Index**: Faster list page rendering
+- **Debug Mode Generation**: Option to generate content indices in Debug builds
+- **Direct Content Loading**: Load individual content items without parsing all files
 
 ## Uninstall
 

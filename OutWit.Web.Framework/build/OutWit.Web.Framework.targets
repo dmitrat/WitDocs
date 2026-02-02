@@ -7,6 +7,7 @@
     Usage:
       - Automatically runs on Release builds after Publish
       - Set <OutWitGenerateContent>true</OutWitGenerateContent> to force generation
+      - Set <OutWitGenerateInDebug>true</OutWitGenerateInDebug> to enable generation in Debug mode
       - Set <OutWitSiteUrl>https://example.com</OutWitSiteUrl> to specify site URL
       - Set <OutWitGenerateStaticPages>false</OutWitGenerateStaticPages> to disable SSG
       - Set <OutWitGenerateSearchIndex>false</OutWitGenerateSearchIndex> to disable search index
@@ -17,11 +18,17 @@
   
   <!-- Define default properties -->
   <PropertyGroup>
-    <!-- Enable/disable content generation (default: true for Release builds) -->
-    <OutWitGenerateContent Condition="'$(OutWitGenerateContent)' == ''">$(Configuration.Contains('Release'))</OutWitGenerateContent>
+    <!-- Enable generation in Debug mode (default: false) -->
+    <OutWitGenerateInDebug Condition="'$(OutWitGenerateInDebug)' == ''">false</OutWitGenerateInDebug>
     
-    <!-- Enable/disable static HTML generation (default: true) -->
-    <OutWitGenerateStaticPages Condition="'$(OutWitGenerateStaticPages)' == ''">true</OutWitGenerateStaticPages>
+    <!-- Enable/disable content generation (default: true for Release builds, or when OutWitGenerateInDebug is true) -->
+    <OutWitGenerateContent Condition="'$(OutWitGenerateContent)' == '' AND '$(Configuration)' == 'Release'">true</OutWitGenerateContent>
+    <OutWitGenerateContent Condition="'$(OutWitGenerateContent)' == '' AND '$(OutWitGenerateInDebug)' == 'true'">true</OutWitGenerateContent>
+    <OutWitGenerateContent Condition="'$(OutWitGenerateContent)' == ''">false</OutWitGenerateContent>
+    
+    <!-- Enable/disable static HTML generation (default: true for Release, false for Debug) -->
+    <OutWitGenerateStaticPages Condition="'$(OutWitGenerateStaticPages)' == '' AND '$(Configuration)' == 'Release'">true</OutWitGenerateStaticPages>
+    <OutWitGenerateStaticPages Condition="'$(OutWitGenerateStaticPages)' == ''">false</OutWitGenerateStaticPages>
     
     <!-- Enable/disable search index generation (default: true) -->
     <OutWitGenerateSearchIndex Condition="'$(OutWitGenerateSearchIndex)' == ''">true</OutWitGenerateSearchIndex>
@@ -118,7 +125,7 @@
 
   <!-- 
     Target: OutWitGenerateContentAfterBuild
-    Runs after Build (in Release mode) to generate all content files using the .NET Generator
+    Runs after Build to generate all content files using the .NET Generator
   -->
   <Target Name="OutWitGenerateContentAfterBuild" 
           AfterTargets="Build" 
@@ -126,7 +133,7 @@
     
     <Message Importance="high" Text="OutWit.Web.Framework: Running content generator..." />
     
-    <!-- Build CLI arguments to match Generator 1.0.1 interface -->
+    <!-- Build CLI arguments to match Generator interface -->
     <PropertyGroup>
       <_GeneratorArgs>--site "$(MSBuildProjectDirectory)"</_GeneratorArgs>
       <_GeneratorArgs Condition="'$(OutWitWwwRootPath)' != ''">$(_GeneratorArgs) --output "$(OutWitWwwRootPath)"</_GeneratorArgs>

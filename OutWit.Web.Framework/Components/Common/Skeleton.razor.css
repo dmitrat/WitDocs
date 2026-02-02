@@ -1,0 +1,114 @@
+/* Skeleton Loading Styles */
+
+.skeleton {
+    --skeleton-bg: var(--color-skeleton-bg, rgba(128, 128, 128, 0.1));
+    --skeleton-shine: var(--color-skeleton-shine, rgba(128, 128, 128, 0.2));
+}
+
+.skeleton__line {
+    height: 1em;
+    background: var(--skeleton-bg);
+    border-radius: 4px;
+    margin-bottom: 0.5em;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton__line:last-child {
+    margin-bottom: 0;
+}
+
+.skeleton__line--short {
+    width: 60%;
+}
+
+.skeleton__line--title {
+    height: 1.5em;
+    width: 80%;
+    margin-bottom: 0.75em;
+}
+
+.skeleton__card {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.skeleton__image {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: var(--skeleton-bg);
+    border-radius: 8px;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton__card-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.skeleton__avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--skeleton-bg);
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton__button {
+    width: 120px;
+    height: 40px;
+    background: var(--skeleton-bg);
+    border-radius: 6px;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+/* Skeleton List */
+.skeleton-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.skeleton-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Pulse Animation */
+@keyframes skeleton-pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Shimmer Animation (alternative) */
+.skeleton--shimmer .skeleton__line,
+.skeleton--shimmer .skeleton__image,
+.skeleton--shimmer .skeleton__avatar,
+.skeleton--shimmer .skeleton__button {
+    animation: none;
+    background: linear-gradient(
+        90deg,
+        var(--skeleton-bg) 25%,
+        var(--skeleton-shine) 50%,
+        var(--skeleton-bg) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}

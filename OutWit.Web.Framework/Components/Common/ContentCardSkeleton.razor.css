@@ -1,0 +1,67 @@
+/* ContentCardSkeleton Styles */
+
+.content-card--skeleton {
+    --skeleton-bg: var(--color-skeleton-bg, rgba(128, 128, 128, 0.1));
+}
+
+.content-card--skeleton .skeleton__line {
+    height: 1em;
+    background: var(--skeleton-bg);
+    border-radius: 4px;
+    margin-bottom: 0.5em;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.content-card--skeleton .skeleton__line--title {
+    height: 1.5em;
+    width: 80%;
+    margin-bottom: 0.75em;
+}
+
+.content-card--skeleton .skeleton__line--short {
+    width: 60%;
+}
+
+.content-card__tags--skeleton {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.skeleton__tag {
+    width: 60px;
+    height: 24px;
+    background: var(--skeleton-bg);
+    border-radius: 4px;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.content-card__meta--skeleton {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.75rem;
+}
+
+.skeleton__meta {
+    width: 80px;
+    height: 1em;
+    background: var(--skeleton-bg);
+    border-radius: 4px;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton__meta--short {
+    width: 50px;
+}
+
+@keyframes skeleton-pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 1;
+    }
+}

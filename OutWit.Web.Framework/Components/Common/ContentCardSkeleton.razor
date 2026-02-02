@@ -1,0 +1,47 @@
+@* ContentCardSkeleton - Skeleton placeholder for ContentCard *@
+
+<div class="content-card content-card--skeleton @CssClass">
+    <div class="content-card__body">
+        <div class="skeleton__line skeleton__line--title"></div>
+        <div class="skeleton__line"></div>
+        <div class="skeleton__line"></div>
+        <div class="skeleton__line skeleton__line--short"></div>
+        
+        @if (ShowTags)
+        {
+            <div class="content-card__tags content-card__tags--skeleton">
+                <span class="skeleton__tag"></span>
+                <span class="skeleton__tag"></span>
+                <span class="skeleton__tag"></span>
+            </div>
+        }
+        
+        @if (ShowMeta)
+        {
+            <div class="content-card__meta content-card__meta--skeleton">
+                <span class="skeleton__meta"></span>
+                <span class="skeleton__meta skeleton__meta--short"></span>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// Whether to show tag placeholders.
+    /// </summary>
+    [Parameter]
+    public bool ShowTags { get; set; } = true;
+
+    /// <summary>
+    /// Whether to show metadata placeholders (date, reading time).
+    /// </summary>
+    [Parameter]
+    public bool ShowMeta { get; set; } = false;
+
+    /// <summary>
+    /// Additional CSS classes.
+    /// </summary>
+    [Parameter]
+    public string CssClass { get; set; } = "";
+}

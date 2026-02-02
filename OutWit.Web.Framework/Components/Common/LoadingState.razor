@@ -3,9 +3,18 @@
 
 @if (IsLoading)
 {
-    <div class="loading-state loading-state--loading">
-        <p class="loading">@LoadingText</p>
-    </div>
+    @if (UseSkeleton)
+    {
+        <div class="loading-state loading-state--skeleton">
+            @SkeletonContent
+        </div>
+    }
+    else
+    {
+        <div class="loading-state loading-state--loading">
+            <p class="loading">@LoadingText</p>
+        </div>
+    }
 }
 else if (!HasContent)
 {

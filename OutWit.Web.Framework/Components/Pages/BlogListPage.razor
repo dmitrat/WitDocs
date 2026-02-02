@@ -17,42 +17,65 @@
                   HasContent="HasContent"
                   LoadingText="Loading posts..."
                   NotFoundText="No blog posts found.">
-        <div class="blog-layout">
-            @* Left sidebar: Recent posts *@
-            <aside class="blog-sidebar">
-                <div class="blog-sidebar__sticky">
-                    <h3 class="blog-sidebar__title">@SidebarTitle</h3>
-                    <nav class="blog-sidebar__nav">
-                        @foreach (var yearGroup in PostItems.Take(SidebarMaxPosts).GroupBy(p => p.PublishDate.Year).OrderByDescending(g => g.Key))
-                        {
-                            <div class="blog-sidebar__year">@yearGroup.Key</div>
-                            <ul class="blog-sidebar__list">
-                                @foreach (var post in yearGroup.OrderByDescending(p => p.PublishDate))
-                                {
-                                    <li>
-                                        <a href="@GetPostUrl(post.Slug)" class="blog-sidebar__link">@post.Title</a>
-                                    </li>
-                                }
-                            </ul>
-                        }
-                    </nav>
+        <SkeletonContent>
+            <div class="blog-layout">
+                @* Left sidebar skeleton *@
+                <aside class="blog-sidebar">
+                    <div class="blog-sidebar__sticky">
+                        <Skeleton Type="SkeletonType.Text" Lines="1" Width="60%" />
+                        <div style="margin-top: 1rem;">
+                            <Skeleton Type="SkeletonType.Text" Lines="5" />
+                        </div>
+                    </div>
+                </aside>
+                
+                @* Right: Post cards skeleton *@
+                <div class="blog-posts">
+                    @for (int i = 0; i < 3; i++)
+                    {
+                        <ContentCardSkeleton ShowTags="true" ShowMeta="true" />
+                    }
                 </div>
-            </aside>
-            
-            @* Right: Post cards *@
-            <div class="blog-posts">
-                @foreach (var post in PostItems)
-                {
-                    <ContentCard Title="@post.Title"
-                                 Url="@GetPostUrl(post.Slug)"
-                                 Description="@(new MarkupString(post.Summary ?? ""))"
-                                 Tags="@post.Tags"
-                                 ShowDate="true"
-                                 Date="@post.PublishDate"
-                                 ShowReadingTime="true"
-                                 ReadingTimeMinutes="@post.ReadingTimeMinutes" />
-                }
             </div>
-        </div>
+        </SkeletonContent>
+        <ChildContent>
+            <div class="blog-layout">
+                @* Left sidebar: Recent posts *@
+                <aside class="blog-sidebar">
+                    <div class="blog-sidebar__sticky">
+                        <h3 class="blog-sidebar__title">@SidebarTitle</h3>
+                        <nav class="blog-sidebar__nav">
+                            @foreach (var yearGroup in PostItems.Take(SidebarMaxPosts).GroupBy(p => p.PublishDate.Year).OrderByDescending(g => g.Key))
+                            {
+                                <div class="blog-sidebar__year">@yearGroup.Key</div>
+                                <ul class="blog-sidebar__list">
+                                    @foreach (var post in yearGroup.OrderByDescending(p => p.PublishDate))
+                                    {
+                                        <li>
+                                            <a href="@GetPostUrl(post.Slug)" class="blog-sidebar__link">@post.Title</a>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </nav>
+                    </div>
+                </aside>
+                
+                @* Right: Post cards *@
+                <div class="blog-posts">
+                    @foreach (var post in PostItems)
+                    {
+                        <ContentCard Title="@post.Title"
+                                     Url="@GetPostUrl(post.Slug)"
+                                     Description="@(new MarkupString(post.Summary ?? ""))"
+                                     Tags="@post.Tags"
+                                     ShowDate="true"
+                                     Date="@post.PublishDate"
+                                     ShowReadingTime="true"
+                                     ReadingTimeMinutes="@post.ReadingTimeMinutes" />
+                    }
+                </div>
+            </div>
+        </ChildContent>
     </LoadingState>
 </div>
