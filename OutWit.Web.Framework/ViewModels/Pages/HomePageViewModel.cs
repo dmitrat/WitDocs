@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using OutWit.Common.MVVM.Blazor.ViewModels;
 using OutWit.Web.Framework.Content;
+using OutWit.Web.Framework.Models;
 using OutWit.Web.Framework.Services;
 
 namespace OutWit.Web.Framework.ViewModels.Pages;
@@ -10,6 +11,7 @@ public class HomePageViewModel : ViewModelBase
     #region Fields
 
     private List<ProjectCard> m_projects = [];
+    private List<ProjectMetadata>? m_projectsMetadata;
     private bool m_loading = true;
 
     #endregion
@@ -18,14 +20,24 @@ public class HomePageViewModel : ViewModelBase
 
     protected override async Task OnInitializedAsync()
     {
-        try 
+        try
         {
-            m_projects = await ContentService.GetProjectsAsync();
+            // Try to use pre-built metadata first (fast path)
+            if (await ContentMetadataService.IsMetadataIndexAvailableAsync())
+            {
+                m_projectsMetadata = await ContentMetadataService.GetProjectsMetadataAsync();
+            }
+            else
+            {
+                // Fallback: load full content (slow path for development)
+                m_projects = await ContentService.GetProjectsAsync();
+            }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading projects: {ex.Message}");
             m_projects = [];
+            m_projectsMetadata = null;
         }
         m_loading = false;
     }
@@ -44,6 +56,12 @@ public class HomePageViewModel : ViewModelBase
     
     protected string GetFirstProjectAnchor()
     {
+        if (m_projectsMetadata != null && m_projectsMetadata.Count > 0)
+        {
+            var first = m_projectsMetadata.FirstOrDefault();
+            return first != null ? $"#project-{first.Slug}" : "#projects";
+        }
+        
         var firstProject = m_projects.FirstOrDefault(p => p.IsFirstProject);
         if (firstProject != null)
             return $"#project-{firstProject.Slug}";
@@ -59,7 +77,26 @@ public class HomePageViewModel : ViewModelBase
 
     #region Properties
 
+    /// <summary>
+    /// Get projects for rendering. Uses metadata if available, falls back to full content.
+    /// </summary>
+    protected IEnumerable<(string Slug, string Title, string Summary, List<string> Tags)> ProjectItems
+    {
+        get
+        {
+            if (m_projectsMetadata != null)
+            {
+                return m_projectsMetadata.Select(p => (p.Slug, p.Title, p.Summary, p.Tags));
+            }
+            return m_projects.Select(p => (p.Slug, p.Title, p.Summary, p.Tags));
+        }
+    }
+
     protected List<ProjectCard> Projects => m_projects;
+    
+    protected List<ProjectMetadata>? ProjectsMetadata => m_projectsMetadata;
+    
+    protected bool HasMetadata => m_projectsMetadata != null;
     
     protected bool Loading => m_loading;
 
@@ -85,6 +122,9 @@ public class HomePageViewModel : ViewModelBase
 
     [Inject]
     public ContentService ContentService { get; set; } = null!;
+    
+    [Inject]
+    public ContentMetadataService ContentMetadataService { get; set; } = null!;
     
     [Inject]
     public MarkdownService MarkdownService { get; set; } = null!;

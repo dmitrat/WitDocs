@@ -48,7 +48,17 @@ public class ContentGenerator
         await WriteContentIndexAsync(contentIndex, cancellationToken);
         Console.WriteLine($"  Found {contentIndex.Blog.Count} blog posts, {contentIndex.Projects.Count} projects, {contentIndex.Articles.Count} articles, {contentIndex.Docs.Count} docs, {contentIndex.Features.Count} features");
 
-        // Step 2: Generate sitemap.xml and robots.txt
+        // Step 2: Generate navigation-index.json (for fast menu loading)
+        Console.WriteLine("Generating navigation index...");
+        var navigationIndexGenerator = new NavigationIndexGenerator(m_config);
+        await navigationIndexGenerator.GenerateAsync(contentIndex, cancellationToken);
+
+        // Step 3: Generate content-metadata.json (for fast list rendering)
+        Console.WriteLine("Generating content metadata index...");
+        var contentMetadataGenerator = new ContentMetadataGenerator(m_config);
+        await contentMetadataGenerator.GenerateAsync(contentIndex, cancellationToken);
+
+        // Step 4: Generate sitemap.xml and robots.txt
         if (m_config.GenerateSitemap)
         {
             Console.WriteLine("Generating sitemap.xml and robots.txt...");
@@ -56,7 +66,7 @@ public class ContentGenerator
             await sitemapGenerator.GenerateAsync(contentIndex, cancellationToken);
         }
 
-        // Step 3: Generate search index
+        // Step 5: Generate search index
         if (m_config.GenerateSearchIndex)
         {
             Console.WriteLine("Generating search-index.json...");
@@ -64,7 +74,7 @@ public class ContentGenerator
             await searchIndexGenerator.GenerateAsync(contentIndex, cancellationToken);
         }
 
-        // Step 4: Generate RSS feed
+        // Step 6: Generate RSS feed
         if (m_config.GenerateRssFeed)
         {
             Console.WriteLine("Generating feed.xml...");
@@ -72,7 +82,7 @@ public class ContentGenerator
             await rssFeedGenerator.GenerateAsync(contentIndex, cancellationToken);
         }
 
-        // Step 5: Generate hosting provider config
+        // Step 7: Generate hosting provider config
         if (m_config.HostingProvider != "none")
         {
             Console.WriteLine($"Generating hosting config for {m_config.HostingProvider}...");
@@ -80,7 +90,7 @@ public class ContentGenerator
             await hostingConfigGenerator.GenerateAsync(cancellationToken);
         }
 
-        // Step 6: Generate static HTML pages (SSG)
+        // Step 8: Generate static HTML pages (SSG)
         if (m_config.GenerateStaticPages)
         {
             Console.WriteLine("Generating static HTML pages...");
@@ -88,7 +98,7 @@ public class ContentGenerator
             await staticPageGenerator.GenerateAsync(contentIndex, cancellationToken);
         }
 
-        // Step 7: Generate OG images (requires Playwright)
+        // Step 9: Generate OG images (requires Playwright)
         if (m_config.GenerateOgImages)
         {
             Console.WriteLine("Generating OG images...");

@@ -35,6 +35,144 @@ public class HeaderViewModel : ViewModelBase, IDisposable
     {
         if (m_config?.Navigation == null)
             return;
+
+        // Try to use pre-built navigation index first (fast path)
+        var navIndex = await NavigationService.GetNavigationIndexAsync();
+        var hasNavIndex = navIndex.Projects.Count > 0 
+                          || navIndex.Articles.Count > 0 
+                          || navIndex.Docs.Count > 0 
+                          || navIndex.Sections.Count > 0;
+
+        if (hasNavIndex)
+        {
+            // Fast path: use pre-built navigation index
+            await PopulateDynamicMenusFromIndex(navIndex);
+        }
+        else
+        {
+            // Fallback: load from content (slow path for development)
+            await PopulateDynamicMenusFromContent();
+        }
+    }
+
+    /// <summary>
+    /// Fast path: populate menus from pre-built navigation index.
+    /// </summary>
+    private async Task PopulateDynamicMenusFromIndex(NavigationIndex navIndex)
+    {
+        if (m_config?.Navigation == null)
+            return;
+
+        foreach (var navItem in m_config.Navigation)
+        {
+            PopulateMenuFromIndex(navItem, "/articles", "article", navIndex.Articles);
+            PopulateMenuFromIndex(navItem, "/docs", "docs", navIndex.Docs);
+            PopulateProjectsMenuFromIndex(navItem, navIndex.Projects);
+            
+            // Populate dynamic sections
+            await PopulateSectionMenuFromIndex(navItem, navIndex);
+        }
+        
+        AddHeaderProjectsFromIndex(navIndex.Projects);
+    }
+
+    private void PopulateMenuFromIndex(NavItem navItem, string href, string routePrefix, List<NavigationMenuItem> items)
+    {
+        if (navItem.Href != href || navItem.Children.Count != 0)
+            return;
+
+        navItem.Children = items
+            .Where(i => i.ShowInMenu)
+            .OrderBy(i => i.Order)
+            .Select(i => new NavItem
+            {
+                Title = i.DisplayTitle,
+                Href = $"/{routePrefix}/{i.Slug}"
+            })
+            .ToList();
+    }
+
+    private void PopulateProjectsMenuFromIndex(NavItem navItem, List<NavigationMenuItem> projects)
+    {
+        if ((navItem.Href != "/#projects" && navItem.Href != "/projects") || navItem.Children.Count != 0)
+            return;
+
+        navItem.Children = projects
+            .Where(p => p.ShowInMenu)
+            .OrderBy(p => p.Order)
+            .Select(p => new NavItem
+            {
+                Title = p.DisplayTitle,
+                Href = $"/project/{p.Slug}"
+            })
+            .ToList();
+    }
+
+    private Task PopulateSectionMenuFromIndex(NavItem navItem, NavigationIndex navIndex)
+    {
+        // Skip if already has children or doesn't start with /
+        if (navItem.Children.Count != 0 || !navItem.Href.StartsWith("/"))
+            return Task.CompletedTask;
+
+        // Get section name from href (e.g., "/use-cases" -> "use-cases")
+        var sectionName = navItem.Href.TrimStart('/').Split('/')[0];
+
+        // Skip hardcoded sections
+        if (sectionName is "articles" or "docs" or "projects" or "blog" or "" or "contact" or "search")
+            return Task.CompletedTask;
+
+        if (!navIndex.Sections.TryGetValue(sectionName, out var sectionItems) || sectionItems.Count == 0)
+            return Task.CompletedTask;
+
+        navItem.Children = sectionItems
+            .Where(i => i.ShowInMenu)
+            .OrderBy(i => i.Order)
+            .Select(i => new NavItem
+            {
+                Title = i.DisplayTitle,
+                Href = $"/{sectionName}/{i.Slug}"
+            })
+            .ToList();
+
+        return Task.CompletedTask;
+    }
+
+    private void AddHeaderProjectsFromIndex(List<NavigationMenuItem> projects)
+    {
+        if (m_config?.Navigation == null)
+            return;
+
+        var headerProjects = projects
+            .Where(p => p.ShowInHeader)
+            .OrderBy(p => p.Order)
+            .Select(p => new NavItem
+            {
+                Title = p.DisplayTitle,
+                Href = $"/project/{p.Slug}"
+            })
+            .ToList();
+
+        var contactIndex = m_config.Navigation.FindIndex(n =>
+            n.Href.Equals("/contact", StringComparison.OrdinalIgnoreCase));
+        var insertIndex = contactIndex >= 0 ? contactIndex : m_config.Navigation.Count;
+
+        foreach (var headerProject in headerProjects)
+        {
+            if (!m_config.Navigation.Any(n => n.Href == headerProject.Href))
+            {
+                m_config.Navigation.Insert(insertIndex, headerProject);
+                insertIndex++;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Fallback: populate menus from content (slow path for development).
+    /// </summary>
+    private async Task PopulateDynamicMenusFromContent()
+    {
+        if (m_config?.Navigation == null)
+            return;
             
         var articles = await ContentService.GetArticlesAsync();
         var projects = await ContentService.GetProjectsAsync();
@@ -266,6 +404,9 @@ public class HeaderViewModel : ViewModelBase, IDisposable
     
     [Inject]
     public ContentService ContentService { get; set; } = null!;
+    
+    [Inject]
+    public NavigationService NavigationService { get; set; } = null!;
     
     [Inject]
     public ThemeService ThemeService { get; set; } = null!;

@@ -14,7 +14,7 @@
     }
     
     <LoadingState IsLoading="Loading"
-                  HasContent="Posts.Count > 0"
+                  HasContent="HasContent"
                   LoadingText="Loading posts..."
                   NotFoundText="No blog posts found.">
         <div class="blog-layout">
@@ -23,7 +23,7 @@
                 <div class="blog-sidebar__sticky">
                     <h3 class="blog-sidebar__title">@SidebarTitle</h3>
                     <nav class="blog-sidebar__nav">
-                        @foreach (var yearGroup in Posts.Take(SidebarMaxPosts).GroupBy(p => p.PublishDate.Year).OrderByDescending(g => g.Key))
+                        @foreach (var yearGroup in PostItems.Take(SidebarMaxPosts).GroupBy(p => p.PublishDate.Year).OrderByDescending(g => g.Key))
                         {
                             <div class="blog-sidebar__year">@yearGroup.Key</div>
                             <ul class="blog-sidebar__list">
@@ -41,7 +41,7 @@
             
             @* Right: Post cards *@
             <div class="blog-posts">
-                @foreach (var post in Posts)
+                @foreach (var post in PostItems)
                 {
                     <ContentCard Title="@post.Title"
                                  Url="@GetPostUrl(post.Slug)"

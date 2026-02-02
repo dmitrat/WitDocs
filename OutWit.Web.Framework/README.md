@@ -11,6 +11,8 @@ A Blazor WebAssembly framework for building content-driven static websites with 
 - Open Graph Images - Auto-generated social media preview images
 - RSS Feed - Automatic RSS feed generation for blog posts
 - Pre-built Search Index - Client-side full-text search with pre-generated index
+- **Fast Navigation** - Pre-built navigation index for instant menu rendering
+- **Fast List Pages** - Pre-built content metadata for instant list rendering (NEW in v1.3.0)
 - Theme Support - Light/dark mode with CSS variables from theme.css
 - Responsive Design - Mobile-first CSS framework
 - Multiple Hosting Providers - Cloudflare Pages, Netlify, Vercel, GitHub Pages
@@ -140,6 +142,9 @@ summary: |
   Longer summary with **markdown** support
 tags: [blazor, dotnet, web]
 publishDate: 2024-01-15
+menuTitle: 'Short Title'    # Optional: short title for navigation menus
+showInMenu: true            # Show in dropdown menus (default: true)
+showInHeader: false         # Show as top-level nav item (projects only)
 ---
 
 # Content starts here
@@ -203,6 +208,8 @@ wwwroot/content/
 On Release build, the framework automatically runs the [OutWit.Web.Generator](../OutWit.Web.Generator/) tool to generate:
 
 - `content/index.json` - Content manifest
+- `navigation-index.json` - Pre-built navigation menu data (v1.2.0+)
+- `content-metadata.json` - Pre-built content metadata for lists (NEW in v1.3.0)
 - `sitemap.xml` - SEO sitemap
 - `robots.txt` - Crawler rules
 - `search-index.json` - Pre-built search index
@@ -239,6 +246,30 @@ npx playwright install chromium
 outwit-generate --content-path ./wwwroot/content --output-path ./wwwroot
 ```
 
+## Performance Optimization
+
+### Navigation Index (v1.2.0+)
+
+The framework generates a `navigation-index.json` file containing pre-built menu data. This eliminates the need to parse all markdown files when loading the header navigation, resulting in significantly faster page loads for sites with many content items.
+
+### Content Metadata Index (v1.3.0+)
+
+The framework now generates a `content-metadata.json` file containing lightweight metadata for all content items. This allows list pages (HomePage, BlogListPage) to render instantly without parsing individual markdown files.
+
+**Before v1.3.0:** List pages loaded and parsed ALL markdown files to display titles, descriptions, and tags
+
+**After v1.3.0:** List pages load a single small JSON file with pre-extracted metadata
+
+The content metadata index includes:
+- Blog posts: slug, title, description, summary, tags, publishDate, author, readingTime, featuredImage
+- Projects: slug, title, description, summary, order, tags, url
+- Articles: slug, title, description, order, tags, publishDate
+- Docs: slug, title, description, order, parentSlug
+- Features: slug, title, description, order, icon, iconSvg
+- Dynamic sections support
+
+During development (when the metadata index is not available), the framework falls back to loading content directly.
+
 ## Open Graph Images
 
 The framework can generate social media preview images (1200x630 PNG) for each content page.
@@ -266,6 +297,8 @@ npx playwright install chromium
 |---------|-------------|
 | ContentService | Load and parse markdown content |
 | ConfigService | Load site configuration |
+| NavigationService | Load pre-built navigation index (v1.2.0+) |
+| ContentMetadataService | Load pre-built content metadata (NEW in v1.3.0) |
 | SearchService | Full-text search with pre-built index |
 | MarkdownService | Parse markdown to HTML |
 | ThemeService | Theme switching (light/dark) |

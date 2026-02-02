@@ -18,13 +18,12 @@
         <h2 class="section-title">@ProjectsSectionTitle</h2>
     }
     
-
     <LoadingState IsLoading="Loading"
-                  HasContent="Projects.Count > 0"
+                  HasContent="ProjectItems.Any()"
                   LoadingText="Loading projects..."
                   NotFoundText="No projects found.">
         <div class="projects-list">
-            @foreach (var project in Projects)
+            @foreach (var project in ProjectItems)
             {
                 <ContentCard Title="@project.Title"
                              Url="@($"/project/{project.Slug}")"

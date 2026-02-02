@@ -18,6 +18,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ConfigService>();
         services.AddScoped<ContentService>();
         services.AddScoped<SearchService>();
+        services.AddScoped<NavigationService>();
+        services.AddScoped<ContentMetadataService>();
         services.AddSingleton<ContentParser>();
         services.AddSingleton<ComponentRegistry>();
         

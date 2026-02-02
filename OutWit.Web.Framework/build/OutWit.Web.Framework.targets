@@ -53,7 +53,7 @@
 
   <!--
     Target: OutWitEnsureStaticFiles
-    Ensures index.json, robots.txt, sitemap.xml, search-index.json, feed.xml exist before build (required for StaticWebAssets)
+    Ensures all generated JSON files exist before build (required for StaticWebAssets)
   -->
   <Target Name="OutWitEnsureStaticFiles" BeforeTargets="Build">
     <PropertyGroup>
@@ -61,6 +61,8 @@
       <_RobotsTxtPath>$(OutWitWwwRootPath)\robots.txt</_RobotsTxtPath>
       <_SitemapXmlPath>$(OutWitWwwRootPath)\sitemap.xml</_SitemapXmlPath>
       <_SearchIndexPath>$(OutWitWwwRootPath)\search-index.json</_SearchIndexPath>
+      <_NavigationIndexPath>$(OutWitWwwRootPath)\navigation-index.json</_NavigationIndexPath>
+      <_ContentMetadataPath>$(OutWitWwwRootPath)\content-metadata.json</_ContentMetadataPath>
       <_FeedXmlPath>$(OutWitWwwRootPath)\feed.xml</_FeedXmlPath>
     </PropertyGroup>
     
@@ -91,6 +93,20 @@
         Lines='[]'
         Overwrite="false"
         Condition="!Exists('$(_SearchIndexPath)')" />
+    
+    <!-- Create empty navigation-index.json if it doesn't exist -->
+    <WriteLinesToFile 
+        File="$(_NavigationIndexPath)"
+        Lines='{"projects":[],"articles":[],"docs":[],"sections":{}}'
+        Overwrite="false"
+        Condition="!Exists('$(_NavigationIndexPath)')" />
+    
+    <!-- Create empty content-metadata.json if it doesn't exist -->
+    <WriteLinesToFile 
+        File="$(_ContentMetadataPath)"
+        Lines='{"blog":[],"projects":[],"articles":[],"docs":[],"features":[],"sections":{}}'
+        Overwrite="false"
+        Condition="!Exists('$(_ContentMetadataPath)')" />
     
     <!-- Create placeholder feed.xml if it doesn't exist -->
     <WriteLinesToFile 

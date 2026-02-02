@@ -87,6 +87,37 @@ public static partial class ContentHelpers
     }
 
     /// <summary>
+    /// Get order number and slug from file path.
+    /// Handles both folder-based and file-based content.
+    /// </summary>
+    /// <param name="path">Full path or filename like "01-biography/index.md" or "02-guide.md".</param>
+    /// <returns>Tuple of (order, slug).</returns>
+    public static (int Order, string Slug) GetOrderAndSlugFromPath(string path)
+    {
+        // Normalize path separators for cross-platform support
+        var normalized = path.Replace('\\', '/');
+        
+        // Handle folder-based content (e.g., "01-biography/index.md")
+        if (normalized.EndsWith("/index.md", StringComparison.OrdinalIgnoreCase) ||
+            normalized.EndsWith("/index.mdx", StringComparison.OrdinalIgnoreCase))
+        {
+            // Get parent folder name
+            var parts = normalized.Split('/');
+            if (parts.Length >= 2)
+            {
+                var folderName = parts[^2];
+                return SlugGenerator.GetOrderAndSlugFromFilename(folderName);
+            }
+        }
+        
+        // Extract just the filename from full path
+        var filename = Path.GetFileName(path);
+        
+        // Use Framework utility
+        return SlugGenerator.GetOrderAndSlugFromFilename(filename);
+    }
+
+    /// <summary>
     /// Extract plain text from markdown content.
     /// Removes markdown syntax for search indexing and descriptions.
     /// </summary>
