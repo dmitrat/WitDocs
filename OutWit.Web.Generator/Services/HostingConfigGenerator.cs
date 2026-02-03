@@ -85,15 +85,37 @@ public class HostingConfigGenerator
         await File.WriteAllTextAsync(headersPath, headersContent, cancellationToken);
         Console.WriteLine($"  Created: {headersPath}");
 
-        // For Cloudflare Pages SPA:
-        // - If no 404.html exists, Cloudflare automatically serves index.html for all routes
-        // - Static assets are served directly (Cloudflare checks file existence first)
-        // - We do NOT need _redirects for SPA fallback
-        // 
-        // See: https://developers.cloudflare.com/pages/configuration/serving-pages/#single-page-application-spa-rendering
-        //
-        // Note: We don't generate 404.html in the root, so SPA mode is automatic.
-        // If you need a custom 404 page, create it at /404/index.html instead.
+        // _routes.json for SPA routing
+        // https://developers.cloudflare.com/pages/functions/routing/
+        // "exclude" - these paths serve static files directly (bypass SPA)
+        // "include" - everything else goes through SPA fallback (index.html)
+        var routesContent = """
+            {
+              "version": 1,
+              "include": ["/*"],
+              "exclude": [
+                "/_framework/*",
+                "/_content/*",
+                "/css/*",
+                "/images/*",
+                "/content/*",
+                "/og-images/*",
+                "/*.json",
+                "/*.xml",
+                "/*.txt",
+                "/*.ico",
+                "/*.png",
+                "/*.jpg",
+                "/*.svg",
+                "/*.woff",
+                "/*.woff2"
+              ]
+            }
+            """;
+
+        var routesPath = Path.Combine(m_config.OutputPath, "_routes.json");
+        await File.WriteAllTextAsync(routesPath, routesContent, cancellationToken);
+        Console.WriteLine($"  Created: {routesPath}");
     }
 
     private async Task GenerateNetlifyConfigAsync(CancellationToken cancellationToken)

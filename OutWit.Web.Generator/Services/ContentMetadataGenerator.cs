@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Markdig;
 using OutWit.Web.Framework.Content;
 using OutWit.Web.Framework.Models;
 using OutWit.Web.Generator.Commands;
@@ -21,6 +22,7 @@ public partial class ContentMetadataGenerator
     #region Fields
 
     private readonly GeneratorConfig m_config;
+    private readonly MarkdownPipeline m_markdownPipeline;
 
     #endregion
 
@@ -29,6 +31,9 @@ public partial class ContentMetadataGenerator
     public ContentMetadataGenerator(GeneratorConfig config)
     {
         m_config = config;
+        m_markdownPipeline = new MarkdownPipelineBuilder()
+            .UseAdvancedExtensions()
+            .Build();
     }
 
     #endregion
@@ -123,8 +128,8 @@ public partial class ContentMetadataGenerator
                 {
                     Slug = slug,
                     Title = frontmatter.Title ?? slug,
-                    Description = frontmatter.Description ?? "",
-                    Summary = frontmatter.Summary ?? "",
+                    Description = RenderInlineMarkdown(frontmatter.Description),
+                    Summary = RenderInlineMarkdown(frontmatter.Summary),
                     PublishDate = frontmatter.PublishDate,
                     Author = frontmatter.Author ?? "",
                     Tags = frontmatter.Tags ?? [],
@@ -171,8 +176,8 @@ public partial class ContentMetadataGenerator
                 {
                     Slug = slug,
                     Title = frontmatter.Title ?? slug,
-                    Description = frontmatter.Description ?? "",
-                    Summary = frontmatter.Summary ?? "",
+                    Description = RenderInlineMarkdown(frontmatter.Description),
+                    Summary = RenderInlineMarkdown(frontmatter.Summary),
                     Order = order,
                     Tags = frontmatter.Tags ?? [],
                     Url = frontmatter.Url ?? ""
@@ -218,7 +223,7 @@ public partial class ContentMetadataGenerator
                 {
                     Slug = slug,
                     Title = frontmatter.Title ?? slug,
-                    Description = frontmatter.Description ?? "",
+                    Description = RenderInlineMarkdown(frontmatter.Description),
                     Order = order,
                     Tags = frontmatter.Tags ?? [],
                     PublishDate = frontmatter.PublishDate
@@ -263,7 +268,7 @@ public partial class ContentMetadataGenerator
                 {
                     Slug = slug,
                     Title = frontmatter.Title ?? slug,
-                    Description = frontmatter.Description ?? "",
+                    Description = RenderInlineMarkdown(frontmatter.Description),
                     Order = order,
                     ParentSlug = frontmatter.Parent ?? ""
                 });
@@ -307,7 +312,7 @@ public partial class ContentMetadataGenerator
                 {
                     Slug = slug,
                     Title = frontmatter.Title ?? slug,
-                    Description = frontmatter.Description ?? "",
+                    Description = RenderInlineMarkdown(frontmatter.Description),
                     Order = order,
                     Icon = frontmatter.Icon ?? "",
                     IconSvg = frontmatter.IconSvg ?? ""
@@ -325,6 +330,26 @@ public partial class ContentMetadataGenerator
     #endregion
 
     #region Tools
+
+    /// <summary>
+    /// Render markdown to inline HTML (for descriptions and summaries).
+    /// Strips outer paragraph tags for inline use.
+    /// </summary>
+    private string RenderInlineMarkdown(string? markdown)
+    {
+        if (string.IsNullOrWhiteSpace(markdown))
+            return "";
+
+        var html = Markdown.ToHtml(markdown, m_markdownPipeline).Trim();
+        
+        // Remove wrapping <p> tags for inline display
+        if (html.StartsWith("<p>") && html.EndsWith("</p>"))
+        {
+            html = html[3..^4];
+        }
+        
+        return html;
+    }
 
     private static int CalculateReadingTime(string content)
     {

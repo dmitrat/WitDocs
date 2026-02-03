@@ -305,8 +305,12 @@ public partial class ContentService
             Slug = slug,
             Order = order,
             Title = frontmatter.Title ?? slug,
-            Description = frontmatter.Description ?? "",
-            Summary = frontmatter.Summary ?? "",
+            Description = !string.IsNullOrEmpty(frontmatter.Description)
+                ? MarkdownService.ToHtmlInline(frontmatter.Description)
+                : "",
+            Summary = !string.IsNullOrEmpty(frontmatter.Summary)
+                ? MarkdownService.ToHtmlInline(frontmatter.Summary)
+                : "",
             Tags = frontmatter.Tags ?? new List<string>(),
             Url = frontmatter.Url ?? "",
             MenuTitle = frontmatter.MenuTitle ?? "",
@@ -517,7 +521,9 @@ public partial class ContentService
             Slug = slug,
             Order = order,
             Title = frontmatter.Title ?? slug,
-            Description = frontmatter.Description ?? "",
+            Description = !string.IsNullOrEmpty(frontmatter.Description)
+                ? MarkdownService.ToHtmlInline(frontmatter.Description)
+                : "",
             PublishDate = frontmatter.PublishDate,
             Tags = frontmatter.Tags ?? new List<string>(),
             MenuTitle = frontmatter.MenuTitle ?? "",
@@ -774,7 +780,9 @@ public partial class ContentService
             Slug = slug,
             Order = order,
             Title = frontmatter.Title ?? slug,
-            Description = frontmatter.Description ?? "",
+            Description = !string.IsNullOrEmpty(frontmatter.Description)
+                ? MarkdownService.ToHtmlInline(frontmatter.Description)
+                : "",
             ParentSlug = frontmatter.Parent ?? "",
             RawContent = content,
             HtmlContent = html,
@@ -847,7 +855,9 @@ public partial class ContentService
             Slug = slug,
             Order = order,
             Title = frontmatter.Title ?? slug,
-            Description = frontmatter.Description ?? "",
+            Description = !string.IsNullOrEmpty(frontmatter.Description)
+                ? MarkdownService.ToHtmlInline(frontmatter.Description)
+                : "",
             Icon = frontmatter.Icon ?? "",
             IconSvg = frontmatter.IconSvg ?? "",
             HtmlContent = html

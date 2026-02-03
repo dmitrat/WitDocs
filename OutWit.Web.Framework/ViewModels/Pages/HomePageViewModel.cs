@@ -46,12 +46,17 @@ public class HomePageViewModel : ViewModelBase
 
     #region Functions
 
+    /// <summary>
+    /// Convert summary string to MarkupString for rendering.
+    /// Summary is already HTML (either from pre-built metadata or ContentService).
+    /// </summary>
     protected MarkupString RenderSummary(string summary)
     {
         if (string.IsNullOrWhiteSpace(summary))
             return new MarkupString(string.Empty);
         
-        return new MarkupString(MarkdownService.ToHtml(summary));
+        // Summary is already HTML - just wrap it
+        return new MarkupString(summary);
     }
     
     protected string GetFirstProjectAnchor()
@@ -125,9 +130,6 @@ public class HomePageViewModel : ViewModelBase
     
     [Inject]
     public ContentMetadataService ContentMetadataService { get; set; } = null!;
-    
-    [Inject]
-    public MarkdownService MarkdownService { get; set; } = null!;
 
     #endregion
 }

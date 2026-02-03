@@ -13,7 +13,7 @@ public class HostingConfigGeneratorTests
     #region Tests
 
     [Test]
-    public async Task GenerateAsyncCloudflareCreatesHeadersOnlyTest()
+    public async Task GenerateAsyncCloudflareCreatesHeadersAndRoutesTest()
     {
         // Arrange
         var tempDir = CreateTempDirectory();
@@ -29,14 +29,52 @@ public class HostingConfigGeneratorTests
             // Act
             await generator.GenerateAsync();
 
-            // Assert - Cloudflare only needs _headers, SPA fallback is automatic
+            // Assert - Cloudflare creates _headers and _routes.json
             Assert.That(File.Exists(Path.Combine(tempDir, "_headers")), Is.True);
-            Assert.That(File.Exists(Path.Combine(tempDir, "_redirects")), Is.False, 
-                "Cloudflare Pages has built-in SPA support, _redirects not needed");
+            Assert.That(File.Exists(Path.Combine(tempDir, "_routes.json")), Is.True);
 
             var headers = await File.ReadAllTextAsync(Path.Combine(tempDir, "_headers"));
             Assert.That(headers, Does.Contain("Cache-Control"));
             Assert.That(headers, Does.Contain("/_framework/*"));
+            
+            var routes = await File.ReadAllTextAsync(Path.Combine(tempDir, "_routes.json"));
+            Assert.That(routes, Does.Contain("\"version\": 1"));
+            Assert.That(routes, Does.Contain("\"include\""));
+            Assert.That(routes, Does.Contain("\"exclude\""));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Test]
+    public async Task GenerateAsyncCloudflareRoutesExcludesStaticAssetsTest()
+    {
+        // Arrange
+        var tempDir = CreateTempDirectory();
+        var config = new GeneratorConfig
+        {
+            OutputPath = tempDir,
+            HostingProvider = "cloudflare"
+        };
+        var generator = new HostingConfigGenerator(config);
+
+        try
+        {
+            // Act
+            await generator.GenerateAsync();
+
+            // Assert - _routes.json should exclude static asset paths
+            var routes = await File.ReadAllTextAsync(Path.Combine(tempDir, "_routes.json"));
+            
+            // Framework files should be excluded
+            Assert.That(routes, Does.Contain("/_framework/*"));
+            
+            // Static file extensions should be excluded
+            Assert.That(routes, Does.Contain("/*.json"));
+            Assert.That(routes, Does.Contain("/content/*"));
+            Assert.That(routes, Does.Contain("/images/*"));
         }
         finally
         {
@@ -161,6 +199,7 @@ public class HostingConfigGeneratorTests
             // Assert - no hosting files should be created
             Assert.That(File.Exists(Path.Combine(tempDir, "_headers")), Is.False);
             Assert.That(File.Exists(Path.Combine(tempDir, "_redirects")), Is.False);
+            Assert.That(File.Exists(Path.Combine(tempDir, "_routes.json")), Is.False);
             Assert.That(File.Exists(Path.Combine(tempDir, "vercel.json")), Is.False);
             Assert.That(File.Exists(Path.Combine(tempDir, ".nojekyll")), Is.False);
         }

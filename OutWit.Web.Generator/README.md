@@ -77,13 +77,21 @@ When using the Framework, configure generation via MSBuild properties in your `.
 |------|-------------|
 | `content/index.json` | Content manifest listing all files |
 | `navigation-index.json` | Pre-built navigation menu data |
-| `content-metadata.json` | Pre-built content metadata for fast list rendering (v1.2.0+) |
+| `content-metadata.json` | Pre-built content metadata for fast list rendering |
 | `sitemap.xml` | SEO sitemap |
 | `robots.txt` | Crawler rules |
 | `search-index.json` | Pre-built search index |
 | `feed.xml` | RSS feed for blog |
 | `*/index.html` | Static HTML pages |
-| `_headers`, `_redirects` | Hosting provider config |
+
+### Hosting Provider Files
+
+| Provider | Files Generated |
+|----------|-----------------|
+| **Cloudflare** | `_headers`, `_routes.json` |
+| **Netlify** | `_headers`, `_redirects` |
+| **Vercel** | `vercel.json` |
+| **GitHub Pages** | `.nojekyll`, `404.html` |
 
 ## Features
 
@@ -143,10 +151,10 @@ Example workflow step:
       --site-name "My Site"
 ```
 
-## What's New in v1.2.0
+## What's New in v1.3.1
 
-- **Content Metadata Index**: Generate `content-metadata.json` for fast list rendering
-- **Debug Mode Support**: Works with `OutWitGenerateInDebug` for development builds
+- **Cloudflare `_routes.json`**: Added explicit SPA routing configuration for Cloudflare Pages
+- **Fixed markdown rendering**: Description and Summary fields now correctly render markdown to HTML
 
 ## License
 

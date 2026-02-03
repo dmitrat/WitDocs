@@ -120,6 +120,67 @@ public class ContentMetadataGeneratorTests
     }
 
     [Test]
+    public async Task GenerateAsyncBlogPostsRendersMarkdownToHtmlTest()
+    {
+        // Arrange
+        var tempDir = CreateTempDirectory();
+        var contentDir = Path.Combine(tempDir, "content");
+        var blogDir = Path.Combine(contentDir, "blog");
+        Directory.CreateDirectory(blogDir);
+
+        // Use markdown formatting in summary
+        File.WriteAllText(Path.Combine(blogDir, "2024-01-15-markdown-test.md"), """
+            ---
+            title: Markdown Test
+            description: A **bold** description
+            summary: This has *italic* and **bold** text
+            publishDate: 2024-01-15
+            ---
+            Content
+            """);
+
+        var config = new GeneratorConfig
+        {
+            SitePath = tempDir,
+            OutputPath = tempDir
+        };
+        var generator = new ContentMetadataGenerator(config);
+        var contentIndex = new Framework.Content.ContentIndex
+        {
+            Blog = ["2024-01-15-markdown-test.md"]
+        };
+
+        try
+        {
+            // Act
+            await generator.GenerateAsync(contentIndex);
+
+            // Assert
+            var outputPath = Path.Combine(tempDir, "content-metadata.json");
+            var json = await File.ReadAllTextAsync(outputPath);
+            var metadataIndex = JsonSerializer.Deserialize<ContentMetadataIndex>(json,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            var post = metadataIndex!.Blog[0];
+            
+            // Description should have bold rendered as <strong>
+            Assert.That(post.Description, Does.Contain("<strong>bold</strong>"));
+            
+            // Summary should have both italic and bold rendered
+            Assert.That(post.Summary, Does.Contain("<em>italic</em>"));
+            Assert.That(post.Summary, Does.Contain("<strong>bold</strong>"));
+            
+            // Should NOT have wrapping <p> tags (inline rendering)
+            Assert.That(post.Description, Does.Not.StartWith("<p>"));
+            Assert.That(post.Summary, Does.Not.StartWith("<p>"));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Test]
     public async Task GenerateAsyncProjectsExtractsMetadataTest()
     {
         // Arrange
