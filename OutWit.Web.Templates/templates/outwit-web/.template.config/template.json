@@ -79,7 +79,7 @@
     "enableDebugGeneration": {
       "type": "parameter",
       "datatype": "bool",
-      "description": "Enable content generation in Debug mode (faster development)",
+      "description": "Enable content generation in Debug mode (slower builds, but no loading delay)",
       "defaultValue": "false"
     },
     "hostingProvider": {

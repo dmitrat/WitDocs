@@ -7,6 +7,12 @@ public class MainLayoutViewModel : LayoutComponentBase
 {
     #region Initialization
 
+    protected override async Task OnInitializedAsync()
+    {
+        // Preload all content indices in parallel for faster page rendering
+        await ContentPreloader.PreloadAsync();
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -27,6 +33,9 @@ public class MainLayoutViewModel : LayoutComponentBase
     
     [Inject]
     public ThemeService ThemeService { get; set; } = null!;
+    
+    [Inject]
+    public ContentPreloader ContentPreloader { get; set; } = null!;
 
     #endregion
 }

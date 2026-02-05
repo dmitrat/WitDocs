@@ -13,6 +13,8 @@ public class NavigationService
     #region Fields
 
     private NavigationIndex? m_navigationIndex;
+    private bool m_indexChecked;
+    private bool m_indexAvailable;
     private readonly SemaphoreSlim m_indexLock = new(1, 1);
 
     #endregion
@@ -91,14 +93,16 @@ public class NavigationService
 
     /// <summary>
     /// Check if navigation index is available (pre-built).
+    /// Returns cached result to avoid repeated HTTP requests.
     /// </summary>
     public async Task<bool> IsNavigationIndexAvailableAsync()
     {
+        // Return cached result if already checked
+        if (m_indexChecked)
+            return m_indexAvailable;
+            
         var index = await GetNavigationIndexAsync();
-        return index.Projects.Count > 0 
-               || index.Articles.Count > 0 
-               || index.Docs.Count > 0 
-               || index.Sections.Count > 0;
+        return m_indexAvailable;
     }
 
     /// <summary>
@@ -107,6 +111,8 @@ public class NavigationService
     public void InvalidateCache()
     {
         m_navigationIndex = null;
+        m_indexChecked = false;
+        m_indexAvailable = false;
     }
 
     #endregion
@@ -115,6 +121,9 @@ public class NavigationService
 
     private async Task<NavigationIndex> LoadNavigationIndexAsync()
     {
+        m_indexChecked = true;
+        m_indexAvailable = false;
+
         try
         {
             var index = await HttpClient.GetFromJsonAsync<NavigationIndex>(
@@ -127,14 +136,23 @@ public class NavigationService
 
             if (index != null)
             {
-                Console.WriteLine($"Loaded navigation index: {index.Projects.Count} projects, {index.Articles.Count} articles, {index.Docs.Count} docs, {index.Sections.Count} sections");
+                m_indexAvailable = index.Projects.Count > 0 
+                                   || index.Articles.Count > 0 
+                                   || index.Docs.Count > 0 
+                                   || index.Sections.Count > 0;
+                
+                if (m_indexAvailable)
+                {
+                    Console.WriteLine($"Loaded navigation index: {index.Projects.Count} projects, {index.Articles.Count} articles, {index.Docs.Count} docs, {index.Sections.Count} sections");
+                }
+                
                 return index;
             }
         }
         catch (HttpRequestException)
         {
-            // File not found - navigation index not available
-            Console.WriteLine("Navigation index not found, will fall back to content parsing");
+            // File not found - navigation index not available (expected in Debug mode)
+            Console.WriteLine("Navigation index not found (Debug mode)");
         }
         catch (Exception ex)
         {

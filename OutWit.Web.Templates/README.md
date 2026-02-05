@@ -24,8 +24,7 @@ dotnet new outwit-web -n MySite \
   --accent-color "#FF6B6B" \
   --github-url "https://github.com/johndoe" \
   --twitter-handle "@johndoe" \
-  --hosting-provider cloudflare \
-  --enable-debug-generation
+  --hosting-provider cloudflare
 ```
 
 ### Available Options
@@ -42,7 +41,7 @@ dotnet new outwit-web -n MySite \
 | `--include-docs-section` | Include docs pages | false |
 | `--include-blog-section` | Include blog pages | true |
 | `--include-projects-section` | Include projects pages | true |
-| `--enable-debug-generation` | Enable content generation in Debug mode (v1.3.0+) | false |
+| `--enable-debug-generation` | Enable content generation in Debug mode | false |
 
 ### Run your site
 

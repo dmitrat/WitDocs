@@ -869,9 +869,10 @@ public partial class ContentService
     #region Tools
     
     /// <summary>
-    /// Load the content index which lists all available content files.
+    /// Get the content index, loading it if necessary.
+    /// Returns cached result on subsequent calls.
     /// </summary>
-    private async Task<ContentIndex> GetContentIndexAsync()
+    public async Task<ContentIndex> GetContentIndexAsync()
     {
         if (m_contentIndex != null)
             return m_contentIndex;
@@ -879,9 +880,27 @@ public partial class ContentService
         try
         {
             m_contentIndex = await Http.GetFromJsonAsync<ContentIndex>("content/index.json");
+            
+            if (m_contentIndex != null)
+            {
+                var totalItems = m_contentIndex.Blog.Count + m_contentIndex.Projects.Count + 
+                                 m_contentIndex.Articles.Count + m_contentIndex.Docs.Count + 
+                                 m_contentIndex.Features.Count;
+                if (totalItems > 0)
+                {
+                    Console.WriteLine($"Loaded content index: {totalItems} items");
+                }
+            }
         }
-        catch
+        catch (HttpRequestException)
         {
+            // File not found - content index not available (expected in Debug mode without generation)
+            Console.WriteLine("Content index not found (Debug mode)");
+            m_contentIndex = new ContentIndex();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading content index: {ex.Message}");
             m_contentIndex = new ContentIndex();
         }
 

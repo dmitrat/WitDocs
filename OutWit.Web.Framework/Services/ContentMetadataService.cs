@@ -13,6 +13,8 @@ public class ContentMetadataService
     #region Fields
 
     private ContentMetadataIndex? m_metadataIndex;
+    private bool m_indexChecked;
+    private bool m_indexAvailable;
     private readonly SemaphoreSlim m_indexLock = new(1, 1);
 
     #endregion
@@ -109,16 +111,16 @@ public class ContentMetadataService
 
     /// <summary>
     /// Check if metadata index is available (pre-built).
+    /// Returns cached result to avoid repeated HTTP requests.
     /// </summary>
     public async Task<bool> IsMetadataIndexAvailableAsync()
     {
+        // Return cached result if already checked
+        if (m_indexChecked)
+            return m_indexAvailable;
+
         var index = await GetMetadataIndexAsync();
-        return index.Blog.Count > 0
-               || index.Projects.Count > 0
-               || index.Articles.Count > 0
-               || index.Docs.Count > 0
-               || index.Features.Count > 0
-               || index.Sections.Count > 0;
+        return m_indexAvailable;
     }
 
     /// <summary>
@@ -127,6 +129,8 @@ public class ContentMetadataService
     public void InvalidateCache()
     {
         m_metadataIndex = null;
+        m_indexChecked = false;
+        m_indexAvailable = false;
     }
 
     #endregion
@@ -135,6 +139,9 @@ public class ContentMetadataService
 
     private async Task<ContentMetadataIndex> LoadMetadataIndexAsync()
     {
+        m_indexChecked = true;
+        m_indexAvailable = false;
+
         try
         {
             var index = await HttpClient.GetFromJsonAsync<ContentMetadataIndex>(
@@ -151,14 +158,21 @@ public class ContentMetadataService
                                  index.Articles.Count + index.Docs.Count + 
                                  index.Features.Count + 
                                  index.Sections.Values.Sum(s => s.Count);
-                Console.WriteLine($"Loaded content metadata index: {totalItems} items");
+                
+                m_indexAvailable = totalItems > 0;
+                
+                if (m_indexAvailable)
+                {
+                    Console.WriteLine($"Loaded content metadata index: {totalItems} items");
+                }
+                
                 return index;
             }
         }
         catch (HttpRequestException)
         {
-            // File not found - metadata index not available
-            Console.WriteLine("Content metadata index not found, will fall back to content parsing");
+            // File not found - metadata index not available (expected in Debug mode)
+            Console.WriteLine("Content metadata index not found (Debug mode)");
         }
         catch (Exception ex)
         {
