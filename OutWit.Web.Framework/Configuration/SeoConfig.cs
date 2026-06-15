@@ -16,6 +16,7 @@ public class SeoConfig : ModelBase
             return false;
         
         return DefaultImage.Is(other.DefaultImage)
+            && Description.Is(other.Description)
             && TwitterHandle.Is(other.TwitterHandle)
             && FacebookAppId.Is(other.FacebookAppId);
     }
@@ -25,6 +26,7 @@ public class SeoConfig : ModelBase
         return new SeoConfig
         {
             DefaultImage = DefaultImage,
+            Description = Description,
             TwitterHandle = TwitterHandle,
             FacebookAppId = FacebookAppId
         };
@@ -35,6 +37,11 @@ public class SeoConfig : ModelBase
     #region Properties
 
     public string DefaultImage { get; set; } = "/images/social-card.png";
+    
+    /// <summary>
+    /// Default site description for SEO and OG images.
+    /// </summary>
+    public string? Description { get; set; }
     
     public string? TwitterHandle { get; set; }
     
