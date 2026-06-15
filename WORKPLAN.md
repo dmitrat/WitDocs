@@ -73,7 +73,7 @@
 
 ### 1.6 Тесты
 - 🟡 ContentService — ✅ 7 тестов (fake HttpMessageHandler: index, blog sort/cache/skip-no-frontmatter, by-slug, docs prev/next + cache). SearchService — ещё нет.
-- ⬜ Интеграционный тест `GenerateAllAsync` (полный пайплайн → проверка артефактов).
+- ✅ Интеграционный тест `GenerateAllAsync` — фикстура сайта → проверка всех артефактов (index/nav/metadata/sitemap/robots/search/feed/hosting/static) + контент (sitemap URL, feed title, home link, og).
 - ⬜ Починить нейминг SlugGeneratorTests; NavigationServiceTests тестирует модели.
 - ✅ Тест на корректность SSG-вывода (nested-div, home prerender) — в StaticPageGeneratorTests.
 
