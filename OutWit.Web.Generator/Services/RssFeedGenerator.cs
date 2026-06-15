@@ -84,11 +84,11 @@ public class RssFeedGenerator
             return new RssItem
             {
                 Title = frontmatter.Title ?? slug,
-                Link = $"{m_siteUrl}/blog/{slug}",
+                Link = $"{m_siteUrl}/blog/{slug}/",
                 // Priority: Summary -> Description (like PS version)
                 Description = frontmatter.Summary ?? frontmatter.Description ?? "",
                 PubDate = pubDate.ToString("R"), // RFC 1123 format
-                Guid = $"{m_siteUrl}/blog/{slug}",
+                Guid = $"{m_siteUrl}/blog/{slug}/",
                 Author = frontmatter.Author ?? ""
             };
         }

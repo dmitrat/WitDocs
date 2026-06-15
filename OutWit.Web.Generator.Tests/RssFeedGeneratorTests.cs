@@ -57,7 +57,7 @@ public class RssFeedGeneratorTests
             Assert.That(content, Does.Contain("<rss version=\"2.0\""));
             Assert.That(content, Does.Contain("<title>Test Site</title>"));
             Assert.That(content, Does.Contain("<title>Test Blog Post</title>"));
-            Assert.That(content, Does.Contain("<link>https://example.com/blog/test-post</link>"));
+            Assert.That(content, Does.Contain("<link>https://example.com/blog/test-post/</link>"));
             Assert.That(content, Does.Contain("<description>This is a test post</description>"));
         }
         finally

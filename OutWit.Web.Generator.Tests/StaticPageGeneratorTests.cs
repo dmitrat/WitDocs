@@ -140,7 +140,7 @@ public class StaticPageGeneratorTests
             // Assert - the home page (root index.html) now contains real, crawlable content
             var home = await File.ReadAllTextAsync(Path.Combine(tempDir, "index.html"));
             Assert.That(home, Does.Contain("My Project"));
-            Assert.That(home, Does.Contain("/project/my-project"));
+            Assert.That(home, Does.Contain("/project/my-project/")); // final 200 URL (trailing slash)
             // Blazor bootstrap must still be present so the SPA can hydrate
             Assert.That(home, Does.Contain("id=\"app\""));
             // Uses the framework's card markup so it is styled (no flash of an

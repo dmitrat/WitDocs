@@ -51,13 +51,14 @@ public class ContentGeneratorTests
 
             // Cross-cutting content correctness
             var sitemap = await File.ReadAllTextAsync(Path.Combine(dir, "sitemap.xml"));
-            Assert.That(sitemap, Does.Contain("https://example.com/blog/hello-world"));
+            // Canonical signals use the final 200 URL (trailing slash), not the 308 form
+            Assert.That(sitemap, Does.Contain("<loc>https://example.com/blog/hello-world/</loc>"));
 
             var feed = await File.ReadAllTextAsync(Path.Combine(dir, "feed.xml"));
             Assert.That(feed, Does.Contain("Hello World"));
 
             var home = await File.ReadAllTextAsync(Path.Combine(dir, "index.html"));
-            Assert.That(home, Does.Contain("/project/my-project"));
+            Assert.That(home, Does.Contain("/project/my-project/"));
 
             var post = await File.ReadAllTextAsync(Path.Combine(dir, "blog/hello-world/index.html"));
             Assert.That(post, Does.Contain("Hello World"));

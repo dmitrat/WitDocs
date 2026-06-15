@@ -37,10 +37,10 @@ public class SitemapGenerator
         var today = DateTime.UtcNow.ToString("yyyy-MM-dd");
 
         // Add static pages
-        entries.Add(new SitemapEntry { Url = m_siteUrl, LastMod = today, Priority = "1.0" });
-        entries.Add(new SitemapEntry { Url = $"{m_siteUrl}/blog", LastMod = today, Priority = "0.8" });
-        entries.Add(new SitemapEntry { Url = $"{m_siteUrl}/contact", LastMod = today, Priority = "0.5" });
-        entries.Add(new SitemapEntry { Url = $"{m_siteUrl}/search", LastMod = today, Priority = "0.3" });
+        entries.Add(new SitemapEntry { Url = $"{m_siteUrl}/", LastMod = today, Priority = "1.0" });
+        entries.Add(new SitemapEntry { Url = $"{m_siteUrl}/blog/", LastMod = today, Priority = "0.8" });
+        entries.Add(new SitemapEntry { Url = $"{m_siteUrl}/contact/", LastMod = today, Priority = "0.5" });
+        entries.Add(new SitemapEntry { Url = $"{m_siteUrl}/search/", LastMod = today, Priority = "0.3" });
 
         // Add blog posts with real file dates
         var blogPath = Path.Combine(m_config.ContentPath, "blog");
@@ -50,7 +50,7 @@ public class SitemapGenerator
             var lastMod = GetFileLastModified(Path.Combine(blogPath, file));
             entries.Add(new SitemapEntry
             {
-                Url = $"{m_siteUrl}/blog/{slug}",
+                Url = $"{m_siteUrl}/blog/{slug}/",
                 LastMod = lastMod,
                 Priority = "0.6" // Match PS version
             });
@@ -64,7 +64,7 @@ public class SitemapGenerator
             var lastMod = GetFileLastModified(Path.Combine(projectsPath, file));
             entries.Add(new SitemapEntry
             {
-                Url = $"{m_siteUrl}/project/{slug}",
+                Url = $"{m_siteUrl}/project/{slug}/",
                 LastMod = lastMod,
                 Priority = "0.7"
             });
@@ -78,7 +78,7 @@ public class SitemapGenerator
             var lastMod = GetFileLastModified(Path.Combine(articlesPath, file));
             entries.Add(new SitemapEntry
             {
-                Url = $"{m_siteUrl}/article/{slug}",
+                Url = $"{m_siteUrl}/article/{slug}/",
                 LastMod = lastMod,
                 Priority = "0.6"
             });
@@ -92,7 +92,7 @@ public class SitemapGenerator
             var lastMod = GetFileLastModified(Path.Combine(docsPath, file));
             entries.Add(new SitemapEntry
             {
-                Url = $"{m_siteUrl}/docs/{slug}",
+                Url = $"{m_siteUrl}/docs/{slug}/",
                 LastMod = lastMod,
                 Priority = "0.6"
             });
@@ -108,7 +108,7 @@ public class SitemapGenerator
                 var lastMod = GetFileLastModified(Path.Combine(sectionPath, file));
                 entries.Add(new SitemapEntry
                 {
-                    Url = $"{m_siteUrl}/{sectionName}/{slug}",
+                    Url = $"{m_siteUrl}/{sectionName}/{slug}/",
                     LastMod = lastMod,
                     Priority = "0.6"
                 });

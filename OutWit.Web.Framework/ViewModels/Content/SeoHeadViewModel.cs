@@ -35,11 +35,17 @@ public class SeoHeadViewModel : ViewModelBase
                 : $"{m_baseUrl}{config.LogoDark}";
         }
 
-        // Build canonical URL from current navigation if not provided
+        // Build canonical URL from current navigation if not provided.
+        // Use a trailing slash so canonical matches the final 200 URL served by the
+        // static host (it 308-redirects the non-slash form), keeping the
+        // canonical/sitemap/redirect signals consistent.
         if (string.IsNullOrEmpty(CanonicalUrl))
         {
             var currentUri = new Uri(NavigationManager.Uri);
-            m_resolvedCanonicalUrl = $"{m_baseUrl}{currentUri.AbsolutePath}";
+            var path = currentUri.AbsolutePath;
+            if (!path.EndsWith("/"))
+                path += "/";
+            m_resolvedCanonicalUrl = $"{m_baseUrl}{path}";
         }
         else
         {

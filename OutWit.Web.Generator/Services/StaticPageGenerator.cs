@@ -127,7 +127,7 @@ public partial class StaticPageGenerator
                     title: frontmatter?.Title ?? slug,
                     description: frontmatter?.Description ?? frontmatter?.Summary ?? "",
                     htmlContent: htmlContent,
-                    canonicalUrl: $"{m_siteUrl}/{routePrefix}/{slug}",
+                    canonicalUrl: $"{m_siteUrl}/{routePrefix}/{slug}/",
                     ogType: "article",
                     publishDate: frontmatter?.PublishDate,
                     tags: frontmatter?.Tags);
@@ -176,7 +176,7 @@ public partial class StaticPageGenerator
             title: "",                       // empty -> page title is the bare site name, no header duplication
             description: description,
             htmlContent: "",
-            canonicalUrl: m_siteUrl,
+            canonicalUrl: $"{m_siteUrl}/",
             ogType: "website",
             bodyOverride: body.ToString());
 
@@ -232,7 +232,7 @@ public partial class StaticPageGenerator
             title: title,
             description: description,
             htmlContent: "",
-            canonicalUrl: $"{m_siteUrl}/{route}",
+            canonicalUrl: $"{m_siteUrl}/{route}/",
             ogType: "website",
             bodyOverride: body.ToString());
 
@@ -251,7 +251,7 @@ public partial class StaticPageGenerator
             title: title,
             description: description,
             htmlContent: $"<p>{ContentHelpers.EscapeHtml(description)}</p>",
-            canonicalUrl: $"{m_siteUrl}/{route}",
+            canonicalUrl: $"{m_siteUrl}/{route}/",
             ogType: "website");
 
         await WritePageAsync(route, pageHtml, cancellationToken);
@@ -305,7 +305,9 @@ public partial class StaticPageGenerator
                 }
             }
 
-            result.Add(new CardInfo($"/{detailRoutePrefix}/{slug}", title, summary));
+            // Trailing slash → the final 200 URL (Cloudflare 308-redirects the
+            // non-slash form), keeping crawler-followed links consistent with canonical/sitemap.
+            result.Add(new CardInfo($"/{detailRoutePrefix}/{slug}/", title, summary));
         }
 
         return result;
@@ -442,20 +444,22 @@ public partial class StaticPageGenerator
         if (!html.Contains("<!-- Open Graph (SSG) -->"))
             html = html.Replace("</head>", $"{ogTags}\n</head>");
 
-        // Keep the template's loading indicator visible during load, and place the
-        // pre-rendered content in a hidden block. Crawlers read it from the HTML
-        // source (and JS-capable bots render the real SPA), while users only ever
-        // see the spinner and then the hydrated UI — no flash of unstyled content.
+        // Pre-rendered content is VISIBLE by default, so the page is readable without
+        // JavaScript and by crawlers straight from the HTML source — no "JavaScript
+        // required" dead-end. The inline script below hides it and reveals the loading
+        // indicator only when JS is available; Blazor then renders the live UI (same
+        // content), so JS users see a spinner → hydrated app with no flash.
         var loadingIndicator = ExtractAppInner(m_templateHtml);
-        var appContent = $"""
-
-                {loadingIndicator}
-                <!-- Pre-rendered content for crawlers (hidden; the SPA renders the real UI) -->
-                <div class="ssg-prerender" hidden aria-hidden="true">
-                {fullContent}
-                </div>
-
-            """;
+        var appContent =
+            "\n                <div class=\"ssg-prerender\">\n" +
+            fullContent +
+            "\n                </div>\n" +
+            "                <div class=\"ssg-loading\" style=\"display:none\">\n" +
+            loadingIndicator +
+            "\n                </div>\n" +
+            "                <script>(function(){var a=document.getElementById('app');if(!a)return;" +
+            "var c=a.querySelector('.ssg-prerender');var s=a.querySelector('.ssg-loading');" +
+            "if(c)c.style.display='none';if(s)s.style.display='block';})();</script>\n            ";
 
         html = ReplaceAppContent(html, appContent);
 
