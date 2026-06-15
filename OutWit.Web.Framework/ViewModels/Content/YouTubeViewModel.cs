@@ -9,17 +9,21 @@ public class YouTubeViewModel : ViewModelBase
 
     protected string GetEmbedHtml()
     {
-        var url = $"https://www.youtube.com/embed/{VideoId}";
+        // Encode untrusted values (these come from markdown [[YouTube ...]] params)
+        // to prevent attribute/URL injection into the iframe.
+        var url = $"https://www.youtube.com/embed/{Uri.EscapeDataString(VideoId)}";
         if (!string.IsNullOrEmpty(PlaylistId))
         {
-            url += $"?list={PlaylistId}";
+            url += $"?list={Uri.EscapeDataString(PlaylistId)}";
         }
-        
+
+        var title = System.Net.WebUtility.HtmlEncode(Title);
+
         return $"""
             <div class="youtube-embed">
-                <iframe 
+                <iframe
                     src="{url}"
-                    title="{Title}"
+                    title="{title}"
                     frameborder="0"
                     loading="lazy"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

@@ -106,20 +106,20 @@ public class RssFeedGenerator
         sb.AppendLine("<rss version=\"2.0\" xmlns:atom=\"http://www.w3.org/2005/Atom\">");
         sb.AppendLine("  <channel>");
         sb.AppendLine($"    <title>{ContentHelpers.EscapeXml(m_siteName)}</title>");
-        sb.AppendLine($"    <link>{m_siteUrl}</link>");
+        sb.AppendLine($"    <link>{ContentHelpers.EscapeXml(m_siteUrl)}</link>");
         sb.AppendLine($"    <description>{ContentHelpers.EscapeXml(m_siteDescription)}</description>");
         sb.AppendLine("    <language>en-us</language>"); // Added language tag like PS
         sb.AppendLine($"    <lastBuildDate>{DateTime.UtcNow:R}</lastBuildDate>");
-        sb.AppendLine($"    <atom:link href=\"{m_siteUrl}/feed.xml\" rel=\"self\" type=\"application/rss+xml\"/>");
+        sb.AppendLine($"    <atom:link href=\"{ContentHelpers.EscapeXml($"{m_siteUrl}/feed.xml")}\" rel=\"self\" type=\"application/rss+xml\"/>");
 
         foreach (var item in items)
         {
             sb.AppendLine("    <item>");
             sb.AppendLine($"      <title>{ContentHelpers.EscapeXml(item.Title)}</title>");
-            sb.AppendLine($"      <link>{item.Link}</link>");
+            sb.AppendLine($"      <link>{ContentHelpers.EscapeXml(item.Link)}</link>");
             sb.AppendLine($"      <description>{ContentHelpers.EscapeXml(item.Description)}</description>");
             sb.AppendLine($"      <pubDate>{item.PubDate}</pubDate>");
-            sb.AppendLine($"      <guid isPermaLink=\"true\">{item.Guid}</guid>");
+            sb.AppendLine($"      <guid isPermaLink=\"true\">{ContentHelpers.EscapeXml(item.Guid)}</guid>");
             if (!string.IsNullOrEmpty(item.Author))
             {
                 sb.AppendLine($"      <author>{ContentHelpers.EscapeXml(item.Author)}</author>");

@@ -149,7 +149,7 @@ public class SitemapGenerator
         foreach (var entry in entries)
         {
             sb.AppendLine("  <url>");
-            sb.AppendLine($"    <loc>{entry.Url}</loc>");
+            sb.AppendLine($"    <loc>{ContentHelpers.EscapeXml(entry.Url)}</loc>");
             sb.AppendLine($"    <lastmod>{entry.LastMod}</lastmod>");
             sb.AppendLine($"    <priority>{entry.Priority}</priority>");
             sb.AppendLine("  </url>");

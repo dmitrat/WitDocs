@@ -10,12 +10,6 @@ namespace OutWit.Web.Framework.Services;
 /// </summary>
 public partial class ContentParser
 {
-    #region Fields
-
-    private int m_placeholderCounter = 0;
-
-    #endregion
-
     #region Functions
 
     /// <summary>
@@ -25,12 +19,15 @@ public partial class ContentParser
     public List<EmbeddedComponent> ExtractComponents(string content)
     {
         var components = new List<EmbeddedComponent>();
-        m_placeholderCounter = 0;
+
+        // Local counter keeps this method (and the singleton service) thread-safe —
+        // a shared field would race across concurrent Transform calls.
+        var counter = 0;
 
         // First, extract block components (with closing tag)
         foreach (Match match in BlockComponentRegex().Matches(content))
         {
-            var component = ParseComponent(match.Value, match.Index, match.Groups);
+            var component = ParseComponent(match.Value, match.Index, match.Groups, ref counter);
             if (component != null)
             {
                 component.InnerContent = match.Groups["inner"].Value.Trim();
@@ -45,7 +42,7 @@ public partial class ContentParser
             if (components.Any(c => c.Position == match.Index))
                 continue;
 
-            var component = ParseComponent(match.Value, match.Index, match.Groups);
+            var component = ParseComponent(match.Value, match.Index, match.Groups, ref counter);
             if (component != null)
             {
                 components.Add(component);
@@ -76,7 +73,7 @@ public partial class ContentParser
     /// <summary>
     /// Parse component from regex match.
     /// </summary>
-    private EmbeddedComponent? ParseComponent(string fullMatch, int position, GroupCollection groups)
+    private EmbeddedComponent? ParseComponent(string fullMatch, int position, GroupCollection groups, ref int counter)
     {
         var typeName = groups["type"].Value;
         if (string.IsNullOrEmpty(typeName))
@@ -91,7 +88,7 @@ public partial class ContentParser
             Parameters = parameters,
             Position = position,
             OriginalText = fullMatch,
-            PlaceholderId = $"comp_{m_placeholderCounter++}"
+            PlaceholderId = $"comp_{counter++}"
         };
     }
 

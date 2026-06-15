@@ -177,7 +177,7 @@ public class SeoHeadViewModel : ViewModelBase
               },
               "mainEntityOfPage": {
                 "@type": "WebPage",
-                "@id": "{{m_resolvedCanonicalUrl}}"
+                "@id": "{{EscapeJsonString(m_resolvedCanonicalUrl ?? "")}}"
               }
             }
             """;
@@ -194,7 +194,10 @@ public class SeoHeadViewModel : ViewModelBase
             .Replace("\"", "\\\"")
             .Replace("\n", "\\n")
             .Replace("\r", "\\r")
-            .Replace("\t", "\\t");
+            .Replace("\t", "\\t")
+            // Escape '<' so a value containing "</script>" cannot break out of the
+            // <script type="application/ld+json"> block. < is valid JSON.
+            .Replace("<", "\\u003c");
     }
 
     #endregion

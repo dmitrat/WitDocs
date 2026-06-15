@@ -41,8 +41,20 @@ internal static class Program
         };
 
         var generator = new ContentGenerator(config);
-        await generator.GenerateAllAsync();
-        
+        try
+        {
+            await generator.GenerateAllAsync();
+        }
+        catch (Exception ex)
+        {
+            // Fail with a clean, actionable message and a non-zero exit code so the
+            // MSBuild target stops the build instead of surfacing a raw stack trace.
+            Console.Error.WriteLine();
+            Console.Error.WriteLine($"ERROR: Content generation failed: {ex.Message}");
+            Console.Error.WriteLine(ex);
+            return 1;
+        }
+
         return 0;
     }
 

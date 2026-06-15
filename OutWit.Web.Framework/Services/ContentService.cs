@@ -27,6 +27,7 @@ public partial class ContentService
     private readonly SemaphoreSlim m_blogPostsLock = new(1, 1);
     private readonly SemaphoreSlim m_articlesLock = new(1, 1);
     private readonly SemaphoreSlim m_featuresLock = new(1, 1);
+    private readonly SemaphoreSlim m_docsLock = new(1, 1);
 
     #endregion
 
@@ -661,47 +662,63 @@ public partial class ContentService
         if (m_docs != null)
             return m_docs.Values.OrderBy(d => d.Order).ToList();
 
-        var index = await GetContentIndexAsync();
-        m_docs = new Dictionary<string, DocPage>();
-
-        foreach (var file in index.Docs)
+        // Prevent race condition with lock (mirrors the other Get*Async loaders).
+        await m_docsLock.WaitAsync();
+        try
         {
-            try
-            {
-                var markdown = await Http.GetStringAsync($"content/docs/{file}");
-                var doc = ParseDocPage(file, markdown);
-                if (doc != null)
-                    m_docs[doc.Slug] = doc;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error loading doc {file}: {ex.Message}");
-            }
-        }
+            // Double-check after acquiring lock
+            if (m_docs != null)
+                return m_docs.Values.OrderBy(d => d.Order).ToList();
 
-        // Build navigation links (Previous/Next)
-        var sortedDocs = m_docs.Values.OrderBy(d => d.Order).ToList();
-        for (int i = 0; i < sortedDocs.Count; i++)
+            var index = await GetContentIndexAsync();
+            var docs = new Dictionary<string, DocPage>();
+
+            foreach (var file in index.Docs)
+            {
+                try
+                {
+                    var markdown = await Http.GetStringAsync($"content/docs/{file}");
+                    var doc = ParseDocPage(file, markdown);
+                    if (doc != null)
+                        docs[doc.Slug] = doc;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error loading doc {file}: {ex.Message}");
+                }
+            }
+
+            // Build navigation links (Previous/Next)
+            var sortedDocs = docs.Values.OrderBy(d => d.Order).ToList();
+            for (int i = 0; i < sortedDocs.Count; i++)
+            {
+                if (i > 0)
+                {
+                    sortedDocs[i].PreviousPage = new DocNavLink
+                    {
+                        Slug = sortedDocs[i - 1].Slug,
+                        Title = sortedDocs[i - 1].Title
+                    };
+                }
+                if (i < sortedDocs.Count - 1)
+                {
+                    sortedDocs[i].NextPage = new DocNavLink
+                    {
+                        Slug = sortedDocs[i + 1].Slug,
+                        Title = sortedDocs[i + 1].Title
+                    };
+                }
+            }
+
+            // Publish to the cache only after fully built (so concurrent readers
+            // never observe a half-populated dictionary).
+            m_docs = docs;
+            return sortedDocs;
+        }
+        finally
         {
-            if (i > 0)
-            {
-                sortedDocs[i].PreviousPage = new DocNavLink 
-                { 
-                    Slug = sortedDocs[i - 1].Slug, 
-                    Title = sortedDocs[i - 1].Title 
-                };
-            }
-            if (i < sortedDocs.Count - 1)
-            {
-                sortedDocs[i].NextPage = new DocNavLink 
-                { 
-                    Slug = sortedDocs[i + 1].Slug, 
-                    Title = sortedDocs[i + 1].Title 
-                };
-            }
+            m_docsLock.Release();
         }
-
-        return sortedDocs;
     }
 
     /// <summary>

@@ -53,16 +53,16 @@
 - ⬜ Централизовать версии (`Directory.Build.props`/CPM); убрать дубль copy-target.
 
 ### 1.3 Безопасность
-- ⬜ **C3:** санитизация markdown→HTML (XSS) — санитайзер или DisableHtmlInline.
-- ⬜ **H7:** экранирование YouTube-iframe атрибутов.
-- ⬜ **H6:** XML-escaping в sitemap/RSS (`<loc>`/`<link>`/`<guid>`).
-- ⬜ JSON-LD: экранировать `</script>`, прогнать canonical через escaper.
+- ⏸ **C3:** санитизация markdown→HTML (XSS) — НУЖНО РЕШЕНИЕ: тяжёлый санитайзер (Ganss/AngleSharp ~1МБ в WASM-payload) vs DisableHtml vs «контент доверенный на билд-тайме, чиним только конкретные векторы». См. лог решений.
+- ✅ **H7:** YouTube-iframe — `Uri.EscapeDataString` для id, `HtmlEncode` для Title.
+- ✅ **H6:** XML-escaping в sitemap (`<loc>`) и RSS (`<link>`/`<guid>`/atom href).
+- ✅ JSON-LD: `<` → `<` (закрывает `</script>`-выход), canonical через escaper.
 
 ### 1.4 Корректность / надёжность
-- ⬜ **C4:** корректные exit-коды генератора (не `return 0` при фатале); агрегировать per-item ошибки.
-- ⬜ **H1:** lock в `GetDocsAsync`.
-- ⬜ **H2:** гонка `m_placeholderCounter` в singleton `ContentParser`.
-- ⬜ **H3:** параллельная загрузка (`Task.WhenAll`) в `Get*Async`.
+- ✅ **C4:** генератор ловит фатал, печатает понятную ошибку, `return 1` (раньше всегда `return 0`).
+- ✅ **H1:** lock + double-check в `GetDocsAsync`; кэш публикуется только после полной сборки.
+- ✅ **H2:** убрано поле `m_placeholderCounter`, локальный счётчик (singleton `ContentParser` потокобезопасен).
+- ⬜ **H3:** параллельная загрузка (`Task.WhenAll` fetch + sequential parse) в `Get*Async` — отдельный согласованный проход (перф, не корректность).
 - ⬜ Не глотать молча ошибки YAML/site.config.json (логировать).
 - ⬜ Убрать двойной рендеринг markdown в `ParseWithFrontmatter`.
 
