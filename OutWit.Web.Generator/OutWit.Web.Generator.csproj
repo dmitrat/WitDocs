@@ -11,7 +11,7 @@
     <ToolCommandName>outwit-generate</ToolCommandName>
     
     <!-- NuGet Package Configuration -->
-    <Version>1.3.7</Version>
+    <Version>1.4.0</Version>
     <Description>WitDocs Generator: CLI tool for static site generation. Creates content index, navigation index, content metadata, sitemap, search index, RSS feed, OG images, and static HTML pages. Part of https://witdocs.io</Description>
     <PackageTags>witdocs;blazor;static-site;generator;cli;ssg;og-images</PackageTags>
     

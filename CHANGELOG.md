@@ -3,6 +3,26 @@
 All notable changes to the WitDocs packages (OutWit.Web.Framework,
 OutWit.Web.Generator, OutWit.Web.Templates) are documented here.
 
+## 1.4.0
+
+### Code blocks (docs-parity)
+- **Syntax highlighting** for fenced code blocks, done in C# at render time
+  (ColorCode) — appears in both the static (SSG) and live output, with no
+  client-side highlighter and no flash. Theme-aware token colors (light/dark).
+  Supported: C#, JS, TS, JSON, HTML, XML, CSS, SQL, PowerShell, Python, C/C++,
+  Java, F#, VB, PHP; unknown languages fall back to plain escaped code.
+- **Copy button** on every code block (a single delegated listener in the
+  framework JS; the author writes no JS).
+
+### SEO
+- **Trailing-slash canonical consistency**: canonical, og:url, sitemap `<loc>`,
+  RSS `<link>`/`<guid>` and the pre-rendered internal links all point to the final
+  200 URL (with trailing slash) instead of the URL that 308-redirects.
+- **No-JS-readable content**: pre-rendered content is now visible without
+  JavaScript (and to crawlers from source); a tiny inline script swaps in the
+  loading indicator only when JS is available. Removed the "JavaScript Required"
+  noscript dead-end (wrong signal for an SSG site; could leak into snippets).
+
 ## 1.3.8
 
 ### Templates
