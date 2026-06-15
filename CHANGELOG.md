@@ -3,6 +3,20 @@
 All notable changes to the WitDocs packages (OutWit.Web.Framework,
 OutWit.Web.Generator, OutWit.Web.Templates) are documented here.
 
+## 1.4.2
+
+### Fixes (Generator — hosting config)
+- Fixed stale-app-after-deploy on Cloudflare/Netlify. The generated `_headers`
+  marked all of `/_framework/*` as `immutable` (1 year) — including the
+  stable-named boot entry points `dotnet.js` and `blazor.webassembly.js`, which
+  change every deploy. Browsers and the CDN edge then pinned the SPA to an old
+  build (old asset hashes), so new code/styles silently failed to load for some
+  sites/visitors. These two files now use `Cache-Control: no-cache` (revalidate);
+  the content-hashed assets stay immutable.
+
+> After upgrading the generator and redeploying, purge the CDN cache once to
+> evict the previously-immutable boot files.
+
 ## 1.4.1
 
 ### Fixes (Framework)

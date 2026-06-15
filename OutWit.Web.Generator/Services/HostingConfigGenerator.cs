@@ -57,9 +57,19 @@ public class HostingConfigGenerator
             # Cloudflare Pages headers
             # https://developers.cloudflare.com/pages/configuration/headers/
 
-            # Cache static assets
+            # Cache content-hashed framework assets aggressively (names change with content)
             /_framework/*
               Cache-Control: public, max-age=31536000, immutable
+
+            # ...but the boot entry points have STABLE names yet change every deploy.
+            # They must revalidate, otherwise the immutable rule above pins the SPA to
+            # a stale build (old asset hashes) after a new deploy — code/styles silently
+            # fail to update for returning visitors and cached edges.
+            /_framework/dotnet.js
+              Cache-Control: no-cache
+
+            /_framework/blazor.webassembly.js
+              Cache-Control: no-cache
 
             /css/*
               Cache-Control: public, max-age=31536000, immutable
@@ -127,6 +137,14 @@ public class HostingConfigGenerator
 
             /_framework/*
               Cache-Control: public, max-age=31536000, immutable
+
+            # Stable-named boot entry points must revalidate (see Cloudflare notes)
+            # so a new deploy isn't pinned to stale asset hashes.
+            /_framework/dotnet.js
+              Cache-Control: no-cache
+
+            /_framework/blazor.webassembly.js
+              Cache-Control: no-cache
 
             /css/*
               Cache-Control: public, max-age=31536000, immutable

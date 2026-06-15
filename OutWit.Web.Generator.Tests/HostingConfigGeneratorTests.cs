@@ -36,7 +36,12 @@ public class HostingConfigGeneratorTests
             var headers = await File.ReadAllTextAsync(Path.Combine(tempDir, "_headers"));
             Assert.That(headers, Does.Contain("Cache-Control"));
             Assert.That(headers, Does.Contain("/_framework/*"));
-            
+            // Stable-named boot entry points must NOT be immutable, or deploys get
+            // pinned to a stale build. They must revalidate.
+            Assert.That(headers, Does.Contain("/_framework/dotnet.js"));
+            Assert.That(headers, Does.Contain("/_framework/blazor.webassembly.js"));
+            Assert.That(headers, Does.Contain("no-cache"));
+
             var routes = await File.ReadAllTextAsync(Path.Combine(tempDir, "_routes.json"));
             Assert.That(routes, Does.Contain("\"version\": 1"));
             Assert.That(routes, Does.Contain("\"include\""));
