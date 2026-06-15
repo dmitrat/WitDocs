@@ -1,0 +1,55 @@
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]in/
+[Oo]bj/
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# IDE
+.vs/
+.vscode/
+.idea/
+.idea_modules/
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Node.js / Playwright
+node_modules/
+playwright-report/
+test-results/
+
+# Generated content & SEO assets — recreated by the generator on every build/publish.
+# Keeping them out of source control avoids a dirty working tree and prevents empty
+# build-time placeholders from being committed and shipped to production.
+**/wwwroot/content/index.json
+**/wwwroot/navigation-index.json
+**/wwwroot/content-metadata.json
+**/wwwroot/search-index.json
+**/wwwroot/sitemap.xml
+**/wwwroot/robots.txt
+**/wwwroot/feed.xml
+**/wwwroot/og-images/
+
+# Hosting provider config (generated from the --hosting option)
+**/wwwroot/_routes.json
+**/wwwroot/_headers
+**/wwwroot/_redirects
+**/wwwroot/vercel.json
+**/wwwroot/.nojekyll

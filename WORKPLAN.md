@@ -49,8 +49,8 @@
 - ✅ **C1:** шаблон возит `.config/dotnet-tools.json` (пин 1.3.4); targets делают авто-`dotnet tool restore` при наличии манифеста + понятный `<Error>` вместо голого MSB3073. Обратно совместимо (сайты без манифеста → глобальный тул). Проверено: restore+вызов из манифеста, exit 0.
 - ✅ **C2:** `test.yml` → `OutWit.slnx` (был несуществующий `OutWit.sln`) + добавлен Generator в выбор. Коммит 0552282.
 - ✅ **H9:** опечатка `$HAS_SN_UPKG` → `$HAS_SNUPKG`; тест-гейт на publish/pack. Коммит 0552282.
-- ⬜ **H10:** не писать placeholder-файлы в исходный `wwwroot` (или в .gitignore шаблона).
-- ⬜ Централизовать версии (`Directory.Build.props`/CPM); убрать дубль copy-target.
+- ✅ **H10:** добавлен `.gitignore` в шаблон (его не было) — игнорит сгенерированные SEO/контент-артефакты и hosting-конфиги. Чистое дерево у новых юзеров, нет пустых плейсхолдеров в проде.
+- ⬜ Централизовать версии (`Directory.Build.props`/CPM); убрать дубль copy-target. **ОТЛОЖЕНО:** `Directory.Build.props` имеет незакоммиченную правку пользователя (Product→WitDocs) — не смешиваю.
 
 ### 1.3 Безопасность
 - ✅ **C3:** флаг `SiteConfig.AllowRawHtml` (default true). `MarkdownService(bool)` + `Configure()`; при false → `.DisableHtml()` (без зависимостей, 0 кБ payload). Генератор берёт флаг синхронно из SiteConfig; рантайм — через `ConfigService` после загрузки config. 3 теста. Решение пользователя: вариант «опция-флаг».
@@ -67,7 +67,7 @@
 - ⬜ Убрать двойной рендеринг markdown в `ParseWithFrontmatter`.
 
 ### 1.5 Код-стайл / рефактор (low, по возможности)
-- ⬜ `ThemeMode.cs`: 4-space, `static readonly`.
+- ✅ `ThemeMode.cs`: 4-space, `static readonly`.
 - ⬜ Разбить `ContentService.cs` (991 строк).
 - ⬜ Дедуп: TOC (TocItem/TocEntry), Parse*, GetBasePathFor*, JsonIndexService<T>.
 

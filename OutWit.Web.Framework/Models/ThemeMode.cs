@@ -4,22 +4,20 @@ namespace OutWit.Web.Framework.Models;
 
 public sealed class ThemeMode : StringEnum<ThemeMode>
 {
+    #region Static Constants
 
- #region Static Constants
+    public static readonly ThemeMode Dark = new("dark");
 
- public static ThemeMode Dark = new("dark");
+    public static readonly ThemeMode Light = new("light");
 
- public static ThemeMode Light = new("light");
+    #endregion
 
- #endregion
+    #region Constructors
 
- #region Constructors
+    private ThemeMode(string value)
+        : base(value)
+    {
+    }
 
- private ThemeMode(string value)
-  : base(value)
- {
-
- }
-
- #endregion
+    #endregion
 }
