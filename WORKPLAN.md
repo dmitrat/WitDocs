@@ -89,6 +89,7 @@
 ---
 
 ## Phase 3 — Ревью и унификация 4 сайтов (п.3)
+- ✅ Версии подняты до 1.3.5 (Framework/Generator/Templates csproj + template PackageReference + tool manifest); создан CHANGELOG.md. Релиз (publish.yml) — за пользователем.
 - ⬜ ratner.io — привести к актуальному фреймворку, redeploy, verify.
 - ⬜ witengine.io — то же.
 - ⬜ witdatabase.io — то же.

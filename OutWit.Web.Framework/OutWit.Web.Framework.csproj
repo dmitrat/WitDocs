@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     
     <!-- NuGet Package Configuration (specific to this project) -->
-    <Version>1.3.4</Version>
+    <Version>1.3.5</Version>
     <Description>WitDocs Framework: Blazor WebAssembly framework for creating static websites with markdown content, SEO optimization, skeleton loading, and automatic content generation. Part of https://witdocs.io</Description>
     <PackageTags>witdocs;blazor;webassembly;static-site;markdown;seo;open-graph;rss;skeleton</PackageTags>
     
