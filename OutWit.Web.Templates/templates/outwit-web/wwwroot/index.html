@@ -7,6 +7,11 @@
     <title>{{SiteName}}</title>
     <base href="/" />
 
+    <!-- Critical: paint the theme background immediately to avoid a white flash
+         before the (@import-ed) theme stylesheet loads. Keep in sync with
+         css/theme.css --color-background. -->
+    <style>html[data-theme="dark"]{background-color:#1f1f1f}html[data-theme="light"]{background-color:#fbfbfb}</style>
+
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="images/favicon.svg" />
 

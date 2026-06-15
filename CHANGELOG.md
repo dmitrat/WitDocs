@@ -3,6 +3,17 @@
 All notable changes to the WitDocs packages (OutWit.Web.Framework,
 OutWit.Web.Generator, OutWit.Web.Templates) are documented here.
 
+## 1.3.8
+
+### Templates
+- The template's `index.html` now paints the theme background via a tiny inline
+  `<style>` before external CSS loads, eliminating a white flash on first paint
+  (the theme stylesheet is pulled in via `@import`, which loads after the initial
+  render). Keep the inline colors in sync with `css/theme.css --color-background`.
+
+Templates only; Framework (1.3.5) and Generator (1.3.7) unchanged. The same
+one-line fix was applied to the existing sites' `index.html`.
+
 ## 1.3.7
 
 ### Static site generation (Generator)
