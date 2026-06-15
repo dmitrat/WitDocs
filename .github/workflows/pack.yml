@@ -40,6 +40,9 @@ jobs:
       - name: Restore
         run: dotnet restore OutWit.slnx
 
+      - name: Test (gate pack on green tests)
+        run: dotnet test OutWit.slnx -c Release --verbosity minimal
+
       - name: Resolve project path
         id: paths
         shell: bash

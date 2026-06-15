@@ -9,6 +9,7 @@ on:
         type: choice
         options:
           - OutWit.Web.Framework
+          - OutWit.Web.Generator
       configuration:
         description: 'Build configuration'
         required: false
@@ -55,7 +56,7 @@ jobs:
             nuget-${{ runner.os }}-
 
       - name: Restore
-        run: dotnet restore OutWit.sln
+        run: dotnet restore OutWit.slnx
 
       - name: Resolve test project path
         id: paths
@@ -70,7 +71,7 @@ jobs:
           echo "Resolved: $TEST_PATH"
 
       - name: Build
-        run: dotnet build OutWit.sln --configuration ${{ env.CONFIGURATION }} --no-restore
+        run: dotnet build OutWit.slnx --configuration ${{ env.CONFIGURATION }} --no-restore
 
       - name: Run tests
         shell: bash

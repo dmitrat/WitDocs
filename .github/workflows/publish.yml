@@ -52,6 +52,9 @@ jobs:
       - name: Restore
         run: dotnet restore OutWit.slnx
 
+      - name: Test (gate publish on green tests)
+        run: dotnet test OutWit.slnx -c Release --verbosity minimal
+
       - name: Resolve project path
         id: paths
         shell: bash
@@ -81,7 +84,7 @@ jobs:
           HAS_SNUPKG=$(ls NuGet/*.snupkg 2>/dev/null | wc -l)
           
           echo "hasNupkg=$([[ $HAS_NUPKG -gt 0 ]] && echo true || echo false)" >> $GITHUB_OUTPUT
-          echo "hasSnupkg=$([[ $HAS_SN_UPKG -gt 0 ]] && echo true || echo false)" >> $GITHUB_OUTPUT
+          echo "hasSnupkg=$([[ $HAS_SNUPKG -gt 0 ]] && echo true || echo false)" >> $GITHUB_OUTPUT
           
           echo "Collected packages:"
           ls -la NuGet/
