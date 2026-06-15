@@ -57,18 +57,22 @@ public class HostingConfigGenerator
             # Cloudflare Pages headers
             # https://developers.cloudflare.com/pages/configuration/headers/
 
-            # Boot entry points have STABLE names but change every deploy. They MUST be
-            # listed BEFORE the wildcard — Cloudflare applies the first matching rule —
-            # and must revalidate, otherwise the immutable wildcard below pins the SPA
-            # to a stale build (old asset hashes) after a deploy.
+            # Stable-named boot loaders change every deploy — they MUST revalidate.
+            # IMPORTANT: do NOT add a broad "/_framework/* immutable" rule. Cloudflare
+            # will not let a specific rule override a wildcard for the same header
+            # (regardless of order), so a wildcard re-pins these to a stale build.
+            # Cache the content-hashed assets by extension instead.
             /_framework/dotnet.js
               Cache-Control: no-cache
 
             /_framework/blazor.webassembly.js
               Cache-Control: no-cache
 
-            # Content-hashed framework assets (names change with content) — cache forever
-            /_framework/*
+            # Content-hashed assets (names change with content) — cache forever
+            /_framework/*.wasm
+              Cache-Control: public, max-age=31536000, immutable
+
+            /_framework/*.dat
               Cache-Control: public, max-age=31536000, immutable
 
             /css/*
@@ -135,15 +139,19 @@ public class HostingConfigGenerator
             # Netlify headers
             # https://docs.netlify.com/routing/headers/
 
-            # Stable-named boot entry points must come FIRST and revalidate, so a new
-            # deploy isn't pinned to stale asset hashes by the immutable wildcard below.
+            # Stable-named boot loaders must revalidate. Do NOT add a broad
+            # "/_framework/* immutable" rule — a wildcard can't be overridden per-file
+            # and would re-pin these to a stale build. Cache hashed assets by extension.
             /_framework/dotnet.js
               Cache-Control: no-cache
 
             /_framework/blazor.webassembly.js
               Cache-Control: no-cache
 
-            /_framework/*
+            /_framework/*.wasm
+              Cache-Control: public, max-age=31536000, immutable
+
+            /_framework/*.dat
               Cache-Control: public, max-age=31536000, immutable
 
             /css/*

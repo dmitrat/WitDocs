@@ -3,14 +3,21 @@
 All notable changes to the WitDocs packages (OutWit.Web.Framework,
 OutWit.Web.Generator, OutWit.Web.Templates) are documented here.
 
+## 1.4.4
+
+### Fixes (Generator — hosting config)
+- Definitive stale-app fix. Cloudflare `_headers` does **not** let a specific rule
+  override a wildcard for the same header (regardless of order — confirmed on
+  prod), so any `/_framework/* immutable` rule re-pinned the boot loaders.
+  Removed the broad wildcard: hashed assets are now cached `immutable` by
+  extension (`*.wasm`, `*.dat`), and `dotnet.js` / `blazor.webassembly.js` are
+  `no-cache` with no conflicting rule. (Supersedes 1.4.2/1.4.3.)
+
 ## 1.4.3
 
 ### Fixes (Generator — hosting config)
-- Make the stale-app fix actually take effect: Cloudflare `_headers` applies the
-  **first matching rule**, so the `no-cache` rules for `dotnet.js` /
-  `blazor.webassembly.js` must precede the `immutable` `/_framework/*` wildcard
-  (in 1.4.2 they came after and were ignored — the boot files stayed immutable).
-  The specific boot rules are now listed first.
+- Attempted ordering fix (specific rules before the wildcard). Cloudflare ignored
+  it — superseded by 1.4.4, which drops the conflicting wildcard entirely.
 
 > After upgrading the generator and redeploying, purge the CDN cache once to
 > evict the previously-immutable boot files.
