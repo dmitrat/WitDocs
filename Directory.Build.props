@@ -2,7 +2,7 @@
   <PropertyGroup Condition="'$(IsTestProject)' != 'true' AND '$(IsPackable)' != 'false'">
 
 	<PackageId>$(MSBuildProjectName)</PackageId>
-	<Product>OutWit.Web</Product>
+	<Product>WitDocs</Product>
   
 	<LangVersion>latest</LangVersion>
 	<SignAssembly>False</SignAssembly>
