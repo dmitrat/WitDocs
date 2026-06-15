@@ -61,20 +61,22 @@ public partial class ContentService
                 return m_blogPosts;
 
             var index = await GetContentIndexAsync();
+
+            // Fetch all files in parallel (overlaps HTTP latency), parse sequentially.
+            var fetched = await FetchAllAsync(index.Blog, "content/blog");
             var posts = new List<BlogPost>();
 
-            foreach (var file in index.Blog)
+            foreach (var (file, markdown) in fetched)
             {
                 try
                 {
-                    var markdown = await Http.GetStringAsync($"content/blog/{file}");
                     var post = ParseBlogPost(file, markdown);
                     if (post != null)
                         posts.Add(post);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error loading blog post {file}: {ex.Message}");
+                    Console.WriteLine($"Error parsing blog post {file}: {ex.Message}");
                 }
             }
 
@@ -141,7 +143,7 @@ public partial class ContentService
     
     private BlogPost? ParseBlogPost(string filename, string markdown)
     {
-        var (frontmatter, _) = MarkdownService.ParseWithFrontmatter<FrontmatterData>(markdown);
+        var frontmatter = MarkdownService.GetFrontmatter<FrontmatterData>(markdown);
         if (frontmatter == null) return null;
 
         var slug = SlugGenerator.GetSlugFromFilename(filename);
@@ -204,18 +206,18 @@ public partial class ContentService
             var index = await GetContentIndexAsync();
             var projects = new List<ProjectCard>();
 
-            foreach (var file in index.Projects)
+            var fetched = await FetchAllAsync(index.Projects, "content/projects");
+            foreach (var (file, markdown) in fetched)
             {
                 try
                 {
-                    var markdown = await Http.GetStringAsync($"content/projects/{file}");
                     var project = ParseProject(file, markdown);
                     if (project != null)
                         projects.Add(project);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error loading project {file}: {ex.Message}");
+                    Console.WriteLine($"Error parsing project {file}: {ex.Message}");
                 }
             }
 
@@ -282,7 +284,7 @@ public partial class ContentService
     
     private ProjectCard? ParseProject(string filename, string markdown)
     {
-        var (frontmatter, _) = MarkdownService.ParseWithFrontmatter<FrontmatterData>(markdown);
+        var frontmatter = MarkdownService.GetFrontmatter<FrontmatterData>(markdown);
         if (frontmatter == null) return null;
 
         var (order, slug) = SlugGenerator.GetOrderAndSlugFromFilename(filename);
@@ -346,18 +348,18 @@ public partial class ContentService
             var index = await GetContentIndexAsync();
             var articles = new List<ArticleCard>();
 
-            foreach (var file in index.Articles)
+            var fetched = await FetchAllAsync(index.Articles, "content/articles");
+            foreach (var (file, markdown) in fetched)
             {
                 try
                 {
-                    var markdown = await Http.GetStringAsync($"content/articles/{file}");
                     var article = ParseArticle(file, markdown, "articles");
                     if (article != null)
                         articles.Add(article);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error loading article {file}: {ex.Message}");
+                    Console.WriteLine($"Error parsing article {file}: {ex.Message}");
                 }
             }
 
@@ -466,12 +468,11 @@ public partial class ContentService
                 return articles;
             }
             
-            foreach (var file in files)
+            var fetched = await FetchAllAsync(files, $"content/{sectionFolder}");
+            foreach (var (file, markdown) in fetched)
             {
                 try
                 {
-                    var filePath = $"content/{sectionFolder}/{file}";
-                    var markdown = await Http.GetStringAsync(filePath);
                     var article = ParseArticle(file, markdown, sectionFolder);
                     if (article != null)
                     {
@@ -480,7 +481,7 @@ public partial class ContentService
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error loading {file} from {sectionFolder}: {ex.Message}");
+                    Console.WriteLine($"Error parsing {file} from {sectionFolder}: {ex.Message}");
                 }
             }
         }
@@ -494,7 +495,7 @@ public partial class ContentService
     
     private ArticleCard? ParseArticle(string filename, string markdown, string contentFolder)
     {
-        var (frontmatter, _) = MarkdownService.ParseWithFrontmatter<FrontmatterData>(markdown);
+        var frontmatter = MarkdownService.GetFrontmatter<FrontmatterData>(markdown);
         if (frontmatter == null) return null;
 
         var (order, slug) = SlugGenerator.GetOrderAndSlugFromFilename(filename);
@@ -673,18 +674,18 @@ public partial class ContentService
             var index = await GetContentIndexAsync();
             var docs = new Dictionary<string, DocPage>();
 
-            foreach (var file in index.Docs)
+            var fetched = await FetchAllAsync(index.Docs, "content/docs");
+            foreach (var (file, markdown) in fetched)
             {
                 try
                 {
-                    var markdown = await Http.GetStringAsync($"content/docs/{file}");
                     var doc = ParseDocPage(file, markdown);
                     if (doc != null)
                         docs[doc.Slug] = doc;
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error loading doc {file}: {ex.Message}");
+                    Console.WriteLine($"Error parsing doc {file}: {ex.Message}");
                 }
             }
 
@@ -770,7 +771,7 @@ public partial class ContentService
     
     private DocPage? ParseDocPage(string filename, string markdown)
     {
-        var (frontmatter, _) = MarkdownService.ParseWithFrontmatter<FrontmatterData>(markdown);
+        var frontmatter = MarkdownService.GetFrontmatter<FrontmatterData>(markdown);
         if (frontmatter == null) return null;
 
         var (order, slug) = SlugGenerator.GetOrderAndSlugFromFilename(filename);
@@ -829,18 +830,18 @@ public partial class ContentService
             var index = await GetContentIndexAsync();
             var features = new List<FeatureCard>();
 
-            foreach (var file in index.Features)
+            var fetched = await FetchAllAsync(index.Features, "content/features");
+            foreach (var (file, markdown) in fetched)
             {
                 try
                 {
-                    var markdown = await Http.GetStringAsync($"content/features/{file}");
                     var feature = ParseFeature(file, markdown);
                     if (feature != null)
                         features.Add(feature);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error loading feature {file}: {ex.Message}");
+                    Console.WriteLine($"Error parsing feature {file}: {ex.Message}");
                 }
             }
 
@@ -860,7 +861,7 @@ public partial class ContentService
 
     private FeatureCard? ParseFeature(string filename, string markdown)
     {
-        var (frontmatter, _) = MarkdownService.ParseWithFrontmatter<FrontmatterData>(markdown);
+        var frontmatter = MarkdownService.GetFrontmatter<FrontmatterData>(markdown);
         if (frontmatter == null) return null;
 
         var (order, slug) = SlugGenerator.GetOrderAndSlugFromFilename(filename);
@@ -884,7 +885,33 @@ public partial class ContentService
     #endregion
 
     #region Tools
-    
+
+    /// <summary>
+    /// Fetch all content files in parallel, returning (file, markdown) for each
+    /// that loaded successfully. Overlaps HTTP latency (even on single-threaded
+    /// WASM the browser runs concurrent fetches); the caller parses sequentially.
+    /// Order matches the input order.
+    /// </summary>
+    private async Task<List<(string File, string Markdown)>> FetchAllAsync(IEnumerable<string> files, string folder)
+    {
+        var tasks = files.Select(async file =>
+        {
+            try
+            {
+                var markdown = await Http.GetStringAsync($"{folder}/{file}");
+                return ((string File, string Markdown)?)(file, markdown);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading {folder}/{file}: {ex.Message}");
+                return null;
+            }
+        });
+
+        var results = await Task.WhenAll(tasks);
+        return results.Where(r => r != null).Select(r => r!.Value).ToList();
+    }
+
     /// <summary>
     /// Get the content index, loading it if necessary.
     /// Returns cached result on subsequent calls.

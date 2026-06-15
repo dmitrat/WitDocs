@@ -77,38 +77,43 @@ public partial class MarkdownService
     #region Functions
 
     /// <summary>
-    /// Parse markdown content and extract frontmatter.
+    /// Parse markdown content and extract frontmatter, also rendering the HTML.
     /// </summary>
     public (T? Frontmatter, string HtmlContent) ParseWithFrontmatter<T>(string markdown) where T : class
     {
-        var document = Markdown.Parse(markdown, Pipeline);
-        
-        // Extract YAML frontmatter
-        T? frontmatter = default;
-        var yamlBlock = document.Descendants<YamlFrontMatterBlock>().FirstOrDefault();
-        
-        if (yamlBlock != null)
-        {
-            var yamlContent = markdown.Substring(yamlBlock.Span.Start, yamlBlock.Span.Length);
-            // Remove the --- delimiters
-            yamlContent = YamlFrontMatterRegex().Replace(yamlContent, "").Trim();
-            
-            try
-            {
-                frontmatter = YamlDeserializer.Deserialize<T>(yamlContent);
-            }
-            catch (Exception ex)
-            {
-                // Don't fail the whole render, but surface the problem — a silent
-                // null frontmatter otherwise makes the page vanish with no diagnostic.
-                Console.Error.WriteLine($"Warning: failed to parse YAML frontmatter: {ex.Message}");
-            }
-        }
-
-        // Render HTML
+        var frontmatter = GetFrontmatter<T>(markdown);
         var html = Markdown.ToHtml(markdown, Pipeline);
-        
         return (frontmatter, html);
+    }
+
+    /// <summary>
+    /// Extract only the YAML frontmatter from markdown, without rendering HTML.
+    /// Cheaper than <see cref="ParseWithFrontmatter{T}"/> when the caller renders
+    /// the body separately (avoids a redundant full Markdig render).
+    /// </summary>
+    public T? GetFrontmatter<T>(string markdown) where T : class
+    {
+        var document = Markdown.Parse(markdown, Pipeline);
+
+        var yamlBlock = document.Descendants<YamlFrontMatterBlock>().FirstOrDefault();
+        if (yamlBlock == null)
+            return null;
+
+        var yamlContent = markdown.Substring(yamlBlock.Span.Start, yamlBlock.Span.Length);
+        // Remove the --- delimiters
+        yamlContent = YamlFrontMatterRegex().Replace(yamlContent, "").Trim();
+
+        try
+        {
+            return YamlDeserializer.Deserialize<T>(yamlContent);
+        }
+        catch (Exception ex)
+        {
+            // Don't fail the whole render, but surface the problem — a silent
+            // null frontmatter otherwise makes the page vanish with no diagnostic.
+            Console.Error.WriteLine($"Warning: failed to parse YAML frontmatter: {ex.Message}");
+            return null;
+        }
     }
 
     /// <summary>

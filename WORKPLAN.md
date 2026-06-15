@@ -62,9 +62,9 @@
 - ✅ **C4:** генератор ловит фатал, печатает понятную ошибку, `return 1` (раньше всегда `return 0`).
 - ✅ **H1:** lock + double-check в `GetDocsAsync`; кэш публикуется только после полной сборки.
 - ✅ **H2:** убрано поле `m_placeholderCounter`, локальный счётчик (singleton `ContentParser` потокобезопасен).
-- ⬜ **H3:** параллельная загрузка (`Task.WhenAll` fetch + sequential parse) в `Get*Async` — отдельный согласованный проход (перф, не корректность).
-- ⬜ Не глотать молча ошибки YAML/site.config.json (логировать).
-- ⬜ Убрать двойной рендеринг markdown в `ParseWithFrontmatter`.
+- ✅ **H3:** общий хелпер `FetchAllAsync` (параллельный `Task.WhenAll` fetch + sequential parse) во всех 6 list-загрузчиках (blog/projects/articles/docs/features/sections).
+- ✅ Не глотать молча ошибки YAML (MarkdownService) / site.config.json (ContentScanner) — логируем.
+- ✅ Убран двойной рендеринг: добавлен `MarkdownService.GetFrontmatter<T>` (только парсинг), 5 `Parse*` переключены на него.
 
 ### 1.5 Код-стайл / рефактор (low, по возможности)
 - ✅ `ThemeMode.cs`: 4-space, `static readonly`.
@@ -72,10 +72,10 @@
 - ⬜ Дедуп: TOC (TocItem/TocEntry), Parse*, GetBasePathFor*, JsonIndexService<T>.
 
 ### 1.6 Тесты
-- ⬜ ContentService/SearchService (fake HttpMessageHandler).
+- 🟡 ContentService — ✅ 7 тестов (fake HttpMessageHandler: index, blog sort/cache/skip-no-frontmatter, by-slug, docs prev/next + cache). SearchService — ещё нет.
 - ⬜ Интеграционный тест `GenerateAllAsync` (полный пайплайн → проверка артефактов).
 - ⬜ Починить нейминг SlugGeneratorTests; NavigationServiceTests тестирует модели.
-- ⬜ Тест на корректность SSG-вывода (валидный HTML, нет orphaned div).
+- ✅ Тест на корректность SSG-вывода (nested-div, home prerender) — в StaticPageGeneratorTests.
 
 ---
 
