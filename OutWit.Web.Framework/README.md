@@ -1,6 +1,6 @@
 # OutWit.Web.Framework
 
-Part of [WitDocs](https://witdocs.io) — a Blazor WebAssembly framework for building content-driven static websites with markdown-based content management, SEO optimization, and automatic content generation.
+Part of [WitDocs](https://witdocs.io) ï¿½ a Blazor WebAssembly framework for building content-driven static websites with markdown-based content management, SEO optimization, and automatic content generation.
 
 ## Features
 
@@ -182,6 +182,53 @@ wwwroot/content/
 | SearchPage | /search | Search results |
 | ContactPage | /contact | Contact form |
 | NotFoundPage | * | 404 page |
+
+## Custom Markdown Components
+
+You can embed components directly in markdown content using `[[Name ...]]` syntax.
+The framework ships built-in components (`YouTube`, `Svg`, `FloatingImage`), and
+you can register your own **without modifying the framework**.
+
+1. Create a Blazor component that takes its values as `[Parameter]`s (parameters
+   are supplied as strings from the markdown attributes; block components also
+   receive `InnerContent` and `BasePath`):
+
+```razor
+@* PricingTable.razor *@
+<div class="pricing pricing--@Plan">...</div>
+
+@code {
+    [Parameter] public string Plan { get; set; } = "free";
+}
+```
+
+2. Register it in `Program.cs` after `AddOutWitWebFramework()`:
+
+```csharp
+builder.Services.AddOutWitWebFramework();
+builder.Services.AddContentComponent<PricingTable>("Pricing");
+```
+
+3. Use it in any markdown file:
+
+```markdown
+Here are our plans:
+
+[[Pricing plan="pro"]]
+```
+
+Block (wrapper) syntax with inner content is also supported:
+
+```markdown
+[[Note type="warning"]]
+This is important.
+[[/Note]]
+```
+
+**Static site generation:** embedded components can't be rendered to static HTML
+at build time, so the generator degrades them gracefully for crawlers â€” block
+components keep their inner content (still indexed), self-closing components are
+omitted. The live Blazor app renders the real component after hydration.
 
 ## Build Configuration
 

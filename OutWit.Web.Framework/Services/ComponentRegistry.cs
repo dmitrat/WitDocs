@@ -17,15 +17,21 @@ public class ComponentRegistry
     #region Constructors
 
     public ComponentRegistry()
+        : this(Array.Empty<ContentComponentRegistration>())
+    {
+    }
+
+    public ComponentRegistry(IEnumerable<ContentComponentRegistration> registrations)
     {
         // Register built-in components
         Register("YouTube", typeof(YouTube));
         Register("FloatingImage", typeof(FloatingImage));
         Register("Svg", typeof(Svg));
 
-        // Add more components here:
-        // Register("PowerPoint", typeof(PowerPoint));
-        // Register("Model3D", typeof(Model3D));
+        // Register site-supplied components (via AddContentComponent<T>).
+        // A site may also override a built-in by reusing its name.
+        foreach (var registration in registrations)
+            Register(registration.Name, registration.ComponentType);
     }
 
     #endregion

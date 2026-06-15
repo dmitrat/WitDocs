@@ -128,6 +128,29 @@ public partial class ContentParser
     }
 
     /// <summary>
+    /// Replace embedded component markup with a static-HTML-friendly fallback for
+    /// SSG, where live Blazor components cannot render: block components keep their
+    /// inner content (so it is still indexed by crawlers), self-closing components
+    /// are removed. Import statements are stripped too.
+    /// </summary>
+    public string StripComponentsForStaticHtml(string content)
+    {
+        content = RemoveImportStatements(content);
+
+        var components = ExtractComponents(content);
+
+        // Replace from end to start to preserve positions.
+        foreach (var component in components.OrderByDescending(c => c.Position))
+        {
+            var replacement = component.InnerContent ?? "";
+            content = content.Remove(component.Position, component.OriginalText.Length)
+                             .Insert(component.Position, replacement);
+        }
+
+        return content;
+    }
+
+    /// <summary>
     /// Full transformation: extract components, replace with placeholders, remove imports.
     /// </summary>
     public (string Content, List<EmbeddedComponent> Components) Transform(string content)

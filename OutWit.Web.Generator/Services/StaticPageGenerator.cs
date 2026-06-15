@@ -27,6 +27,7 @@ public partial class StaticPageGenerator
     private readonly string m_siteUrl;
     private readonly string m_siteName;
     private readonly MarkdownService m_markdown;
+    private readonly ContentParser m_contentParser = new();
     private string m_templateHtml = "";
 
     #endregion
@@ -117,6 +118,10 @@ public partial class StaticPageGenerator
                 var markdown = await File.ReadAllTextAsync(filePath, cancellationToken);
                 var (frontmatter, content) = ContentHelpers.ExtractFrontmatter(markdown);
 
+                // Embedded [[Component]]s can't render to static HTML — degrade them
+                // (block: keep inner content, self-closing: drop) so crawlers never
+                // see raw [[...]] markup.
+                content = m_contentParser.StripComponentsForStaticHtml(content);
                 var htmlContent = m_markdown.ToHtml(content);
                 var pageHtml = GenerateStaticPage(
                     title: frontmatter?.Title ?? slug,

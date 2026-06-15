@@ -80,10 +80,11 @@
 ---
 
 ## Phase 2 — Модель расширения markdown-компонентов (п.2)
-- ⬜ Спроектировать публичный API регистрации кастомного компонента в DI (без правки фреймворка).
-- ⬜ Динамический рендер по типу в рантайме (`EmbeddedComponentRenderer`/`ContentWithComponents`).
-- ⬜ Поддержка кастомных компонентов в SSG-генераторе (рендер или корректная деградация).
-- ⬜ Документация + пример нового компонента.
+- ✅ Публичный API: `services.AddContentComponent<TComponent>("Name")` (DI extension). `ContentComponentRegistration` собирается в `ComponentRegistry` через конструктор поверх встроенных. Обратно совместимо.
+- ✅ Динамический рендер по типу уже был (`<DynamicComponent>` в `EmbeddedComponentRenderer`/`ContentWithComponents`) — теперь питается из DI-регистраций.
+- ✅ SSG-деградация: `ContentParser.StripComponentsForStaticHtml` (block→inner, self-closing→убрать); генератор применяет перед рендером detail-страниц. Краулеры больше не видят сырой `[[...]]`.
+- ✅ Документация + пример — секция «Custom Markdown Components» в OutWit.Web.Framework/README.md.
+- 6 тестов: реестр (built-in + DI + resolve), strip (block/self-closing/plain).
 
 ---
 
