@@ -91,5 +91,7 @@ test-results/
 # Generated OG images (regenerated on build)
 **/wwwroot/og-images/
 
-# Personal / local settings
+# Personal / local working documents (not part of the public repo)
 CLAUDE.md
+WORKPLAN.md
+PERFORMANCE_PLAN.md
