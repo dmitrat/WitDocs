@@ -98,10 +98,90 @@ public class StaticPageGeneratorTests
             // Act
             await generator.GenerateAsync(index);
 
-            // Assert - index pages should be created
-            Assert.That(File.Exists(Path.Combine(tempDir, "blog", "index.html")), Is.True);
+            // Assert - home + always-present form pages are created even with no content
+            Assert.That(File.Exists(Path.Combine(tempDir, "index.html")), Is.True);
             Assert.That(File.Exists(Path.Combine(tempDir, "contact", "index.html")), Is.True);
             Assert.That(File.Exists(Path.Combine(tempDir, "search", "index.html")), Is.True);
+
+            // Content list pages are only generated when content exists
+            Assert.That(File.Exists(Path.Combine(tempDir, "blog", "index.html")), Is.False);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Test]
+    public async Task GenerateAsyncPrerendersHomePageContentTest()
+    {
+        // Arrange
+        var tempDir = CreateTempDirectory();
+        CreateTemplate(tempDir);
+        SetupContentDirectory(tempDir, "projects", "01-my-project.md", """
+            ---
+            title: My Project
+            summary: A neat project.
+            ---
+
+            # My Project
+            Body.
+            """);
+
+        var config = new GeneratorConfig { OutputPath = tempDir };
+        var generator = new StaticPageGenerator(config, null, "https://example.com", "Test Site");
+        var index = new ContentIndex { Projects = ["01-my-project.md"] };
+
+        try
+        {
+            // Act
+            await generator.GenerateAsync(index);
+
+            // Assert - the home page (root index.html) now contains real, crawlable content
+            var home = await File.ReadAllTextAsync(Path.Combine(tempDir, "index.html"));
+            Assert.That(home, Does.Contain("My Project"));
+            Assert.That(home, Does.Contain("/project/my-project"));
+            // Blazor bootstrap must still be present so the SPA can hydrate
+            Assert.That(home, Does.Contain("id=\"app\""));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Test]
+    public void ReplaceAppContentHandlesNestedDivsTest()
+    {
+        // Arrange - a realistic template whose #app contains a nested loading <div>
+        var tempDir = CreateTempDirectory();
+        File.WriteAllText(Path.Combine(tempDir, "index.html"), """
+            <!DOCTYPE html>
+            <html>
+            <head><title>Template</title></head>
+            <body>
+              <div id="app">
+                <div class="loading"><span>Loading...</span></div>
+              </div>
+              <script src="_framework/blazor.webassembly.js"></script>
+            </body>
+            </html>
+            """);
+
+        var config = new GeneratorConfig { OutputPath = tempDir };
+        var generator = new StaticPageGenerator(config, null, "https://example.com", "Test Site");
+
+        try
+        {
+            // Act
+            generator.GenerateAsync(new ContentIndex()).GetAwaiter().GetResult();
+
+            // Assert - no orphaned </div> after the script (which the old non-greedy regex produced)
+            var home = File.ReadAllText(Path.Combine(tempDir, "index.html"));
+            var scriptIdx = home.IndexOf("blazor.webassembly.js", StringComparison.Ordinal);
+            Assert.That(scriptIdx, Is.GreaterThan(0));
+            var afterScript = home[scriptIdx..];
+            Assert.That(afterScript, Does.Not.Contain("</div>"));
         }
         finally
         {
