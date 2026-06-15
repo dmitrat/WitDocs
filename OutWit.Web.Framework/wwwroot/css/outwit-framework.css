@@ -961,12 +961,21 @@ tbody tr:nth-child(even) {
     opacity: 1;
 }
 
-/* The wrapper provides the frame; the inner <pre> sits flush inside it. */
-.code-block pre {
+/* The wrapper provides the frame; the inner <pre> sits flush inside it.
+   `div.code-block pre` (0,1,2) intentionally outranks the page content rules
+   `.blog-post__content pre` / `.article-content__body pre` (0,1,1), which load
+   later and would otherwise re-add a nested box with large margins/padding. */
+div.code-block pre {
     margin: 0;
+    padding: var(--spacing-md);
     border: none;
     border-radius: 0;
     background: transparent;
+}
+
+div.code-block pre code {
+    padding: 0;
+    background: none;
 }
 
 /* Syntax token palette — theme-aware (light/dark). */

@@ -3,6 +3,14 @@
 All notable changes to the WitDocs packages (OutWit.Web.Framework,
 OutWit.Web.Generator, OutWit.Web.Templates) are documented here.
 
+## 1.4.1
+
+### Fixes (Framework)
+- Code blocks no longer render with large top/bottom gaps. The page content
+  styles (`.blog-post__content pre` / `.article-content__body pre`) load after the
+  framework CSS and re-added a nested box with `margin: 1.5rem 0`; the code-block
+  `pre` rule now outranks them so the wrapper alone frames the code.
+
 ## 1.4.0
 
 ### Code blocks (docs-parity)
