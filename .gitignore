@@ -95,6 +95,7 @@ test-results/
 CLAUDE.md
 WORKPLAN.md
 PERFORMANCE_PLAN.md
+ROADMAP.md
 
 # Editor workspace
 *.code-workspace
