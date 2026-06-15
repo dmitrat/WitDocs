@@ -3,18 +3,28 @@
 All notable changes to the WitDocs packages (OutWit.Web.Framework,
 OutWit.Web.Generator, OutWit.Web.Templates) are documented here.
 
-## 1.3.6
+## 1.3.7
 
 ### Static site generation (Generator)
-- Fixed a flash of unstyled content on the pre-rendered home/list pages: the
-  generator now emits the same `.projects-list` / `.content-card` markup the live
-  `ContentCard` component uses, so the pre-rendered content is styled by the
-  framework CSS and matches the hydrated UI instead of briefly showing an
-  unstyled bullet list before Blazor renders.
+- Eliminated the flash of unstyled/unhydrated content on load: the generator now
+  keeps the template's loading indicator visible and places the pre-rendered
+  content in a `hidden` block. Crawlers still read it from the HTML source (and
+  JS-capable bots render the real SPA), while users only ever see the spinner and
+  then the hydrated UI. Supersedes the 1.3.6 approach (which rendered the cards
+  visibly and could briefly show them before CSS/hydration).
 
 Generator and Templates only; Framework is unchanged at 1.3.5. Existing sites
 pick up the fix on their next deploy (they install the generator tool at
 `latest`); no site project changes are required.
+
+## 1.3.6
+
+### Static site generation (Generator)
+- First attempt at fixing the home/list prerender flash by emitting the live
+  `.projects-list` / `.content-card` markup. Superseded by 1.3.7 (hidden block +
+  visible spinner), which removes the flash entirely.
+
+Generator and Templates only; Framework unchanged at 1.3.5.
 
 ## 1.3.5
 

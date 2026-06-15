@@ -148,6 +148,11 @@ public class StaticPageGeneratorTests
             Assert.That(home, Does.Contain("projects-list"));
             Assert.That(home, Does.Contain("content-card"));
             Assert.That(home, Does.Not.Contain("content-list__items"));
+            // Pre-rendered content sits in a hidden block (crawlers read it from
+            // source; users see the template's loading indicator then the SPA) —
+            // no flash of unstyled content.
+            Assert.That(home, Does.Contain("ssg-prerender"));
+            Assert.That(home, Does.Contain("Loading...")); // template spinner preserved
         }
         finally
         {

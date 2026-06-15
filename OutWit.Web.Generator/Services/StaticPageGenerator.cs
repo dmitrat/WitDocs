@@ -442,19 +442,18 @@ public partial class StaticPageGenerator
         if (!html.Contains("<!-- Open Graph (SSG) -->"))
             html = html.Replace("</head>", $"{ogTags}\n</head>");
 
-        // Replace app content (Blazor will hydrate over this)
+        // Keep the template's loading indicator visible during load, and place the
+        // pre-rendered content in a hidden block. Crawlers read it from the HTML
+        // source (and JS-capable bots render the real SPA), while users only ever
+        // see the spinner and then the hydrated UI — no flash of unstyled content.
+        var loadingIndicator = ExtractAppInner(m_templateHtml);
         var appContent = $"""
 
-                <!-- Static content for SEO - Blazor will hydrate this -->
+                {loadingIndicator}
+                <!-- Pre-rendered content for crawlers (hidden; the SPA renders the real UI) -->
+                <div class="ssg-prerender" hidden aria-hidden="true">
                 {fullContent}
-
-                <!-- NoScript fallback -->
-                <noscript>
-                    <div style="padding: 2rem; text-align: center;">
-                        <h1>JavaScript Required</h1>
-                        <p>This site requires JavaScript to function properly.</p>
-                    </div>
-                </noscript>
+                </div>
 
             """;
 
@@ -472,6 +471,42 @@ public partial class StaticPageGenerator
     /// handling nested &lt;div&gt; elements by counting tag depth (a non-greedy
     /// regex would stop at the first nested &lt;/div&gt; and corrupt the markup).
     /// </summary>
+    /// <summary>
+    /// Return the original inner content of the &lt;div id="app"&gt; element (the
+    /// template's loading indicator), matching the close tag by counting nested div
+    /// depth. Used to preserve the spinner while injecting hidden SEO content.
+    /// </summary>
+    private static string ExtractAppInner(string html)
+    {
+        var open = AppDivOpenRegex().Match(html);
+        if (!open.Success)
+            return "";
+
+        var innerStart = open.Index + open.Length;
+        var cursor = innerStart;
+        var depth = 1;
+
+        while (true)
+        {
+            var tag = DivTagRegex().Match(html, cursor);
+            if (!tag.Success)
+                return "";
+
+            if (tag.Value.StartsWith("</", StringComparison.OrdinalIgnoreCase))
+            {
+                depth--;
+                if (depth == 0)
+                    return html.Substring(innerStart, tag.Index - innerStart);
+            }
+            else
+            {
+                depth++;
+            }
+
+            cursor = tag.Index + tag.Length;
+        }
+    }
+
     private static string ReplaceAppContent(string html, string innerContent)
     {
         var open = AppDivOpenRegex().Match(html);
