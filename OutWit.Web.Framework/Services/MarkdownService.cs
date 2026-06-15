@@ -97,9 +97,11 @@ public partial class MarkdownService
             {
                 frontmatter = YamlDeserializer.Deserialize<T>(yamlContent);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Log or handle YAML parsing error
+                // Don't fail the whole render, but surface the problem — a silent
+                // null frontmatter otherwise makes the page vanish with no diagnostic.
+                Console.Error.WriteLine($"Warning: failed to parse YAML frontmatter: {ex.Message}");
             }
         }
 

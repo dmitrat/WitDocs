@@ -122,8 +122,11 @@ public class ContentScanner
                 PropertyNameCaseInsensitive = true
             });
         }
-        catch
+        catch (Exception ex)
         {
+            // A malformed site.config.json silently disables all dynamic sections —
+            // warn so it's diagnosable instead of vanishing.
+            Console.WriteLine($"  Warning: Failed to parse site.config.json: {ex.Message}");
             return null;
         }
     }
