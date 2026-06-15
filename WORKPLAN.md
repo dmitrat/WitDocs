@@ -46,9 +46,9 @@
 - ⬜ Осталось из H5: убрать дубль `RenderInlineMarkdown` в ContentMetadataGenerator (вернуть guard или перейти на MarkdownService).
 
 ### 1.2 Сборка / CI / упаковка
-- ⬜ **C1:** убрать жёсткую связку с глобальным `dotnet outwit-generate` (local tool manifest + `dotnet tool restore`, либо warning вместо `ErrorAndStop`).
-- ⬜ **C2:** `test.yml` → `OutWit.slnx` (сейчас несуществующий `OutWit.sln`).
-- ⬜ **H9:** опечатка `$HAS_SN_UPKG` → `$HAS_SNUPKG`; тест-гейт на publish/pack.
+- ✅ **C1:** шаблон возит `.config/dotnet-tools.json` (пин 1.3.4); targets делают авто-`dotnet tool restore` при наличии манифеста + понятный `<Error>` вместо голого MSB3073. Обратно совместимо (сайты без манифеста → глобальный тул). Проверено: restore+вызов из манифеста, exit 0.
+- ✅ **C2:** `test.yml` → `OutWit.slnx` (был несуществующий `OutWit.sln`) + добавлен Generator в выбор. Коммит 0552282.
+- ✅ **H9:** опечатка `$HAS_SN_UPKG` → `$HAS_SNUPKG`; тест-гейт на publish/pack. Коммит 0552282.
 - ⬜ **H10:** не писать placeholder-файлы в исходный `wwwroot` (или в .gitignore шаблона).
 - ⬜ Централизовать версии (`Directory.Build.props`/CPM); убрать дубль copy-target.
 

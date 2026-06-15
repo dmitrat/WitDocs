@@ -132,7 +132,19 @@
           Condition="'$(OutWitGenerateContent)' == 'true' AND Exists('$(OutWitContentPath)')">
     
     <Message Importance="high" Text="OutWit.Web.Framework: Running content generator..." />
-    
+
+    <!--
+      If the project ships a local tool manifest pinning the generator
+      (.config/dotnet-tools.json), restore it so the correct version is used
+      without requiring a global install. This is a no-op for consumers that
+      install the tool globally (no manifest present), so it stays backward
+      compatible with existing sites.
+    -->
+    <Exec Condition="Exists('$(MSBuildProjectDirectory)\.config\dotnet-tools.json')"
+          Command="dotnet tool restore"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          ContinueOnError="true" />
+
     <!-- Build CLI arguments to match Generator interface -->
     <PropertyGroup>
       <_GeneratorArgs>--site "$(MSBuildProjectDirectory)"</_GeneratorArgs>
@@ -145,12 +157,20 @@
       <_GeneratorArgs Condition="'$(OutWitGenerateOgImages)' == 'true'">$(_GeneratorArgs) --og-images</_GeneratorArgs>
     </PropertyGroup>
     
-    <!-- Run the .NET Generator tool -->
+    <!--
+      Run the .NET Generator tool. Resolves a local-manifest tool first, then a
+      global tool. Capture the exit code so a missing/failed tool produces an
+      actionable error instead of a bare MSB3073.
+    -->
     <Exec Command="dotnet outwit-generate $(_GeneratorArgs)"
           WorkingDirectory="$(MSBuildProjectDirectory)"
-          IgnoreExitCode="false"
-          ContinueOnError="ErrorAndStop" />
-    
+          ContinueOnError="true">
+      <Output TaskParameter="ExitCode" PropertyName="_OutWitGenExitCode" />
+    </Exec>
+
+    <Error Condition="'$(_OutWitGenExitCode)' != '0'"
+           Text="OutWit content generation failed (exit code $(_OutWitGenExitCode)). The 'outwit-generate' tool is missing or errored. Provide it via a local manifest (.config/dotnet-tools.json with 'outwit.web.generator', then 'dotnet tool restore') or install it globally ('dotnet tool install -g OutWit.Web.Generator'). Projects created from the OutWit template include the manifest automatically." />
+
     <Message Importance="high" Text="OutWit.Web.Framework: Content generation complete." />
   </Target>
 
