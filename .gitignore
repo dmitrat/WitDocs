@@ -90,3 +90,6 @@ test-results/
 
 # Generated OG images (regenerated on build)
 **/wwwroot/og-images/
+
+# Personal / local settings
+CLAUDE.md
