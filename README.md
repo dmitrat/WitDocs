@@ -1,6 +1,6 @@
 # WitDocs
 
-A Blazor WebAssembly platform for building content-driven static websites with markdown content, SEO optimization, and automatic content generation.
+A Blazor WebAssembly platform for building content-driven static websites with markdown content, SEO optimization, and automatic content generation — all in C#. A .NET developer can build and extend a documentation/content site (think Docusaurus) without writing any JavaScript or TypeScript.
 
 **Website:** [https://witdocs.io](https://witdocs.io)
 
@@ -21,7 +21,7 @@ A Blazor WebAssembly platform for building content-driven static websites with m
 dotnet new install OutWit.Web.Templates
 
 # Create a new site
-dotnet new outwit-web -n MySite -s "My Awesome Site" -b "https://mysite.com"
+dotnet new outwit-web -n MySite --siteName "My Awesome Site" --baseUrl "https://mysite.com"
 
 # Run the site
 cd MySite
@@ -38,8 +38,10 @@ dotnet add package OutWit.Web.Framework
 
 - **Reusable Page Components** - HomePage, BlogListPage, ProjectPage, ArticlePage, DocsPage, etc.
 - **Markdown Content** - Write content in markdown with YAML frontmatter
-- **SEO Optimized** - Open Graph, Twitter Cards, JSON-LD structured data, sitemap, robots.txt
-- **Static Site Generation** - Pre-rendered HTML pages for search engines
+- **Syntax Highlighting + Copy** - Fenced code highlighted in C# (ColorCode), themed for light/dark, with a copy button — no client-side highlighter
+- **Pluggable Components** - Embed your own Blazor components in markdown via `[[Name ...]]` (`AddContentComponent<T>()`) — no framework changes
+- **SEO Optimized** - Open Graph, Twitter Cards, JSON-LD structured data, sitemap, robots.txt, trailing-slash canonical consistency
+- **Static Site Generation** - Pre-rendered, crawler-visible HTML that's readable without JavaScript
 - **Open Graph Images** - Auto-generated social media preview images
 - **RSS Feed** - Automatic RSS feed generation for blog posts
 - **Full-Text Search** - Client-side search with pre-generated index
@@ -127,16 +129,18 @@ dotnet new outwit-web --help
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `-s, --siteName` | Display name of your site | My Site |
-| `-b, --baseUrl` | Base URL (https://...) | https://example.com |
-| `-au, --authorName` | Author name for copyright | Your Name |
-| `-ac, --accentColor` | Primary accent color (hex) | #007CF0 |
-| `-g, --githubUrl` | GitHub profile/repo URL | (empty) |
-| `-tw, --twitterHandle` | Twitter handle | (empty) |
-| `-ho, --hostingProvider` | cloudflare/netlify/vercel/github/none | cloudflare |
+| `--siteName` | Display name of your site | My Site |
+| `--siteDescription` | Description for SEO / social sharing | Welcome to my site |
+| `--baseUrl` | Base URL (https://...) | https://example.com |
+| `--authorName` | Author name for copyright | Your Name |
+| `--accentColor` | Primary accent color (hex) | #007CF0 |
+| `--githubUrl` | GitHub profile/repo URL | (empty) |
+| `--twitterHandle` | Twitter handle | (empty) |
+| `--hostingProvider` | cloudflare/netlify/vercel/github/none | cloudflare |
 | `--includeDocsSection` | Include documentation pages | false |
 | `--includeBlogSection` | Include blog pages | true |
 | `--includeProjectsSection` | Include projects pages | true |
+| `--enableDebugGeneration` | Generate content indices in Debug builds too | false |
 
 ## Build and Deploy
 

@@ -1,6 +1,6 @@
 # OutWit.Web.Templates
 
-Part of [WitDocs](https://witdocs.io) � project templates for creating static websites using WitDocs framework.
+Part of [WitDocs](https://witdocs.io) — project templates for creating static documentation/content sites with the WitDocs framework.
 
 ## Installation
 
@@ -18,30 +18,32 @@ dotnet new outwit-web -n MySite
 
 # With all options
 dotnet new outwit-web -n MySite \
-  --site-name "My Awesome Site" \
-  --base-url "https://mysite.com" \
-  --author-name "John Doe" \
-  --accent-color "#FF6B6B" \
-  --github-url "https://github.com/johndoe" \
-  --twitter-handle "@johndoe" \
-  --hosting-provider cloudflare
+  --siteName "My Awesome Site" \
+  --siteDescription "Docs and guides for My Awesome Site" \
+  --baseUrl "https://mysite.com" \
+  --authorName "John Doe" \
+  --accentColor "#FF6B6B" \
+  --githubUrl "https://github.com/johndoe" \
+  --twitterHandle "@johndoe" \
+  --hostingProvider cloudflare
 ```
 
 ### Available Options
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `--site-name` | Display name of your site | My Site |
-| `--base-url` | Base URL (e.g., https://example.com) | https://example.com |
-| `--author-name` | Author name for copyright | Your Name |
-| `--accent-color` | Primary accent color (hex) | #007CF0 |
-| `--github-url` | GitHub profile/repo URL | (empty) |
-| `--twitter-handle` | Twitter handle | (empty) |
-| `--hosting-provider` | Target hosting (cloudflare/netlify/vercel/github/none) | cloudflare |
-| `--include-docs-section` | Include docs pages | false |
-| `--include-blog-section` | Include blog pages | true |
-| `--include-projects-section` | Include projects pages | true |
-| `--enable-debug-generation` | Enable content generation in Debug mode | false |
+| `--siteName` | Display name of your site | My Site |
+| `--siteDescription` | Description for SEO / social sharing | Welcome to my site |
+| `--baseUrl` | Base URL (e.g., https://example.com) | https://example.com |
+| `--authorName` | Author name for copyright | Your Name |
+| `--accentColor` | Primary accent color (hex) | #007CF0 |
+| `--githubUrl` | GitHub profile/repo URL | (empty) |
+| `--twitterHandle` | Twitter handle | (empty) |
+| `--hostingProvider` | Target hosting (cloudflare/netlify/vercel/github/none) | cloudflare |
+| `--includeDocsSection` | Include docs pages | false |
+| `--includeBlogSection` | Include blog pages | true |
+| `--includeProjectsSection` | Include projects pages | true |
+| `--enableDebugGeneration` | Generate content indices in Debug builds too | false |
 
 ### Run your site
 
@@ -55,6 +57,11 @@ dotnet run
 ```bash
 dotnet publish -c Release
 ```
+
+The template ships a local tool manifest (`.config/dotnet-tools.json`) pinning the
+generator, so a Release build restores and runs it automatically — **no global
+`dotnet tool install` required**. It also includes a `.gitignore` that excludes the
+generated SEO/content assets.
 
 ## Project Structure
 
@@ -88,12 +95,20 @@ MySite/
 3. **Content**: Add markdown files to `wwwroot/content/` folders
 4. **Logo**: Replace `wwwroot/images/logo.svg`
 
-## What's New in v1.3.0
+## What's New
 
-- **Skeleton Loading**: Built-in skeleton components for better loading UX
-- **Content Metadata Index**: Faster list page rendering
-- **Debug Mode Generation**: Option to generate content indices in Debug builds
-- **Direct Content Loading**: Load individual content items without parsing all files
+### v1.4.x
+- **Syntax-highlighted code blocks** with a copy button (pure C#, no JS to write).
+- **Pluggable markdown components** — register your own with
+  `services.AddContentComponent<T>("Name")` and use `[[Name ...]]` in markdown.
+- **Smoother / SEO-friendly loading**: inline theme background (no white flash),
+  no-JS-readable pre-rendered content, trailing-slash canonical URLs.
+- **Local tool manifest** so new projects build without a global generator install;
+  shipped `.gitignore` for generated assets; `siteDescription` template option.
+
+### v1.3.x
+- Skeleton loading components, content-metadata index for fast lists, optional
+  Debug-mode generation, and direct single-item content loading.
 
 ## Uninstall
 

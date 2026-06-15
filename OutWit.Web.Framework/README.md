@@ -1,18 +1,19 @@
 # OutWit.Web.Framework
 
-Part of [WitDocs](https://witdocs.io) � a Blazor WebAssembly framework for building content-driven static websites with markdown-based content management, SEO optimization, and automatic content generation.
+Part of [WitDocs](https://witdocs.io) — a Blazor WebAssembly framework for building content-driven static websites with markdown-based content management, SEO optimization, and automatic content generation. All in C#: a .NET developer can build and extend a docs/content site without writing any JavaScript.
 
 ## Features
 
 - Reusable Page Components - HomePage, BlogListPage, ProjectPage, ArticlePage, DocsPage, etc.
 - Markdown Content - Write content in markdown with YAML frontmatter
-- SEO Optimized - Built-in SeoHead component with Open Graph, Twitter Cards, JSON-LD structured data
-- Static Site Generation (SSG) - Pre-rendered HTML pages for search engines
+- **Syntax highlighting + copy button** - Fenced code is highlighted at build/render time in C# (ColorCode), themed for light/dark — no client-side highlighter
+- **Pluggable components** - Embed your own Blazor components in markdown via `[[Name ...]]` with `AddContentComponent<T>("Name")` — no framework changes
+- SEO Optimized - SeoHead with Open Graph, Twitter Cards, JSON-LD; trailing-slash canonical consistency
+- Static Site Generation (SSG) - Pre-rendered, crawler-visible HTML that's readable without JavaScript
 - Open Graph Images - Auto-generated social media preview images
 - RSS Feed - Automatic RSS feed generation for blog posts
 - Pre-built Search Index - Client-side full-text search with pre-generated index
-- **Fast Navigation** - Pre-built navigation index for instant menu rendering
-- **Fast List Pages** - Pre-built content metadata for instant list rendering (NEW in v1.3.0)
+- **Fast Navigation & List Pages** - Pre-built navigation/metadata indices for instant rendering
 - Theme Support - Light/dark mode with CSS variables from theme.css
 - Responsive Design - Mobile-first CSS framework
 - Multiple Hosting Providers - Cloudflare Pages, Netlify, Vercel, GitHub Pages
@@ -61,7 +62,8 @@ Create `wwwroot/site.config.json`:
 {
   "siteName": "My Site",
   "baseUrl": "https://example.com",
-  "logo": "/images/logo.svg",
+  "logoLight": "/images/logo-light.svg",
+  "logoDark": "/images/logo-dark.svg",
   "defaultTheme": "dark",
   "navigation": [
     { "title": "Home", "href": "/" },
@@ -299,19 +301,18 @@ dotnet build -c Release
 ### Manual Generation
 
 ```bash
-outwit-generate \
-  --content-path ./wwwroot/content \
-  --output-path ./wwwroot \
-  --site-url https://example.com \
-  --site-name "My Site"
+# --site points at the project dir; --output defaults to <site>/wwwroot
+outwit-generate --site ./MySite --url https://example.com --hosting cloudflare
 ```
 
 For OG images (requires Playwright):
 
 ```bash
 npx playwright install chromium
-outwit-generate --content-path ./wwwroot/content --output-path ./wwwroot
+outwit-generate --site ./MySite --og-images
 ```
+
+See [OutWit.Web.Generator](../OutWit.Web.Generator/) for the full CLI option list.
 
 ## Performance Optimization
 
