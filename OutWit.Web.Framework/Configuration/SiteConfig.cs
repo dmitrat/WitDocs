@@ -29,7 +29,8 @@ public class SiteConfig : ModelBase
             && Contact.Is(other.Contact)
             && Search.Is(other.Search)
             && Seo.Is(other.Seo)
-            && ContentSections.Is(other.ContentSections);
+            && ContentSections.Is(other.ContentSections)
+            && AllowRawHtml.Is(other.AllowRawHtml);
     }
 
     public override SiteConfig Clone()
@@ -46,7 +47,8 @@ public class SiteConfig : ModelBase
             Contact = Contact.Clone(),
             Search = Search.Clone(),
             Seo = Seo.Clone(),
-            ContentSections = ContentSections.Select(s => s.Clone()).ToList()
+            ContentSections = ContentSections.Select(s => s.Clone()).ToList(),
+            AllowRawHtml = AllowRawHtml
         };
     }
 
@@ -111,6 +113,14 @@ public class SiteConfig : ModelBase
     /// Allows creating sections like "solutions", "products", etc.
     /// </summary>
     public List<ContentSectionConfig> ContentSections { get; set; } = [];
+
+    /// <summary>
+    /// Whether raw inline HTML in markdown content is rendered as-is.
+    /// Default true (content is authored by the site owner at build time).
+    /// Set to false for defense-in-depth to strip raw HTML (e.g. &lt;script&gt;)
+    /// from rendered markdown — no extra dependency, no payload cost.
+    /// </summary>
+    public bool AllowRawHtml { get; set; } = true;
 
     #endregion
 

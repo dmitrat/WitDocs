@@ -15,22 +15,61 @@ namespace OutWit.Web.Framework.Services;
 /// </summary>
 public partial class MarkdownService
 {
+    #region Fields
+
+    private bool m_allowRawHtml;
+
+    #endregion
+
     #region Constructors
 
-    public MarkdownService()
+    public MarkdownService() : this(true)
     {
-        Pipeline = new MarkdownPipelineBuilder()
-            .UseAdvancedExtensions()
-            .UseYamlFrontMatter()
-            .UseAutoIdentifiers()
-            .UseTaskLists()
-            .UseEmojiAndSmiley()
-            .Build();
+    }
+
+    public MarkdownService(bool allowRawHtml)
+    {
+        m_allowRawHtml = allowRawHtml;
+        Pipeline = BuildPipeline(allowRawHtml);
 
         YamlDeserializer = new DeserializerBuilder()
             .WithNamingConvention(CamelCaseNamingConvention.Instance)
             .IgnoreUnmatchedProperties()
             .Build();
+    }
+
+    #endregion
+
+    #region Initialization
+
+    /// <summary>
+    /// Reconfigure raw-HTML handling once the site config is known. Used by the
+    /// runtime DI path (ConfigService) since config is loaded asynchronously after
+    /// the service is constructed. No-op when the setting is unchanged.
+    /// </summary>
+    public void Configure(bool allowRawHtml)
+    {
+        if (allowRawHtml == m_allowRawHtml)
+            return;
+
+        m_allowRawHtml = allowRawHtml;
+        Pipeline = BuildPipeline(allowRawHtml);
+    }
+
+    private static MarkdownPipeline BuildPipeline(bool allowRawHtml)
+    {
+        var builder = new MarkdownPipelineBuilder()
+            .UseAdvancedExtensions()
+            .UseYamlFrontMatter()
+            .UseAutoIdentifiers()
+            .UseTaskLists()
+            .UseEmojiAndSmiley();
+
+        // Strip raw inline/block HTML so markdown like <script> renders as text.
+        if (!allowRawHtml)
+            builder = builder.DisableHtml();
+
+        return builder.Build();
     }
 
     #endregion
@@ -180,8 +219,8 @@ public partial class MarkdownService
 
     #region Properties
 
-    private MarkdownPipeline Pipeline { get; }
-    
+    private MarkdownPipeline Pipeline { get; set; }
+
     private IDeserializer YamlDeserializer { get; }
 
     #endregion

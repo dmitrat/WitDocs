@@ -17,6 +17,54 @@ public class MarkdownServiceTests
         m_service = new MarkdownService();
     }
 
+    #region Raw HTML Policy Tests
+
+    [Test]
+    public void ToHtmlAllowsRawHtmlByDefaultTest()
+    {
+        // Arrange - default service allows raw HTML
+        var markdown = "Hello <b>bold</b> and <script>alert(1)</script>";
+
+        // Act
+        var html = m_service.ToHtml(markdown);
+
+        // Assert - raw HTML is passed through
+        Assert.That(html, Does.Contain("<script>alert(1)</script>"));
+    }
+
+    [Test]
+    public void ToHtmlWithRawHtmlDisabledStripsRawHtmlTest()
+    {
+        // Arrange - hardened service disables raw HTML
+        var service = new MarkdownService(allowRawHtml: false);
+        var markdown = "Hello <script>alert(1)</script>";
+
+        // Act
+        var html = service.ToHtml(markdown);
+
+        // Assert - the script tag is escaped/neutralized, not emitted as live HTML
+        Assert.That(html, Does.Not.Contain("<script>"));
+        // Markdown emphasis still works (only raw HTML is disabled)
+        Assert.That(service.ToHtml("**x**"), Does.Contain("<strong>x</strong>"));
+    }
+
+    [Test]
+    public void ConfigureTogglesRawHtmlHandlingTest()
+    {
+        // Arrange
+        var service = new MarkdownService();
+        const string markdown = "<script>alert(1)</script>";
+
+        // Act / Assert - reconfigure to strip, then back to allow
+        service.Configure(allowRawHtml: false);
+        Assert.That(service.ToHtml(markdown), Does.Not.Contain("<script>"));
+
+        service.Configure(allowRawHtml: true);
+        Assert.That(service.ToHtml(markdown), Does.Contain("<script>alert(1)</script>"));
+    }
+
+    #endregion
+
     #region ToHtml Tests
 
     [Test]

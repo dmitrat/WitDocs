@@ -41,8 +41,9 @@ public partial class StaticPageGenerator
         m_siteName = siteName;
 
         // Reuse the framework's markdown pipeline so SSG HTML matches the live app
-        // (auto heading ids for anchors, task lists, emoji, frontmatter handling).
-        m_markdown = new MarkdownService();
+        // (auto heading ids for anchors, task lists, emoji, frontmatter handling),
+        // honoring the site's raw-HTML policy.
+        m_markdown = new MarkdownService(siteConfig?.AllowRawHtml ?? true);
     }
 
     #endregion

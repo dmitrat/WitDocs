@@ -11,9 +11,10 @@ public class ConfigService
 {
     #region Constructors
 
-    public ConfigService(HttpClient httpClient)
+    public ConfigService(HttpClient httpClient, MarkdownService markdownService)
     {
         HttpClient = httpClient;
+        MarkdownService = markdownService;
     }
 
     #endregion
@@ -49,6 +50,9 @@ public class ConfigService
             };
         }
 
+        // Apply security-relevant config to the markdown pipeline now that it's known.
+        MarkdownService.Configure(Config!.AllowRawHtml);
+
         return Config!;
     }
 
@@ -65,7 +69,9 @@ public class ConfigService
     #region Properties
 
     private HttpClient HttpClient { get; }
-    
+
+    private MarkdownService MarkdownService { get; }
+
     private SiteConfig? Config { get; set; }
 
     #endregion

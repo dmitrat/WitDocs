@@ -53,7 +53,7 @@
 - ⬜ Централизовать версии (`Directory.Build.props`/CPM); убрать дубль copy-target.
 
 ### 1.3 Безопасность
-- ⏸ **C3:** санитизация markdown→HTML (XSS) — НУЖНО РЕШЕНИЕ: тяжёлый санитайзер (Ganss/AngleSharp ~1МБ в WASM-payload) vs DisableHtml vs «контент доверенный на билд-тайме, чиним только конкретные векторы». См. лог решений.
+- ✅ **C3:** флаг `SiteConfig.AllowRawHtml` (default true). `MarkdownService(bool)` + `Configure()`; при false → `.DisableHtml()` (без зависимостей, 0 кБ payload). Генератор берёт флаг синхронно из SiteConfig; рантайм — через `ConfigService` после загрузки config. 3 теста. Решение пользователя: вариант «опция-флаг».
 - ✅ **H7:** YouTube-iframe — `Uri.EscapeDataString` для id, `HtmlEncode` для Title.
 - ✅ **H6:** XML-escaping в sitemap (`<loc>`) и RSS (`<link>`/`<guid>`/atom href).
 - ✅ JSON-LD: `<` → `<` (закрывает `</script>`-выход), canonical через escaper.
