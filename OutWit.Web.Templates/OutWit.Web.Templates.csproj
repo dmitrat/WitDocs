@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <PackageType>Template</PackageType>
-    <Version>1.4.2</Version>
+    <Version>1.4.3</Version>
     <Title>WitDocs Site Templates</Title>
     <Description>WitDocs Templates: Project templates for creating static websites with Blazor WebAssembly, markdown content, skeleton loading, and SEO optimization. Part of https://witdocs.io</Description>
     <PackageTags>witdocs;dotnet-new;templates;blazor;webassembly;static-site;markdown;skeleton</PackageTags>

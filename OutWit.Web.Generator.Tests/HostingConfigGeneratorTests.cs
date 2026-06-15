@@ -41,6 +41,10 @@ public class HostingConfigGeneratorTests
             Assert.That(headers, Does.Contain("/_framework/dotnet.js"));
             Assert.That(headers, Does.Contain("/_framework/blazor.webassembly.js"));
             Assert.That(headers, Does.Contain("no-cache"));
+            // Specific boot rules MUST precede the wildcard — Cloudflare applies the
+            // first matching rule, so the immutable wildcard must come last.
+            Assert.That(headers.IndexOf("/_framework/dotnet.js", StringComparison.Ordinal),
+                Is.LessThan(headers.IndexOf("/_framework/*", StringComparison.Ordinal)));
 
             var routes = await File.ReadAllTextAsync(Path.Combine(tempDir, "_routes.json"));
             Assert.That(routes, Does.Contain("\"version\": 1"));
