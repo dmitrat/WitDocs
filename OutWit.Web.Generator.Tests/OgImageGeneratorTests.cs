@@ -109,7 +109,7 @@ public class OgImageGeneratorTests
     private class TestableOgImageGenerator : OgImageGenerator
     {
         public TestableOgImageGenerator(GeneratorConfig config, string siteUrl, string siteName)
-            : base(config, siteUrl, siteName)
+            : base(config, null, siteUrl, siteName)
         {
         }
 

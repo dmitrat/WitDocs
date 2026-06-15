@@ -23,6 +23,13 @@
       "defaultValue": "My Site",
       "replaces": "{{SiteName}}"
     },
+    "siteDescription": {
+      "type": "parameter",
+      "datatype": "string",
+      "description": "Site description for SEO and social sharing",
+      "defaultValue": "Welcome to my site",
+      "replaces": "{{SiteDescription}}"
+    },
     "baseUrl": {
       "type": "parameter",
       "datatype": "string",

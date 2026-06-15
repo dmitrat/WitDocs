@@ -102,7 +102,7 @@ public class ContentGenerator
         if (m_config.GenerateOgImages)
         {
             Console.WriteLine("Generating OG images...");
-            await using var ogImageGenerator = new OgImageGenerator(m_config, siteUrl, siteConfig?.SiteName ?? "OutWit Web");
+            await using var ogImageGenerator = new OgImageGenerator(m_config, siteConfig, siteUrl, siteConfig?.SiteName ?? "OutWit Web");
             await ogImageGenerator.GenerateAsync(contentIndex, cancellationToken);
         }
 

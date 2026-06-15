@@ -42,6 +42,7 @@
   },
   "seo": {
     "defaultImage": "/images/social-card.png",
+    "description": "{{SiteDescription}}",
     "twitterHandle": "{{TwitterHandle}}"
   },
   "contentSections": []

@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Playwright;
 using OutWit.Web.Generator.Commands;
 using OutWit.Web.Framework.Content;
+using OutWit.Web.Framework.Configuration;
 
 namespace OutWit.Web.Generator.Services;
 
@@ -26,6 +27,7 @@ public partial class OgImageGenerator : IAsyncDisposable
     #region Fields
 
     private readonly GeneratorConfig m_config;
+    private readonly SiteConfig? m_siteConfig;
     private readonly string m_siteUrl;
     private readonly string m_siteName;
     private string m_accentColor = DEFAULT_ACCENT_COLOR;
@@ -37,9 +39,10 @@ public partial class OgImageGenerator : IAsyncDisposable
 
     #region Constructors
 
-    public OgImageGenerator(GeneratorConfig config, string siteUrl, string siteName)
+    public OgImageGenerator(GeneratorConfig config, SiteConfig? siteConfig, string siteUrl, string siteName)
     {
         m_config = config;
+        m_siteConfig = siteConfig;
         m_siteUrl = siteUrl.TrimEnd('/');
         m_siteName = siteName;
     }
@@ -65,8 +68,9 @@ public partial class OgImageGenerator : IAsyncDisposable
 
             var stats = new OgImageStats();
 
-            // Generate default OG image
-            await GenerateOgImageAsync("default", "", m_siteName, "", m_siteUrl, ogImagesDir, stats, cancellationToken);
+            // Generate default OG image (for home page)
+            var homeDescription = m_siteConfig?.Seo?.Description ?? "";
+            await GenerateOgImageAsync("default", "", m_siteName, homeDescription, m_siteUrl, ogImagesDir, stats, cancellationToken);
 
             // Process blog posts
             await ProcessContentAsync("blog", "Blog", contentIndex.Blog, ogImagesDir, stats, cancellationToken);
