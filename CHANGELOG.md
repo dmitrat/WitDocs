@@ -3,6 +3,19 @@
 All notable changes to the WitDocs packages (OutWit.Web.Framework,
 OutWit.Web.Generator, OutWit.Web.Templates) are documented here.
 
+## 1.3.6
+
+### Static site generation (Generator)
+- Fixed a flash of unstyled content on the pre-rendered home/list pages: the
+  generator now emits the same `.projects-list` / `.content-card` markup the live
+  `ContentCard` component uses, so the pre-rendered content is styled by the
+  framework CSS and matches the hydrated UI instead of briefly showing an
+  unstyled bullet list before Blazor renders.
+
+Generator and Templates only; Framework is unchanged at 1.3.5. Existing sites
+pick up the fix on their next deploy (they install the generator tool at
+`latest`); no site project changes are required.
+
 ## 1.3.5
 
 ### SEO / static site generation

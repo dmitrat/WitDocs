@@ -143,6 +143,11 @@ public class StaticPageGeneratorTests
             Assert.That(home, Does.Contain("/project/my-project"));
             // Blazor bootstrap must still be present so the SPA can hydrate
             Assert.That(home, Does.Contain("id=\"app\""));
+            // Uses the framework's card markup so it is styled (no flash of an
+            // unstyled list before hydration).
+            Assert.That(home, Does.Contain("projects-list"));
+            Assert.That(home, Does.Contain("content-card"));
+            Assert.That(home, Does.Not.Contain("content-list__items"));
         }
         finally
         {

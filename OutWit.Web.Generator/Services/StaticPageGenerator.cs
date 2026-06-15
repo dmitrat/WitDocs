@@ -311,21 +311,29 @@ public partial class StaticPageGenerator
         return result;
     }
 
+    /// <summary>
+    /// Render a list of cards using the SAME markup/classes as the live
+    /// <c>ContentCard</c> component (.projects-list / .content-card*), so the
+    /// pre-rendered content is styled by the framework CSS and matches the
+    /// hydrated UI — avoiding a flash of unstyled content before Blazor renders.
+    /// </summary>
     private static string RenderCardSection(string id, string heading, List<CardInfo> cards)
     {
         var sb = new StringBuilder();
-        sb.Append($"<section id=\"{ContentHelpers.EscapeHtml(id)}\" class=\"content-list\">");
-        sb.Append($"<h2 class=\"section-title\">{ContentHelpers.EscapeHtml(heading)}</h2>");
-        sb.Append("<ul class=\"content-list__items\">");
+        sb.Append($"<section id=\"{ContentHelpers.EscapeHtml(id)}\" class=\"projects-section container\">");
+        if (!string.IsNullOrEmpty(heading))
+            sb.Append($"<h2 class=\"section-title\">{ContentHelpers.EscapeHtml(heading)}</h2>");
+        sb.Append("<div class=\"projects-list\">");
         foreach (var card in cards)
         {
-            sb.Append("<li class=\"content-list__item\">");
-            sb.Append($"<a href=\"{ContentHelpers.EscapeHtml(card.Url)}\">{ContentHelpers.EscapeHtml(card.Title)}</a>");
+            sb.Append("<article class=\"content-card\">");
+            sb.Append($"<h2 class=\"content-card__title\"><a href=\"{ContentHelpers.EscapeHtml(card.Url)}\">{ContentHelpers.EscapeHtml(card.Title)}</a></h2>");
             if (!string.IsNullOrWhiteSpace(card.Summary))
-                sb.Append($"<p>{ContentHelpers.EscapeHtml(card.Summary)}</p>");
-            sb.Append("</li>");
+                sb.Append($"<div class=\"content-card__description\">{ContentHelpers.EscapeHtml(card.Summary)}</div>");
+            sb.Append($"<div class=\"content-card__footer\"><a href=\"{ContentHelpers.EscapeHtml(card.Url)}\" class=\"content-card__more\">More...</a></div>");
+            sb.Append("</article>");
         }
-        sb.Append("</ul></section>");
+        sb.Append("</div></section>");
         return sb.ToString();
     }
 
