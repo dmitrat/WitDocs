@@ -5,6 +5,45 @@
 window.outwit = window.outwit || {};
 
 /**
+ * Copy-to-clipboard for code blocks. A single delegated listener handles every
+ * .code-copy button — including those Blazor renders later — so the markdown
+ * author never writes any JS.
+ */
+document.addEventListener('click', function (e) {
+    const button = e.target.closest('.code-copy');
+    if (!button) return;
+
+    const block = button.closest('.code-block');
+    const code = block && block.querySelector('code');
+    if (!code) return;
+
+    const text = code.innerText;
+    const done = function () {
+        const original = button.dataset.label || button.textContent;
+        button.dataset.label = original;
+        button.textContent = 'Copied!';
+        button.classList.add('is-copied');
+        setTimeout(function () {
+            button.textContent = button.dataset.label || 'Copy';
+            button.classList.remove('is-copied');
+        }, 1500);
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(function () { /* ignore */ });
+    } else {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); done(); } catch (_) { /* ignore */ }
+        document.body.removeChild(ta);
+    }
+});
+
+/**
  * Get system theme preference (dark/light)
  * @returns {boolean} True if system prefers dark mode
  */

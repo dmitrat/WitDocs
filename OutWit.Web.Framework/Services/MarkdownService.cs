@@ -65,6 +65,10 @@ public partial class MarkdownService
             .UseTaskLists()
             .UseEmojiAndSmiley();
 
+        // Syntax-highlight fenced code (pure C#, build-time + runtime) and wrap it
+        // with a language label + copy button.
+        builder = builder.Use(new CodeHighlightExtension());
+
         // Strip raw inline/block HTML so markdown like <script> renders as text.
         if (!allowRawHtml)
             builder = builder.DisableHtml();

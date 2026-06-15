@@ -17,6 +17,43 @@ public class MarkdownServiceTests
         m_service = new MarkdownService();
     }
 
+    #region Code Highlighting Tests
+
+    [Test]
+    public void ToHtmlHighlightsFencedCodeTest()
+    {
+        var html = m_service.ToHtml("```csharp\nvar x = 1; // hi\n```");
+
+        Assert.That(html, Does.Contain("class=\"code-block\""));
+        Assert.That(html, Does.Contain("data-lang=\"csharp\""));
+        Assert.That(html, Does.Contain("class=\"code-copy\""));
+        Assert.That(html, Does.Contain("tok-keyword"));   // 'var'
+        Assert.That(html, Does.Contain("tok-comment"));   // '// hi'
+    }
+
+    [Test]
+    public void ToHtmlUnknownLanguageFallsBackToPlainTest()
+    {
+        var html = m_service.ToHtml("```bash\necho hello\n```");
+
+        Assert.That(html, Does.Contain("class=\"code-block\""));
+        Assert.That(html, Does.Contain("echo hello")); // plain, still wrapped + copy button
+        Assert.That(html, Does.Contain("class=\"code-copy\""));
+        Assert.That(html, Does.Not.Contain("tok-keyword"));
+    }
+
+    [Test]
+    public void ToHtmlCodeBlockEscapesHtmlTest()
+    {
+        var html = m_service.ToHtml("```\n<script>alert(1)</script>\n```");
+
+        // Code content must be escaped, never emitted as live markup.
+        Assert.That(html, Does.Not.Contain("<script>alert(1)</script>"));
+        Assert.That(html, Does.Contain("&lt;script&gt;"));
+    }
+
+    #endregion
+
     #region Raw HTML Policy Tests
 
     [Test]
@@ -109,10 +146,11 @@ public class MarkdownServiceTests
         // Act
         var html = m_service.ToHtml(markdown);
         
-        // Assert
+        // Assert - code is rendered in a highlighted code block (tokens are wrapped
+        // in spans, so the source is no longer a single contiguous string).
         Assert.That(html, Does.Contain("<pre>"));
         Assert.That(html, Does.Contain("<code"));
-        Assert.That(html, Does.Contain("var x = 1;"));
+        Assert.That(html, Does.Contain("tok-keyword")); // 'var' highlighted
     }
 
     [Test]

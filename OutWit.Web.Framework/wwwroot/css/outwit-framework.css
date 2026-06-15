@@ -912,3 +912,92 @@ tbody tr:nth-child(even) {
         --font-size-2xl: 1.125rem;
     }
 }
+
+/* ============================================
+   CODE BLOCKS (syntax highlighting + copy)
+   ============================================ */
+
+.code-block {
+    margin: var(--spacing-lg) 0;
+    border: 1px solid var(--color-code-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background-color: var(--color-code-bg);
+}
+
+.code-block__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    padding: 0.35rem 0.75rem;
+    font-family: var(--font-family-mono);
+    font-size: 0.75rem;
+    border-bottom: 1px solid var(--color-code-border);
+}
+
+.code-block__lang {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.65;
+}
+
+.code-copy {
+    margin-left: auto;
+    font: inherit;
+    font-size: 0.75rem;
+    cursor: pointer;
+    border: 1px solid var(--color-code-border);
+    background: transparent;
+    color: inherit;
+    border-radius: var(--radius-sm);
+    padding: 0.1rem 0.55rem;
+    opacity: 0.65;
+    transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.code-copy:hover,
+.code-copy.is-copied {
+    opacity: 1;
+}
+
+/* The wrapper provides the frame; the inner <pre> sits flush inside it. */
+.code-block pre {
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+}
+
+/* Syntax token palette — theme-aware (light/dark). */
+.tok-comment {
+    font-style: italic;
+}
+
+[data-theme="dark"] .tok-comment { color: #6a9955; }
+[data-theme="dark"] .tok-keyword { color: #569cd6; }
+[data-theme="dark"] .tok-string { color: #ce9178; }
+[data-theme="dark"] .tok-number { color: #b5cea8; }
+[data-theme="dark"] .tok-type { color: #4ec9b0; }
+[data-theme="dark"] .tok-property { color: #9cdcfe; }
+[data-theme="dark"] .tok-attr { color: #9cdcfe; }
+[data-theme="dark"] .tok-tag { color: #569cd6; }
+[data-theme="dark"] .tok-selector { color: #d7ba7d; }
+[data-theme="dark"] .tok-variable { color: #9cdcfe; }
+[data-theme="dark"] .tok-function { color: #dcdcaa; }
+[data-theme="dark"] .tok-meta { color: #c586c0; }
+[data-theme="dark"] .tok-punctuation { color: #d4d4d4; }
+
+[data-theme="light"] .tok-comment { color: #008000; }
+[data-theme="light"] .tok-keyword { color: #0000ff; }
+[data-theme="light"] .tok-string { color: #a31515; }
+[data-theme="light"] .tok-number { color: #098658; }
+[data-theme="light"] .tok-type { color: #267f99; }
+[data-theme="light"] .tok-property { color: #001080; }
+[data-theme="light"] .tok-attr { color: #c00000; }
+[data-theme="light"] .tok-tag { color: #800000; }
+[data-theme="light"] .tok-selector { color: #800000; }
+[data-theme="light"] .tok-variable { color: #001080; }
+[data-theme="light"] .tok-function { color: #795e26; }
+[data-theme="light"] .tok-meta { color: #af00db; }
+[data-theme="light"] .tok-punctuation { color: #24292e; }
