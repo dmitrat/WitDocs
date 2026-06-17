@@ -1,0 +1,9 @@
+@page "/project/{Slug}"
+@using OutWit.Docs.Framework.Components.Pages
+
+<ProjectPage Slug="@Slug" />
+
+@code {
+    [Parameter]
+    public string Slug { get; set; } = "";
+}

@@ -1,0 +1,177 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  
+  <!--
+    OutWit.Docs.Framework MSBuild Targets
+    Automatically generates content index, sitemap, robots.txt, search index, RSS feed, and static HTML pages after publish
+    
+    Usage:
+      - Automatically runs on Release builds after Publish
+      - Set <OutWitGenerateContent>true</OutWitGenerateContent> to force generation
+      - Set <OutWitGenerateInDebug>true</OutWitGenerateInDebug> to enable generation in Debug mode
+      - Set <OutWitSiteUrl>https://example.com</OutWitSiteUrl> to specify site URL
+      - Set <OutWitGenerateStaticPages>false</OutWitGenerateStaticPages> to disable SSG
+      - Set <OutWitGenerateSearchIndex>false</OutWitGenerateSearchIndex> to disable search index
+      - Set <OutWitGenerateRssFeed>false</OutWitGenerateRssFeed> to disable RSS feed
+      - Set <OutWitGenerateOgImages>true</OutWitGenerateOgImages> to enable OG image generation (requires Playwright)
+      - Set <OutWitHostingProvider>cloudflare|netlify|vercel|github|none</OutWitHostingProvider> for hosting-specific files
+  -->
+  
+  <!-- Define default properties -->
+  <PropertyGroup>
+    <!-- Enable generation in Debug mode (default: false) -->
+    <OutWitGenerateInDebug Condition="'$(OutWitGenerateInDebug)' == ''">false</OutWitGenerateInDebug>
+    
+    <!-- Enable/disable content generation (default: true for Release builds, or when OutWitGenerateInDebug is true) -->
+    <OutWitGenerateContent Condition="'$(OutWitGenerateContent)' == '' AND '$(Configuration)' == 'Release'">true</OutWitGenerateContent>
+    <OutWitGenerateContent Condition="'$(OutWitGenerateContent)' == '' AND '$(OutWitGenerateInDebug)' == 'true'">true</OutWitGenerateContent>
+    <OutWitGenerateContent Condition="'$(OutWitGenerateContent)' == ''">false</OutWitGenerateContent>
+    
+    <!-- Enable/disable static HTML generation (default: true for Release, false for Debug) -->
+    <OutWitGenerateStaticPages Condition="'$(OutWitGenerateStaticPages)' == '' AND '$(Configuration)' == 'Release'">true</OutWitGenerateStaticPages>
+    <OutWitGenerateStaticPages Condition="'$(OutWitGenerateStaticPages)' == ''">false</OutWitGenerateStaticPages>
+    
+    <!-- Enable/disable search index generation (default: true) -->
+    <OutWitGenerateSearchIndex Condition="'$(OutWitGenerateSearchIndex)' == ''">true</OutWitGenerateSearchIndex>
+    
+    <!-- Enable/disable RSS feed generation (default: true) -->
+    <OutWitGenerateRssFeed Condition="'$(OutWitGenerateRssFeed)' == ''">true</OutWitGenerateRssFeed>
+    
+    <!-- Enable/disable OG image generation (default: false, requires Playwright) -->
+    <OutWitGenerateOgImages Condition="'$(OutWitGenerateOgImages)' == ''">false</OutWitGenerateOgImages>
+    
+    <!-- Hosting provider for config files (default: cloudflare) -->
+    <OutWitHostingProvider Condition="'$(OutWitHostingProvider)' == ''">cloudflare</OutWitHostingProvider>
+    
+    <!-- Always generate in CI/CD environments -->
+    <OutWitGenerateContent Condition="'$(CI)' == 'true' OR '$(TF_BUILD)' == 'true' OR '$(GITHUB_ACTIONS)' == 'true'">true</OutWitGenerateContent>
+    
+    <!-- Path to wwwroot (auto-detected) -->
+    <OutWitWwwRootPath Condition="'$(OutWitWwwRootPath)' == ''">$(MSBuildProjectDirectory)\wwwroot</OutWitWwwRootPath>
+    
+    <!-- Path to content folder -->
+    <OutWitContentPath Condition="'$(OutWitContentPath)' == ''">$(OutWitWwwRootPath)\content</OutWitContentPath>
+    
+    <!-- Site URL (read from site.config.json if not specified) -->
+    <OutWitSiteUrl Condition="'$(OutWitSiteUrl)' == ''"></OutWitSiteUrl>
+    
+    <!-- Site Name (read from site.config.json if not specified) -->
+    <OutWitSiteName Condition="'$(OutWitSiteName)' == ''"></OutWitSiteName>
+  </PropertyGroup>
+
+  <!--
+    Target: OutWitEnsureStaticFiles
+    Ensures all generated JSON files exist before build (required for StaticWebAssets)
+  -->
+  <Target Name="OutWitEnsureStaticFiles" BeforeTargets="Build">
+    <PropertyGroup>
+      <_IndexJsonPath>$(OutWitContentPath)\index.json</_IndexJsonPath>
+      <_RobotsTxtPath>$(OutWitWwwRootPath)\robots.txt</_RobotsTxtPath>
+      <_SitemapXmlPath>$(OutWitWwwRootPath)\sitemap.xml</_SitemapXmlPath>
+      <_SearchIndexPath>$(OutWitWwwRootPath)\search-index.json</_SearchIndexPath>
+      <_NavigationIndexPath>$(OutWitWwwRootPath)\navigation-index.json</_NavigationIndexPath>
+      <_ContentMetadataPath>$(OutWitWwwRootPath)\content-metadata.json</_ContentMetadataPath>
+      <_FeedXmlPath>$(OutWitWwwRootPath)\feed.xml</_FeedXmlPath>
+    </PropertyGroup>
+    
+    <!-- Create empty index.json if it doesn't exist -->
+    <WriteLinesToFile 
+        File="$(_IndexJsonPath)"
+        Lines='{"projects":[],"docs":[],"articles":[],"blog":[],"features":[],"sections":{}}'
+        Overwrite="false"
+        Condition="!Exists('$(_IndexJsonPath)')" />
+    
+    <!-- Create placeholder robots.txt if it doesn't exist -->
+    <WriteLinesToFile 
+        File="$(_RobotsTxtPath)"
+        Lines="User-agent: *;Allow: /"
+        Overwrite="false"
+        Condition="!Exists('$(_RobotsTxtPath)')" />
+    
+    <!-- Create placeholder sitemap.xml if it doesn't exist -->
+    <WriteLinesToFile 
+        File="$(_SitemapXmlPath)"
+        Lines='&lt;?xml version="1.0" encoding="UTF-8"?&gt;&lt;urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"&gt;&lt;/urlset&gt;'
+        Overwrite="false"
+        Condition="!Exists('$(_SitemapXmlPath)')" />
+    
+    <!-- Create empty search-index.json if it doesn't exist -->
+    <WriteLinesToFile 
+        File="$(_SearchIndexPath)"
+        Lines='[]'
+        Overwrite="false"
+        Condition="!Exists('$(_SearchIndexPath)')" />
+    
+    <!-- Create empty navigation-index.json if it doesn't exist -->
+    <WriteLinesToFile 
+        File="$(_NavigationIndexPath)"
+        Lines='{"projects":[],"articles":[],"docs":[],"sections":{}}'
+        Overwrite="false"
+        Condition="!Exists('$(_NavigationIndexPath)')" />
+    
+    <!-- Create empty content-metadata.json if it doesn't exist -->
+    <WriteLinesToFile 
+        File="$(_ContentMetadataPath)"
+        Lines='{"blog":[],"projects":[],"articles":[],"docs":[],"features":[],"sections":{}}'
+        Overwrite="false"
+        Condition="!Exists('$(_ContentMetadataPath)')" />
+    
+    <!-- Create placeholder feed.xml if it doesn't exist -->
+    <WriteLinesToFile 
+        File="$(_FeedXmlPath)"
+        Lines='&lt;?xml version="1.0" encoding="UTF-8"?&gt;&lt;rss version="2.0"&gt;&lt;channel&gt;&lt;/channel&gt;&lt;/rss&gt;'
+        Overwrite="false"
+        Condition="!Exists('$(_FeedXmlPath)')" />
+  </Target>
+
+  <!-- 
+    Target: OutWitGenerateContentAfterBuild
+    Runs after Build to generate all content files using the .NET Generator
+  -->
+  <Target Name="OutWitGenerateContentAfterBuild" 
+          AfterTargets="Build" 
+          Condition="'$(OutWitGenerateContent)' == 'true' AND Exists('$(OutWitContentPath)')">
+    
+    <Message Importance="high" Text="OutWit.Docs.Framework: Running content generator..." />
+
+    <!--
+      If the project ships a local tool manifest pinning the generator
+      (.config/dotnet-tools.json), restore it so the correct version is used
+      without requiring a global install. This is a no-op for consumers that
+      install the tool globally (no manifest present), so it stays backward
+      compatible with existing sites.
+    -->
+    <Exec Condition="Exists('$(MSBuildProjectDirectory)\.config\dotnet-tools.json')"
+          Command="dotnet tool restore"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          ContinueOnError="true" />
+
+    <!-- Build CLI arguments to match Generator interface -->
+    <PropertyGroup>
+      <_GeneratorArgs>--site "$(MSBuildProjectDirectory)"</_GeneratorArgs>
+      <_GeneratorArgs Condition="'$(OutWitWwwRootPath)' != ''">$(_GeneratorArgs) --output "$(OutWitWwwRootPath)"</_GeneratorArgs>
+      <_GeneratorArgs Condition="'$(OutWitSiteUrl)' != ''">$(_GeneratorArgs) --url "$(OutWitSiteUrl)"</_GeneratorArgs>
+      <_GeneratorArgs>$(_GeneratorArgs) --hosting "$(OutWitHostingProvider)"</_GeneratorArgs>
+      <_GeneratorArgs Condition="'$(OutWitGenerateStaticPages)' != 'true'">$(_GeneratorArgs) --skip-static</_GeneratorArgs>
+      <_GeneratorArgs Condition="'$(OutWitGenerateSearchIndex)' != 'true'">$(_GeneratorArgs) --skip-search</_GeneratorArgs>
+      <_GeneratorArgs Condition="'$(OutWitGenerateRssFeed)' != 'true'">$(_GeneratorArgs) --skip-rss</_GeneratorArgs>
+      <_GeneratorArgs Condition="'$(OutWitGenerateOgImages)' == 'true'">$(_GeneratorArgs) --og-images</_GeneratorArgs>
+    </PropertyGroup>
+    
+    <!--
+      Run the .NET Generator tool. Resolves a local-manifest tool first, then a
+      global tool. Capture the exit code so a missing/failed tool produces an
+      actionable error instead of a bare MSB3073.
+    -->
+    <Exec Command="dotnet witdocs-generate $(_GeneratorArgs)"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          ContinueOnError="true">
+      <Output TaskParameter="ExitCode" PropertyName="_OutWitGenExitCode" />
+    </Exec>
+
+    <Error Condition="'$(_OutWitGenExitCode)' != '0'"
+           Text="OutWit content generation failed (exit code $(_OutWitGenExitCode)). The 'witdocs-generate' tool is missing or errored. Provide it via a local manifest (.config/dotnet-tools.json with 'outwit.docs.generator', then 'dotnet tool restore') or install it globally ('dotnet tool install -g OutWit.Docs.Generator'). Projects created from the OutWit template include the manifest automatically." />
+
+    <Message Importance="high" Text="OutWit.Docs.Framework: Content generation complete." />
+  </Target>
+
+</Project>

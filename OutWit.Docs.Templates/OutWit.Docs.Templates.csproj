@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageType>Template</PackageType>
+    <Version>2.0.0</Version>
+    <Title>WitDocs Site Templates</Title>
+    <Description>WitDocs Templates: Project templates for creating static websites with Blazor WebAssembly, markdown content, skeleton loading, and SEO optimization. Part of https://witdocs.io</Description>
+    <PackageTags>witdocs;dotnet-new;templates;blazor;webassembly;static-site;markdown;skeleton</PackageTags>
+    
+    <TargetFramework>net10.0</TargetFramework>
+    <IncludeContentInPack>true</IncludeContentInPack>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <ContentTargetFolders>content</ContentTargetFolders>
+    <NoDefaultExcludes>true</NoDefaultExcludes>
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
+    
+    <!-- Template packages don't need symbols -->
+    <IncludeSymbols>false</IncludeSymbols>
+    
+    <!-- Suppress warnings -->
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+  </PropertyGroup>
+
+  <!-- Template content -->
+  <ItemGroup>
+    <Content Include="templates\**\*" Exclude="templates\**\bin\**;templates\**\obj\**" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Compile Remove="**\*" />
+  </ItemGroup>
+
+</Project>

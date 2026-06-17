@@ -1,0 +1,254 @@
+using Markdig;
+using Markdig.Syntax;
+using Markdig.Syntax.Inlines;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
+using OutWit.Docs.Framework.Models;
+using OutWit.Docs.Framework.Utils;
+using System.Text.RegularExpressions;
+using Markdig.Extensions.Yaml;
+
+namespace OutWit.Docs.Framework.Services;
+
+/// <summary>
+/// Service for parsing and rendering Markdown content with frontmatter support.
+/// </summary>
+public partial class MarkdownService
+{
+    #region Fields
+
+    private bool m_allowRawHtml;
+
+    #endregion
+
+    #region Constructors
+
+    public MarkdownService() : this(true)
+    {
+    }
+
+    public MarkdownService(bool allowRawHtml)
+    {
+        m_allowRawHtml = allowRawHtml;
+        Pipeline = BuildPipeline(allowRawHtml);
+
+        YamlDeserializer = new DeserializerBuilder()
+            .WithNamingConvention(CamelCaseNamingConvention.Instance)
+            .IgnoreUnmatchedProperties()
+            .Build();
+    }
+
+    #endregion
+
+    #region Initialization
+
+    /// <summary>
+    /// Reconfigure raw-HTML handling once the site config is known. Used by the
+    /// runtime DI path (ConfigService) since config is loaded asynchronously after
+    /// the service is constructed. No-op when the setting is unchanged.
+    /// </summary>
+    public void Configure(bool allowRawHtml)
+    {
+        if (allowRawHtml == m_allowRawHtml)
+            return;
+
+        m_allowRawHtml = allowRawHtml;
+        Pipeline = BuildPipeline(allowRawHtml);
+    }
+
+    private static MarkdownPipeline BuildPipeline(bool allowRawHtml)
+    {
+        var builder = new MarkdownPipelineBuilder()
+            .UseAdvancedExtensions()
+            .UseYamlFrontMatter()
+            .UseAutoIdentifiers()
+            .UseTaskLists()
+            .UseEmojiAndSmiley();
+
+        // Syntax-highlight fenced code (pure C#, build-time + runtime) and wrap it
+        // with a language label + copy button.
+        builder = builder.Use(new CodeHighlightExtension());
+
+        // Strip raw inline/block HTML so markdown like <script> renders as text.
+        if (!allowRawHtml)
+            builder = builder.DisableHtml();
+
+        return builder.Build();
+    }
+
+    #endregion
+
+    #region Functions
+
+    /// <summary>
+    /// Parse markdown content and extract frontmatter, also rendering the HTML.
+    /// </summary>
+    public (T? Frontmatter, string HtmlContent) ParseWithFrontmatter<T>(string markdown) where T : class
+    {
+        var frontmatter = GetFrontmatter<T>(markdown);
+        var html = Markdown.ToHtml(markdown, Pipeline);
+        return (frontmatter, html);
+    }
+
+    /// <summary>
+    /// Extract only the YAML frontmatter from markdown, without rendering HTML.
+    /// Cheaper than <see cref="ParseWithFrontmatter{T}"/> when the caller renders
+    /// the body separately (avoids a redundant full Markdig render).
+    /// </summary>
+    public T? GetFrontmatter<T>(string markdown) where T : class
+    {
+        var document = Markdown.Parse(markdown, Pipeline);
+
+        var yamlBlock = document.Descendants<YamlFrontMatterBlock>().FirstOrDefault();
+        if (yamlBlock == null)
+            return null;
+
+        var yamlContent = markdown.Substring(yamlBlock.Span.Start, yamlBlock.Span.Length);
+        // Remove the --- delimiters
+        yamlContent = YamlFrontMatterRegex().Replace(yamlContent, "").Trim();
+
+        try
+        {
+            return YamlDeserializer.Deserialize<T>(yamlContent);
+        }
+        catch (Exception ex)
+        {
+            // Don't fail the whole render, but surface the problem — a silent
+            // null frontmatter otherwise makes the page vanish with no diagnostic.
+            Console.Error.WriteLine($"Warning: failed to parse YAML frontmatter: {ex.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Render markdown to HTML.
+    /// </summary>
+    public string ToHtml(string markdown)
+    {
+        return Markdown.ToHtml(markdown, Pipeline);
+    }
+
+    /// <summary>
+    /// Render markdown to HTML without paragraph wrapper.
+    /// Useful for short inline content like summaries and descriptions.
+    /// </summary>
+    public string ToHtmlInline(string markdown)
+    {
+        if (string.IsNullOrEmpty(markdown))
+            return string.Empty;
+
+        var html = ToHtml(markdown).Trim();
+
+        // Remove wrapping <p> tags if present (for single-line content)
+        if (html.StartsWith("<p>") && html.EndsWith("</p>") && html.IndexOf("<p>", 3) == -1)
+        {
+            html = html[3..^4];
+        }
+
+        return html;
+    }
+
+    /// <summary>
+    /// Extract table of contents from markdown.
+    /// </summary>
+    public List<TocEntry> ExtractTableOfContents(string markdown)
+    {
+        var document = Markdown.Parse(markdown, Pipeline);
+        var entries = new List<TocEntry>();
+        var stack = new Stack<TocEntry>();
+
+        foreach (var heading in document.Descendants<HeadingBlock>())
+        {
+            var text = GetHeadingText(heading);
+            var id = SlugGenerator.GenerateSlug(text);
+            var entry = new TocEntry
+            {
+                Id = id,
+                Title = text,
+                Level = heading.Level
+            };
+
+            // Build hierarchy
+            while (stack.Count > 0 && stack.Peek().Level >= heading.Level)
+            {
+                stack.Pop();
+            }
+
+            if (stack.Count == 0)
+            {
+                entries.Add(entry);
+            }
+            else
+            {
+                stack.Peek().Children.Add(entry);
+            }
+
+            stack.Push(entry);
+        }
+
+        return entries;
+    }
+
+    /// <summary>
+    /// Calculate reading time in minutes.
+    /// </summary>
+    public int CalculateReadingTime(string markdown, int wordsPerMinute = 200)
+    {
+        // Remove markdown syntax for more accurate word count
+        var plainText = StripMarkdownRegex().Replace(markdown, " ");
+        var wordCount = plainText.Split([' ', '\n', '\r', '\t'], StringSplitOptions.RemoveEmptyEntries).Length;
+        return Math.Max(1, (int)Math.Ceiling((double)wordCount / wordsPerMinute));
+    }
+
+    /// <summary>
+    /// Extract plain text from markdown for search indexing.
+    /// </summary>
+    public string ExtractPlainText(string markdown)
+    {
+        // Remove YAML frontmatter
+        var content = YamlFrontMatterBlockRegex().Replace(markdown, "");
+        // Remove markdown syntax
+        content = StripMarkdownRegex().Replace(content, " ");
+        // Normalize whitespace
+        content = MultipleSpacesRegex().Replace(content, " ").Trim();
+        return content;
+    }
+
+    #endregion
+
+    #region Tools
+
+    private static string GetHeadingText(HeadingBlock heading)
+    {
+        var inline = heading.Inline;
+        if (inline == null) return string.Empty;
+        
+        return string.Concat(inline.Descendants<LiteralInline>().Select(l => l.Content.ToString()));
+    }
+
+    #endregion
+
+    #region Properties
+
+    private MarkdownPipeline Pipeline { get; set; }
+
+    private IDeserializer YamlDeserializer { get; }
+
+    #endregion
+
+    #region Regex Patterns
+
+    [GeneratedRegex(@"^---\s*\n?|---\s*$", RegexOptions.Multiline)]
+    private static partial Regex YamlFrontMatterRegex();
+
+    [GeneratedRegex(@"^---[\s\S]*?---\s*", RegexOptions.Multiline)]
+    private static partial Regex YamlFrontMatterBlockRegex();
+
+    [GeneratedRegex(@"[#*`\[\]()>!_~\-]")]
+    private static partial Regex StripMarkdownRegex();
+
+    [GeneratedRegex(@"\s+")]
+    private static partial Regex MultipleSpacesRegex();
+
+    #endregion
+}

@@ -1,7 +1,24 @@
 # Changelog
 
-All notable changes to the WitDocs packages (OutWit.Web.Framework,
-OutWit.Web.Generator, OutWit.Web.Templates) are documented here.
+All notable changes to the WitDocs packages (OutWit.Docs.Framework,
+OutWit.Docs.Generator, OutWit.Docs.Templates) are documented here.
+
+## 2.0.0
+
+### Breaking — rebrand OutWit.Web → OutWit.Docs (WitDocs)
+
+- **Package IDs renamed**: `OutWit.Web.Framework` → `OutWit.Docs.Framework`,
+  `OutWit.Web.Generator` → `OutWit.Docs.Generator`, `OutWit.Web.Templates` →
+  `OutWit.Docs.Templates`. The old `OutWit.Web.*` packages remain published (1.x) but
+  are deprecated; migrate `PackageReference`s to `OutWit.Docs.*`.
+- **CLI tool command** renamed `outwit-generate` → `witdocs-generate`
+  (tool package `OutWit.Docs.Generator`, manifest id `outwit.docs.generator`).
+- **Template** short name `outwit-web` → `witdocs` (`dotnet new witdocs`).
+- Root namespaces/assemblies moved `OutWit.Web.*` → `OutWit.Docs.*`; the framework
+  build props file is now `build/OutWit.Docs.Framework.targets`.
+- **Unchanged on purpose:** the MSBuild property surface (`OutWitHostingProvider`,
+  `OutWitGenerateContent`, …) keeps its `OutWit*` prefix, so consumer csproj/CI need
+  no property changes — only the `PackageReference`, tool install, and `@using`.
 
 ## 1.4.4
 
@@ -135,7 +152,7 @@ Generator and Templates only; Framework unchanged at 1.3.5.
 ### Build / tooling
 - The project template ships a local tool manifest (`.config/dotnet-tools.json`)
   pinning the generator, and the targets run `dotnet tool restore` automatically,
-  so `dotnet new outwit-web` + `dotnet build -c Release` works without a global
+  so `dotnet new witdocs` + `dotnet build -c Release` works without a global
   tool install. Build emits an actionable error if the tool is missing.
 - The template now ships a `.gitignore` that excludes generated content/SEO
   assets (sitemap, search index, feed, og-images, hosting config).

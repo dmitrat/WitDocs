@@ -8,8 +8,8 @@ on:
         required: true
         type: choice
         options:
-          - OutWit.Web.Framework
-          - OutWit.Web.Generator
+          - OutWit.Docs.Framework
+          - OutWit.Docs.Generator
       configuration:
         description: 'Build configuration'
         required: false

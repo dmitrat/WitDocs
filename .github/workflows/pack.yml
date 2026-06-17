@@ -8,9 +8,9 @@ on:
         required: true
         type: choice
         options:
-          - OutWit.Web.Framework
-          - OutWit.Web.Generator
-          - OutWit.Web.Templates
+          - OutWit.Docs.Framework
+          - OutWit.Docs.Generator
+          - OutWit.Docs.Templates
 
 permissions:
   contents: read
