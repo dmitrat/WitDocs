@@ -26,6 +26,7 @@ on:
 permissions:
   contents: read
   packages: write
+  id-token: write   # required for NuGet trusted publishing (OIDC)
 
 jobs:
   publish:
@@ -99,11 +100,21 @@ jobs:
             --name github \
             "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
 
+      # Trusted publishing (OIDC): exchanges the workflow's id-token for a short-lived
+      # nuget.org API key — no long-lived secret. Requires a matching trusted-publishing
+      # policy on nuget.org (owner + repo dmitrat/WitDocs + workflow publish.yml).
+      - name: NuGet trusted-publishing login
+        id: nugetlogin
+        if: github.event.inputs.pushToNuGet == 'true' && steps.collect.outputs.hasNupkg == 'true'
+        uses: NuGet/login@v1
+        with:
+          user: dmitrat   # <-- must match your nuget.org username
+
       - name: Push to nuget.org
         if: github.event.inputs.pushToNuGet == 'true' && steps.collect.outputs.hasNupkg == 'true'
         run: |
           dotnet nuget push "NuGet/*.nupkg" \
-            --api-key ${{ secrets.NUGET_API_KEY }} \
+            --api-key ${{ steps.nugetlogin.outputs.NUGET_API_KEY }} \
             --source https://api.nuget.org/v3/index.json \
             --skip-duplicate
 
@@ -111,7 +122,7 @@ jobs:
         if: github.event.inputs.pushToNuGet == 'true' && steps.collect.outputs.hasSnupkg == 'true'
         run: |
           dotnet nuget push "NuGet/*.snupkg" \
-            --api-key ${{ secrets.NUGET_API_KEY }} \
+            --api-key ${{ steps.nugetlogin.outputs.NUGET_API_KEY }} \
             --source https://api.nuget.org/v3/index.json \
             --skip-duplicate
 
