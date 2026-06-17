@@ -169,7 +169,7 @@
     </Exec>
 
     <Error Condition="'$(_OutWitGenExitCode)' != '0'"
-           Text="OutWit content generation failed (exit code $(_OutWitGenExitCode)). The 'witdocs-generate' tool is missing or errored. Provide it via a local manifest (.config/dotnet-tools.json with 'outwit.web.generator', then 'dotnet tool restore') or install it globally ('dotnet tool install -g OutWit.Docs.Generator'). Projects created from the OutWit template include the manifest automatically." />
+           Text="OutWit content generation failed (exit code $(_OutWitGenExitCode)). The 'witdocs-generate' tool is missing or errored. Provide it via a local manifest (.config/dotnet-tools.json with 'outwit.docs.generator', then 'dotnet tool restore') or install it globally ('dotnet tool install -g OutWit.Docs.Generator'). Projects created from the OutWit template include the manifest automatically." />
 
     <Message Importance="high" Text="OutWit.Docs.Framework: Content generation complete." />
   </Target>

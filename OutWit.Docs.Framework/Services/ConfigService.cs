@@ -44,7 +44,7 @@ public class ConfigService
             // Return default config if loading fails
             Config = new SiteConfig
             {
-                SiteName = "OutWit Web",
+                SiteName = "WitDocs",
                 BaseUrl = "/",
                 DefaultTheme = "dark"
             };

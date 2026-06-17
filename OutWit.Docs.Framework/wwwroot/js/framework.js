@@ -1,4 +1,4 @@
-// OutWit Web Framework - JavaScript Interop
+// WitDocs Framework - JavaScript Interop
 // Functions called from Blazor via JS.InvokeVoidAsync
 
 // OutWit namespace for framework functions

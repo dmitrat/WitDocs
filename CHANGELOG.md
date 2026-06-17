@@ -3,6 +3,23 @@
 All notable changes to the WitDocs packages (OutWit.Docs.Framework,
 OutWit.Docs.Generator, OutWit.Docs.Templates) are documented here.
 
+## 2.0.0
+
+### Breaking — rebrand OutWit.Web → OutWit.Docs (WitDocs)
+
+- **Package IDs renamed**: `OutWit.Web.Framework` → `OutWit.Docs.Framework`,
+  `OutWit.Web.Generator` → `OutWit.Docs.Generator`, `OutWit.Web.Templates` →
+  `OutWit.Docs.Templates`. The old `OutWit.Web.*` packages remain published (1.x) but
+  are deprecated; migrate `PackageReference`s to `OutWit.Docs.*`.
+- **CLI tool command** renamed `outwit-generate` → `witdocs-generate`
+  (tool package `OutWit.Docs.Generator`, manifest id `outwit.docs.generator`).
+- **Template** short name `outwit-web` → `witdocs` (`dotnet new witdocs`).
+- Root namespaces/assemblies moved `OutWit.Web.*` → `OutWit.Docs.*`; the framework
+  build props file is now `build/OutWit.Docs.Framework.targets`.
+- **Unchanged on purpose:** the MSBuild property surface (`OutWitHostingProvider`,
+  `OutWitGenerateContent`, …) keeps its `OutWit*` prefix, so consumer csproj/CI need
+  no property changes — only the `PackageReference`, tool install, and `@using`.
+
 ## 1.4.4
 
 ### Fixes (Generator — hosting config)

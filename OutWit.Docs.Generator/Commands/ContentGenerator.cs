@@ -78,7 +78,7 @@ public class ContentGenerator
         if (m_config.GenerateRssFeed)
         {
             Console.WriteLine("Generating feed.xml...");
-            var rssFeedGenerator = new RssFeedGenerator(m_config, siteUrl, siteConfig?.SiteName ?? "OutWit Web");
+            var rssFeedGenerator = new RssFeedGenerator(m_config, siteUrl, siteConfig?.SiteName ?? "WitDocs");
             await rssFeedGenerator.GenerateAsync(contentIndex, cancellationToken);
         }
 
@@ -94,7 +94,7 @@ public class ContentGenerator
         if (m_config.GenerateStaticPages)
         {
             Console.WriteLine("Generating static HTML pages...");
-            var staticPageGenerator = new StaticPageGenerator(m_config, siteConfig, siteUrl, siteConfig?.SiteName ?? "OutWit Web");
+            var staticPageGenerator = new StaticPageGenerator(m_config, siteConfig, siteUrl, siteConfig?.SiteName ?? "WitDocs");
             await staticPageGenerator.GenerateAsync(contentIndex, cancellationToken);
         }
 
@@ -102,7 +102,7 @@ public class ContentGenerator
         if (m_config.GenerateOgImages)
         {
             Console.WriteLine("Generating OG images...");
-            await using var ogImageGenerator = new OgImageGenerator(m_config, siteConfig, siteUrl, siteConfig?.SiteName ?? "OutWit Web");
+            await using var ogImageGenerator = new OgImageGenerator(m_config, siteConfig, siteUrl, siteConfig?.SiteName ?? "WitDocs");
             await ogImageGenerator.GenerateAsync(contentIndex, cancellationToken);
         }
 

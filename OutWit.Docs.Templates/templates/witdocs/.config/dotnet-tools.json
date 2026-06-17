@@ -2,7 +2,7 @@
   "version": 1,
   "isRoot": true,
   "tools": {
-    "outwit.web.generator": {
+    "outwit.docs.generator": {
       "version": "1.4.4",
       "commands": [
         "witdocs-generate"

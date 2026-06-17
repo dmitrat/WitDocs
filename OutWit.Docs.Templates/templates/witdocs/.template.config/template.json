@@ -3,7 +3,7 @@
   "author": "Dmitry Ratner",
   "classifications": ["Web", "Blazor", "WebAssembly", "Static Site"],
   "identity": "OutWit.Docs.Site",
-  "name": "OutWit Web Site",
+  "name": "WitDocs Site",
   "shortName": "witdocs",
   "description": "A Blazor WebAssembly static site using OutWit.Docs.Framework with markdown content, skeleton loading, SEO optimization, and automatic content generation.",
   "tags": {
