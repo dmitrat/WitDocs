@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>OutWit.Docs.Site.Template</RootNamespace>
+    <AssemblyName>OutWit.Docs.Site.Template</AssemblyName>
+    
+    <!-- Hosting provider for content generation -->
+    <OutWitHostingProvider>{{HostingProvider}}</OutWitHostingProvider>
+    
+    <!-- Enable content generation in Debug mode (for faster development) -->
+    <OutWitGenerateInDebug>{{EnableDebugGeneration}}</OutWitGenerateInDebug>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.1" PrivateAssets="all" />
+    <PackageReference Include="OutWit.Docs.Framework" Version="2.0.0" />
+  </ItemGroup>
+
+</Project>

@@ -10,9 +10,9 @@
     <File Path=".github/workflows/release.yml" />
     <File Path=".github/workflows/test.yml" />
   </Folder>
-  <Project Path="OutWit.Web.Framework.Tests/OutWit.Web.Framework.Tests.csproj" />
-  <Project Path="OutWit.Web.Framework/OutWit.Web.Framework.csproj" />
-  <Project Path="OutWit.Web.Generator/OutWit.Web.Generator.csproj" />
-  <Project Path="OutWit.Web.Generator.Tests/OutWit.Web.Generator.Tests.csproj" />
-  <Project Path="OutWit.Web.Templates/OutWit.Web.Templates.csproj" />
+  <Project Path="OutWit.Docs.Framework.Tests/OutWit.Docs.Framework.Tests.csproj" />
+  <Project Path="OutWit.Docs.Framework/OutWit.Docs.Framework.csproj" />
+  <Project Path="OutWit.Docs.Generator/OutWit.Docs.Generator.csproj" />
+  <Project Path="OutWit.Docs.Generator.Tests/OutWit.Docs.Generator.Tests.csproj" />
+  <Project Path="OutWit.Docs.Templates/OutWit.Docs.Templates.csproj" />
 </Solution>

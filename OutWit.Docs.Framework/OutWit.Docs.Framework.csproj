@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    
+    <!-- NuGet Package Configuration (specific to this project) -->
+    <Version>2.0.0</Version>
+    <Description>WitDocs Framework: Blazor WebAssembly framework for creating static websites with markdown content, SEO optimization, skeleton loading, and automatic content generation. Part of https://witdocs.io</Description>
+    <PackageTags>witdocs;blazor;webassembly;static-site;markdown;seo;open-graph;rss;skeleton</PackageTags>
+    
+    <!-- Include build assets in the package -->
+    <DevelopmentDependency>false</DevelopmentDependency>
+    
+    <!-- Make targets/props available to ProjectReference consumers -->
+    <TargetsForTfmSpecificBuildOutput>GetBuildAssets</TargetsForTfmSpecificBuildOutput>
+    
+    <!-- Suppress NuGet warnings about PowerShell scripts in build folder (they are MSBuild scripts, not install scripts) -->
+    <NoWarn>$(NoWarn);NU5110;NU5111</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ColorCode.Core" Version="2.0.15" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.2" />
+    <PackageReference Include="OutWit.Common.MVVM.Blazor" Version="2.0.2" />
+    <PackageReference Include="Markdig" Version="0.44.0" />
+    <PackageReference Include="YamlDotNet" Version="16.3.0" />
+  </ItemGroup>
+
+  <!-- Include build targets and scripts in NuGet package -->
+  <ItemGroup>
+    <!-- MSBuild targets file - automatically imported by consuming projects -->
+    <None Include="build\OutWit.Docs.Framework.targets" Pack="true" PackagePath="build\" />
+    
+    <!-- PowerShell scripts for content generation -->
+  </ItemGroup>
+  
+  <!-- Make build assets available to ProjectReference consumers -->
+  <Target Name="GetBuildAssets">
+    <ItemGroup>
+      <BuildOutputInPackage Include="$(MSBuildProjectDirectory)\build\OutWit.Docs.Framework.targets" TargetPath="build\" />
+    </ItemGroup>
+  </Target>
+
+</Project>

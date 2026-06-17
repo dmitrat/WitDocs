@@ -1,0 +1,234 @@
+using NUnit.Framework;
+using OutWit.Docs.Generator.Commands;
+using OutWit.Docs.Generator.Services;
+
+namespace OutWit.Docs.Generator.Tests;
+
+/// <summary>
+/// Tests for HostingConfigGenerator service.
+/// </summary>
+[TestFixture]
+public class HostingConfigGeneratorTests
+{
+    #region Tests
+
+    [Test]
+    public async Task GenerateAsyncCloudflareCreatesHeadersAndRoutesTest()
+    {
+        // Arrange
+        var tempDir = CreateTempDirectory();
+        var config = new GeneratorConfig
+        {
+            OutputPath = tempDir,
+            HostingProvider = "cloudflare"
+        };
+        var generator = new HostingConfigGenerator(config);
+
+        try
+        {
+            // Act
+            await generator.GenerateAsync();
+
+            // Assert - Cloudflare creates _headers and _routes.json
+            Assert.That(File.Exists(Path.Combine(tempDir, "_headers")), Is.True);
+            Assert.That(File.Exists(Path.Combine(tempDir, "_routes.json")), Is.True);
+
+            var headers = await File.ReadAllTextAsync(Path.Combine(tempDir, "_headers"));
+            Assert.That(headers, Does.Contain("Cache-Control"));
+            Assert.That(headers, Does.Contain("/_framework/*"));
+            // Stable-named boot entry points must NOT be immutable, or deploys get
+            // pinned to a stale build. They must revalidate.
+            Assert.That(headers, Does.Contain("/_framework/dotnet.js"));
+            Assert.That(headers, Does.Contain("/_framework/blazor.webassembly.js"));
+            Assert.That(headers, Does.Contain("no-cache"));
+            // Hashed assets are immutable by extension; there is NO broad
+            // "/_framework/* immutable" rule (Cloudflare can't override a wildcard
+            // per-file, which would re-pin the boot loaders to a stale build).
+            Assert.That(headers, Does.Contain("/_framework/*.wasm"));
+            Assert.That(headers, Does.Not.Contain("/_framework/*\n  Cache-Control: public, max-age=31536000, immutable"));
+
+            var routes = await File.ReadAllTextAsync(Path.Combine(tempDir, "_routes.json"));
+            Assert.That(routes, Does.Contain("\"version\": 1"));
+            Assert.That(routes, Does.Contain("\"include\""));
+            Assert.That(routes, Does.Contain("\"exclude\""));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Test]
+    public async Task GenerateAsyncCloudflareRoutesExcludesStaticAssetsTest()
+    {
+        // Arrange
+        var tempDir = CreateTempDirectory();
+        var config = new GeneratorConfig
+        {
+            OutputPath = tempDir,
+            HostingProvider = "cloudflare"
+        };
+        var generator = new HostingConfigGenerator(config);
+
+        try
+        {
+            // Act
+            await generator.GenerateAsync();
+
+            // Assert - _routes.json should exclude static asset paths
+            var routes = await File.ReadAllTextAsync(Path.Combine(tempDir, "_routes.json"));
+            
+            // Framework files should be excluded
+            Assert.That(routes, Does.Contain("/_framework/*"));
+            
+            // Static file extensions should be excluded
+            Assert.That(routes, Does.Contain("/*.json"));
+            Assert.That(routes, Does.Contain("/content/*"));
+            Assert.That(routes, Does.Contain("/images/*"));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Test]
+    public async Task GenerateAsyncNetlifyCreatesHeadersAndRedirectsTest()
+    {
+        // Arrange
+        var tempDir = CreateTempDirectory();
+        var config = new GeneratorConfig
+        {
+            OutputPath = tempDir,
+            HostingProvider = "netlify"
+        };
+        var generator = new HostingConfigGenerator(config);
+
+        try
+        {
+            // Act
+            await generator.GenerateAsync();
+
+            // Assert - Netlify needs both _headers and _redirects
+            Assert.That(File.Exists(Path.Combine(tempDir, "_headers")), Is.True);
+            Assert.That(File.Exists(Path.Combine(tempDir, "_redirects")), Is.True);
+
+            var headers = await File.ReadAllTextAsync(Path.Combine(tempDir, "_headers"));
+            Assert.That(headers, Does.Contain("Cache-Control"));
+            
+            var redirects = await File.ReadAllTextAsync(Path.Combine(tempDir, "_redirects"));
+            Assert.That(redirects, Does.Contain("/*  /index.html  200"));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Test]
+    public async Task GenerateAsyncVercelCreatesJsonTest()
+    {
+        // Arrange
+        var tempDir = CreateTempDirectory();
+        var config = new GeneratorConfig
+        {
+            OutputPath = tempDir,
+            HostingProvider = "vercel"
+        };
+        var generator = new HostingConfigGenerator(config);
+
+        try
+        {
+            // Act
+            await generator.GenerateAsync();
+
+            // Assert
+            var vercelJsonPath = Path.Combine(tempDir, "vercel.json");
+            Assert.That(File.Exists(vercelJsonPath), Is.True);
+
+            var content = await File.ReadAllTextAsync(vercelJsonPath);
+            Assert.That(content, Does.Contain("rewrites"));
+            Assert.That(content, Does.Contain("headers"));
+            Assert.That(content, Does.Contain("_framework"));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Test]
+    public async Task GenerateAsyncGithubCreates404AndNojekyllTest()
+    {
+        // Arrange
+        var tempDir = CreateTempDirectory();
+
+        var config = new GeneratorConfig
+        {
+            OutputPath = tempDir,
+            HostingProvider = "github"
+        };
+        var generator = new HostingConfigGenerator(config);
+
+        try
+        {
+            // Act
+            await generator.GenerateAsync();
+
+            // Assert
+            Assert.That(File.Exists(Path.Combine(tempDir, ".nojekyll")), Is.True);
+            Assert.That(File.Exists(Path.Combine(tempDir, "404.html")), Is.True);
+
+            var content = await File.ReadAllTextAsync(Path.Combine(tempDir, "404.html"));
+            Assert.That(content, Does.Contain("Redirecting"));
+            Assert.That(content, Does.Contain("sessionStorage"));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Test]
+    public async Task GenerateAsyncNoneCreatesNothingTest()
+    {
+        // Arrange
+        var tempDir = CreateTempDirectory();
+        var config = new GeneratorConfig
+        {
+            OutputPath = tempDir,
+            HostingProvider = "none"
+        };
+        var generator = new HostingConfigGenerator(config);
+
+        try
+        {
+            // Act
+            await generator.GenerateAsync();
+
+            // Assert - no hosting files should be created
+            Assert.That(File.Exists(Path.Combine(tempDir, "_headers")), Is.False);
+            Assert.That(File.Exists(Path.Combine(tempDir, "_redirects")), Is.False);
+            Assert.That(File.Exists(Path.Combine(tempDir, "_routes.json")), Is.False);
+            Assert.That(File.Exists(Path.Combine(tempDir, "vercel.json")), Is.False);
+            Assert.That(File.Exists(Path.Combine(tempDir, ".nojekyll")), Is.False);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    #endregion
+
+    #region Tools
+
+    private static string CreateTempDirectory()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "OutWit.Test." + Guid.NewGuid().ToString("N")[..8]);
+        Directory.CreateDirectory(path);
+        return path;
+    }
+
+    #endregion
+}

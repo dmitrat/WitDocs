@@ -1,0 +1,52 @@
+using Microsoft.AspNetCore.Components;
+using OutWit.Common.MVVM.Blazor.ViewModels;
+using OutWit.Docs.Framework.Configuration;
+using OutWit.Docs.Framework.Services;
+
+namespace OutWit.Docs.Framework.ViewModels.Layout;
+
+public class FooterExpandedViewModel : ViewModelBase
+{
+    #region Fields
+
+    private SiteConfig? m_config;
+
+    #endregion
+
+    #region Initialization
+
+    protected override async Task OnInitializedAsync()
+    {
+        m_config = await ConfigService.GetConfigAsync();
+    }
+
+    #endregion
+
+    #region Functions
+
+    /// <summary>
+    /// Renders a footer line with inline markdown support (links, bold, etc.).
+    /// </summary>
+    protected string RenderLine(string line)
+    {
+        return MarkdownService.ToHtmlInline(line);
+    }
+
+    #endregion
+
+    #region Properties
+
+    protected SiteConfig? Config => m_config;
+
+    #endregion
+
+    #region Injected Dependencies
+
+    [Inject]
+    public ConfigService ConfigService { get; set; } = null!;
+
+    [Inject]
+    public MarkdownService MarkdownService { get; set; } = null!;
+
+    #endregion
+}

@@ -1,0 +1,146 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Dmitry Ratner",
+  "classifications": ["Web", "Blazor", "WebAssembly", "Static Site"],
+  "identity": "OutWit.Docs.Site",
+  "name": "OutWit Web Site",
+  "shortName": "witdocs",
+  "description": "A Blazor WebAssembly static site using OutWit.Docs.Framework with markdown content, skeleton loading, SEO optimization, and automatic content generation.",
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "sourceName": "OutWit.Docs.Site.Template",
+  "preferNameDirectory": true,
+  "primaryOutputs": [
+    { "path": "OutWit.Docs.Site.Template.csproj" }
+  ],
+  "symbols": {
+    "siteName": {
+      "type": "parameter",
+      "datatype": "string",
+      "description": "The display name of your site",
+      "defaultValue": "My Site",
+      "replaces": "{{SiteName}}"
+    },
+    "siteDescription": {
+      "type": "parameter",
+      "datatype": "string",
+      "description": "Site description for SEO and social sharing",
+      "defaultValue": "Welcome to my site",
+      "replaces": "{{SiteDescription}}"
+    },
+    "baseUrl": {
+      "type": "parameter",
+      "datatype": "string",
+      "description": "The base URL of your site (e.g., https://example.com)",
+      "defaultValue": "https://example.com",
+      "replaces": "{{BaseUrl}}"
+    },
+    "authorName": {
+      "type": "parameter",
+      "datatype": "string",
+      "description": "Author name for copyright",
+      "defaultValue": "Your Name",
+      "replaces": "{{AuthorName}}"
+    },
+    "accentColor": {
+      "type": "parameter",
+      "datatype": "string",
+      "description": "Primary accent color (hex)",
+      "defaultValue": "#007CF0",
+      "replaces": "{{AccentColor}}"
+    },
+    "githubUrl": {
+      "type": "parameter",
+      "datatype": "string",
+      "description": "GitHub profile or repo URL",
+      "defaultValue": "",
+      "replaces": "{{GitHubUrl}}"
+    },
+    "twitterHandle": {
+      "type": "parameter",
+      "datatype": "string",
+      "description": "Twitter handle (e.g., @yourhandle)",
+      "defaultValue": "",
+      "replaces": "{{TwitterHandle}}"
+    },
+    "includeDocsSection": {
+      "type": "parameter",
+      "datatype": "bool",
+      "description": "Include documentation section",
+      "defaultValue": "false"
+    },
+    "includeBlogSection": {
+      "type": "parameter",
+      "datatype": "bool",
+      "description": "Include blog section",
+      "defaultValue": "true"
+    },
+    "includeProjectsSection": {
+      "type": "parameter",
+      "datatype": "bool",
+      "description": "Include projects section",
+      "defaultValue": "true"
+    },
+    "enableDebugGeneration": {
+      "type": "parameter",
+      "datatype": "bool",
+      "description": "Enable content generation in Debug mode (slower builds, but no loading delay)",
+      "defaultValue": "false"
+    },
+    "hostingProvider": {
+      "type": "parameter",
+      "datatype": "choice",
+      "description": "Target hosting provider",
+      "defaultValue": "cloudflare",
+      "choices": [
+        { "choice": "cloudflare", "description": "Cloudflare Pages" },
+        { "choice": "netlify", "description": "Netlify" },
+        { "choice": "vercel", "description": "Vercel" },
+        { "choice": "github", "description": "GitHub Pages" },
+        { "choice": "none", "description": "No specific provider" }
+      ],
+      "replaces": "{{HostingProvider}}"
+    },
+    "enableDebugGenerationValue": {
+      "type": "generated",
+      "generator": "switch",
+      "parameters": {
+        "evaluator": "C++",
+        "cases": [
+          { "condition": "(enableDebugGeneration)", "value": "true" },
+          { "condition": "(!enableDebugGeneration)", "value": "false" }
+        ]
+      },
+      "replaces": "{{EnableDebugGeneration}}"
+    }
+  },
+  "sources": [
+    {
+      "modifiers": [
+        {
+          "condition": "(!includeDocsSection)",
+          "exclude": ["Pages/Docs.razor", "Pages/DocsIndex.razor", "wwwroot/content/docs/**"]
+        },
+        {
+          "condition": "(!includeBlogSection)",
+          "exclude": ["Pages/Blog.razor", "Pages/BlogPost.razor", "wwwroot/content/blog/**"]
+        },
+        {
+          "condition": "(!includeProjectsSection)",
+          "exclude": ["Pages/Project.razor", "wwwroot/content/projects/**"]
+        }
+      ]
+    }
+  ],
+  "postActions": [
+    {
+      "actionId": "210D431B-A78B-4D2F-B762-4ED3E3EA9025",
+      "condition": "true",
+      "description": "Restore NuGet packages",
+      "manualInstructions": [{ "text": "Run 'dotnet restore'" }],
+      "continueOnError": true
+    }
+  ]
+}

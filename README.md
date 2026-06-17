@@ -8,9 +8,9 @@ A Blazor WebAssembly platform for building content-driven static websites with m
 
 | Package | Description | NuGet |
 |---------|-------------|-------|
-| [OutWit.Web.Framework](OutWit.Web.Framework/) | Core framework with components, services, and build tools | [![NuGet](https://img.shields.io/nuget/v/OutWit.Web.Framework.svg)](https://www.nuget.org/packages/OutWit.Web.Framework/) |
-| [OutWit.Web.Generator](OutWit.Web.Generator/) | CLI tool for content generation (sitemap, RSS, search, OG images) | [![NuGet](https://img.shields.io/nuget/v/OutWit.Web.Generator.svg)](https://www.nuget.org/packages/OutWit.Web.Generator/) |
-| [OutWit.Web.Templates](OutWit.Web.Templates/) | dotnet new templates for creating new sites | [![NuGet](https://img.shields.io/nuget/v/OutWit.Web.Templates.svg)](https://www.nuget.org/packages/OutWit.Web.Templates/) |
+| [OutWit.Docs.Framework](OutWit.Docs.Framework/) | Core framework with components, services, and build tools | [![NuGet](https://img.shields.io/nuget/v/OutWit.Docs.Framework.svg)](https://www.nuget.org/packages/OutWit.Docs.Framework/) |
+| [OutWit.Docs.Generator](OutWit.Docs.Generator/) | CLI tool for content generation (sitemap, RSS, search, OG images) | [![NuGet](https://img.shields.io/nuget/v/OutWit.Docs.Generator.svg)](https://www.nuget.org/packages/OutWit.Docs.Generator/) |
+| [OutWit.Docs.Templates](OutWit.Docs.Templates/) | dotnet new templates for creating new sites | [![NuGet](https://img.shields.io/nuget/v/OutWit.Docs.Templates.svg)](https://www.nuget.org/packages/OutWit.Docs.Templates/) |
 
 ## Quick Start
 
@@ -18,10 +18,10 @@ A Blazor WebAssembly platform for building content-driven static websites with m
 
 ```bash
 # Install the template
-dotnet new install OutWit.Web.Templates
+dotnet new install OutWit.Docs.Templates
 
 # Create a new site
-dotnet new outwit-web -n MySite --siteName "My Awesome Site" --baseUrl "https://mysite.com"
+dotnet new witdocs -n MySite --siteName "My Awesome Site" --baseUrl "https://mysite.com"
 
 # Run the site
 cd MySite
@@ -31,7 +31,7 @@ dotnet run
 ### Option 2: Add to Existing Project
 
 ```bash
-dotnet add package OutWit.Web.Framework
+dotnet add package OutWit.Docs.Framework
 ```
 
 ## Features
@@ -124,7 +124,7 @@ your-site/
 ## Template Options
 
 ```bash
-dotnet new outwit-web --help
+dotnet new witdocs --help
 ```
 
 | Option | Description | Default |
@@ -155,7 +155,7 @@ dotnet run
 **Prerequisite:** Install the Generator tool:
 
 ```bash
-dotnet tool install -g OutWit.Web.Generator
+dotnet tool install -g OutWit.Docs.Generator
 ```
 
 Then build in Release mode:
@@ -207,9 +207,9 @@ jobs:
 
 ## Documentation
 
-- [OutWit.Web.Framework README](OutWit.Web.Framework/README.md) - Detailed framework documentation
-- [OutWit.Web.Generator README](OutWit.Web.Generator/README.md) - Generator CLI documentation
-- [OutWit.Web.Templates README](OutWit.Web.Templates/README.md) - Template usage guide
+- [OutWit.Docs.Framework README](OutWit.Docs.Framework/README.md) - Detailed framework documentation
+- [OutWit.Docs.Generator README](OutWit.Docs.Generator/README.md) - Generator CLI documentation
+- [OutWit.Docs.Templates README](OutWit.Docs.Templates/README.md) - Template usage guide
 
 ## License
 
