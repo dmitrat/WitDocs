@@ -3,6 +3,15 @@
 All notable changes to the WitDocs packages (OutWit.Docs.Framework,
 OutWit.Docs.Generator, OutWit.Docs.Templates) are documented here.
 
+## 2.2.0
+
+### Footer — Reddit social icon
+
+- `SocialIcon` now renders the official **Reddit** logo for `platform: "reddit"`
+  (footer `socialLinks`). Previously unknown platforms (incl. reddit) fell back to
+  the generic globe icon. Other platforms unchanged; unknown ones still fall back
+  to the globe (handy for a generic "portal"/website link).
+
 ## 2.1.0
 
 ### Sections — short "landing" URLs (opt-in)
