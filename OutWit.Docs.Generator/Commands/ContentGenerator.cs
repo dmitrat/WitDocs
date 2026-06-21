@@ -62,7 +62,7 @@ public class ContentGenerator
         if (m_config.GenerateSitemap)
         {
             Console.WriteLine("Generating sitemap.xml and robots.txt...");
-            var sitemapGenerator = new SitemapGenerator(m_config, siteUrl);
+            var sitemapGenerator = new SitemapGenerator(m_config, siteUrl, siteConfig);
             await sitemapGenerator.GenerateAsync(contentIndex, cancellationToken);
         }
 
@@ -70,7 +70,7 @@ public class ContentGenerator
         if (m_config.GenerateSearchIndex)
         {
             Console.WriteLine("Generating search-index.json...");
-            var searchIndexGenerator = new SearchIndexGenerator(m_config);
+            var searchIndexGenerator = new SearchIndexGenerator(m_config, siteConfig);
             await searchIndexGenerator.GenerateAsync(contentIndex, cancellationToken);
         }
 

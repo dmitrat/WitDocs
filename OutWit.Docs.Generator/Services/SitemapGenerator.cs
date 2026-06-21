@@ -1,5 +1,6 @@
 using System.Text;
 using OutWit.Docs.Generator.Commands;
+using OutWit.Docs.Framework.Configuration;
 using OutWit.Docs.Framework.Content;
 
 namespace OutWit.Docs.Generator.Services;
@@ -13,15 +14,17 @@ public class SitemapGenerator
 
     private readonly GeneratorConfig m_config;
     private readonly string m_siteUrl;
+    private readonly SiteConfig? m_siteConfig;
 
     #endregion
 
     #region Constructors
 
-    public SitemapGenerator(GeneratorConfig config, string siteUrl)
+    public SitemapGenerator(GeneratorConfig config, string siteUrl, SiteConfig? siteConfig = null)
     {
         m_config = config;
         m_siteUrl = siteUrl.TrimEnd('/');
+        m_siteConfig = siteConfig;
     }
 
     #endregion
@@ -101,14 +104,26 @@ public class SitemapGenerator
         // Add dynamic sections
         foreach (var (sectionName, files) in contentIndex.Sections)
         {
+            var section = m_siteConfig?.ContentSections?.FirstOrDefault(s => s.Folder == sectionName);
+            var route = string.IsNullOrEmpty(section?.Route) ? sectionName : section!.Route;
+            var landing = section?.LandingPage == true;
             var sectionPath = Path.Combine(m_config.ContentPath, sectionName);
-            foreach (var file in files)
+
+            for (var i = 0; i < files.Count; i++)
             {
+                var file = files[i];
                 var slug = ContentHelpers.GetSlugFromPath(file);
                 var lastMod = GetFileLastModified(Path.Combine(sectionPath, file));
+
+                // Landing section: the lead (first) page is canonical at the short
+                // route itself; the rest keep /{route}/{slug}/.
+                var url = landing && i == 0
+                    ? $"{m_siteUrl}/{route}/"
+                    : $"{m_siteUrl}/{route}/{slug}/";
+
                 entries.Add(new SitemapEntry
                 {
-                    Url = $"{m_siteUrl}/{sectionName}/{slug}/",
+                    Url = url,
                     LastMod = lastMod,
                     Priority = "0.6"
                 });

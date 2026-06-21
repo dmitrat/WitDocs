@@ -1,5 +1,6 @@
 using System.Text.Json;
 using OutWit.Docs.Generator.Commands;
+using OutWit.Docs.Framework.Configuration;
 using OutWit.Docs.Framework.Content;
 
 namespace OutWit.Docs.Generator.Services;
@@ -12,14 +13,16 @@ public class SearchIndexGenerator
     #region Fields
 
     private readonly GeneratorConfig m_config;
+    private readonly SiteConfig? m_siteConfig;
 
     #endregion
 
     #region Constructors
 
-    public SearchIndexGenerator(GeneratorConfig config)
+    public SearchIndexGenerator(GeneratorConfig config, SiteConfig? siteConfig = null)
     {
         m_config = config;
+        m_siteConfig = siteConfig;
     }
 
     #endregion
@@ -72,10 +75,17 @@ public class SearchIndexGenerator
         // Index dynamic sections
         foreach (var (sectionName, files) in contentIndex.Sections)
         {
+            var section = m_siteConfig?.ContentSections?.FirstOrDefault(s => s.Folder == sectionName);
+            var route = string.IsNullOrEmpty(section?.Route) ? sectionName : section!.Route;
+            var landing = section?.LandingPage == true;
             var sectionPath = Path.Combine(m_config.ContentPath, sectionName);
-            foreach (var file in files)
+
+            for (var i = 0; i < files.Count; i++)
             {
-                var entry = await ParseContentAsync(Path.Combine(sectionPath, file), sectionName, cancellationToken);
+                // Landing section: the lead (first) page is canonical at the short
+                // route itself, so index it under /{route} (not /{route}/{slug}).
+                var urlOverride = landing && i == 0 ? $"/{route}" : null;
+                var entry = await ParseContentAsync(Path.Combine(sectionPath, files[i]), sectionName, cancellationToken, urlOverride);
                 if (entry != null)
                     entries.Add(entry);
             }
@@ -99,7 +109,7 @@ public class SearchIndexGenerator
 
     #region Tools
 
-    private async Task<SearchIndexEntry?> ParseContentAsync(string filePath, string contentType, CancellationToken cancellationToken)
+    private async Task<SearchIndexEntry?> ParseContentAsync(string filePath, string contentType, CancellationToken cancellationToken, string? urlOverride = null)
     {
         if (!File.Exists(filePath))
             return null;
@@ -123,7 +133,7 @@ public class SearchIndexGenerator
                 Title = frontmatter.Title ?? slug,
                 Description = frontmatter.Summary ?? frontmatter.Description ?? "",
                 Content = ContentHelpers.TruncateText(plainText, maxLength),
-                Url = $"/{contentType}/{slug}",
+                Url = urlOverride ?? $"/{contentType}/{slug}",
                 Type = contentType,
                 Tags = frontmatter.Tags ?? []
             };

@@ -3,6 +3,30 @@
 All notable changes to the WitDocs packages (OutWit.Docs.Framework,
 OutWit.Docs.Generator, OutWit.Docs.Templates) are documented here.
 
+## 2.1.0
+
+### Sections — short "landing" URLs (opt-in)
+
+- New `ContentSectionConfig.LandingPage` (bool, default `false`). When `true`, a
+  dynamic section's **lead (first) page** is served at the short section route
+  itself (`/{route}/`) instead of `/{route}/{lead-slug}/`, and no card-listing
+  page is generated for the root; the remaining pages keep `/{route}/{slug}/`.
+  Each page then has exactly **one canonical URL**, so the human-navigable paths
+  match the sitemap/search-index. Ordering uses the usual `NN-` filename prefixes
+  (the lead is the lowest-ordered file).
+- Applies across the generator: static HTML (`StaticPageGenerator`), `sitemap.xml`
+  (`SitemapGenerator`) and `search-index.json` (`SearchIndexGenerator`) all emit
+  the canonical `/{route}/` for the lead and `/{route}/{slug}/` for the rest.
+- Backward compatible: sections without `landingPage` keep the previous behavior
+  (listing root + every page under `/{route}/{slug}/`). No change for existing
+  sites until they opt in.
+- Tip: give the lead page `showInMenu: false` so the section's auto dropdown lists
+  only the sub-pages (the lead is reached via the top-level menu item itself).
+
+> Publish **OutWit.Docs.Framework** then **OutWit.Docs.Generator** 2.1.0 (the
+> generator tool depends on the framework package); consumer sites pick up the new
+> URLs on their next generate/deploy.
+
 ## 2.0.0
 
 ### Breaking — rebrand OutWit.Web → OutWit.Docs (WitDocs)

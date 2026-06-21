@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using OutWit.Docs.Framework.Configuration;
 using OutWit.Docs.Framework.Content;
 using OutWit.Docs.Generator.Commands;
 using OutWit.Docs.Generator.Services;
@@ -153,6 +154,71 @@ public class StaticPageGeneratorTests
             // no flash of unstyled content.
             Assert.That(home, Does.Contain("ssg-prerender"));
             Assert.That(home, Does.Contain("Loading...")); // template spinner preserved
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Test]
+    public async Task GenerateAsyncLandingSectionPutsLeadPageAtRootTest()
+    {
+        // Arrange — a landing section: the lead (first) page should live at the
+        // short route itself (/vision/), the rest at /vision/{slug}/, and there
+        // should be NO /vision/{lead-slug}/ and NO listing root.
+        var tempDir = CreateTempDirectory();
+        CreateTemplate(tempDir);
+        SetupContentDirectory(tempDir, "vision", "01-the-ultracomputer.md", """
+            ---
+            title: The Ultracomputer
+            description: Lead.
+            ---
+
+            # The Ultracomputer
+            Lead body.
+            """);
+        SetupContentDirectory(tempDir, "vision", "02-roadmap.md", """
+            ---
+            title: Roadmap
+            description: Second.
+            ---
+
+            # Roadmap
+            Second body.
+            """);
+
+        var siteConfig = new SiteConfig
+        {
+            ContentSections =
+            [
+                new ContentSectionConfig { Folder = "vision", Route = "vision", LandingPage = true }
+            ]
+        };
+        var config = new GeneratorConfig { OutputPath = tempDir };
+        var generator = new StaticPageGenerator(config, siteConfig, "https://example.com", "Test Site");
+        var index = new ContentIndex
+        {
+            Sections = { ["vision"] = ["01-the-ultracomputer.md", "02-roadmap.md"] }
+        };
+
+        try
+        {
+            // Act
+            await generator.GenerateAsync(index);
+
+            // Assert — lead page is at the section root, carrying its real content
+            var root = Path.Combine(tempDir, "vision", "index.html");
+            Assert.That(File.Exists(root), Is.True);
+            var rootHtml = await File.ReadAllTextAsync(root);
+            Assert.That(rootHtml, Does.Contain("The Ultracomputer"));
+            Assert.That(rootHtml, Does.Contain("https://example.com/vision/")); // canonical
+
+            // Lead page is NOT duplicated under /vision/{lead-slug}/
+            Assert.That(File.Exists(Path.Combine(tempDir, "vision", "the-ultracomputer", "index.html")), Is.False);
+
+            // Remaining page keeps /vision/{slug}/
+            Assert.That(File.Exists(Path.Combine(tempDir, "vision", "roadmap", "index.html")), Is.True);
         }
         finally
         {

@@ -77,7 +77,29 @@ public partial class StaticPageGenerator
         // Dynamic sections
         foreach (var (sectionName, files) in contentIndex.Sections)
         {
-            await ProcessContentFolderAsync(sectionName, sectionName, files, stats, cancellationToken);
+            var section = m_siteConfig?.ContentSections?.FirstOrDefault(s => s.Folder == sectionName);
+            var route = string.IsNullOrEmpty(section?.Route) ? sectionName : section!.Route;
+
+            if (section?.LandingPage == true && files.Count > 0)
+            {
+                // Lead page lives at the short section route itself (/{route}/);
+                // the remaining pages keep /{route}/{slug}/.
+                await RenderSectionFileAsync(sectionName, files[0], route, stats, cancellationToken);
+                foreach (var file in files.Skip(1))
+                {
+                    var slug = ContentHelpers.GetSlugFromPath(file);
+                    await RenderSectionFileAsync(sectionName, file, $"{route}/{slug}", stats, cancellationToken);
+                }
+            }
+            else
+            {
+                foreach (var file in files)
+                {
+                    var slug = ContentHelpers.GetSlugFromPath(file);
+                    await RenderSectionFileAsync(sectionName, file, $"{route}/{slug}", stats, cancellationToken);
+                }
+            }
+
             stats.Sections++;
         }
 
@@ -145,6 +167,51 @@ public partial class StaticPageGenerator
         }
     }
 
+    /// <summary>
+    /// Render a single dynamic-section markdown file to <c>/{urlPath}/index.html</c>.
+    /// Used so a landing section can place its lead page at the short route (<c>/{route}/</c>)
+    /// while other pages keep <c>/{route}/{slug}/</c>.
+    /// </summary>
+    private async Task RenderSectionFileAsync(
+        string folderName,
+        string file,
+        string urlPath,
+        GenerationStats stats,
+        CancellationToken cancellationToken)
+    {
+        var filePath = Path.Combine(m_config.ContentPath, folderName, file);
+        if (!File.Exists(filePath))
+            return;
+
+        try
+        {
+            var slug = ContentHelpers.GetSlugFromPath(file);
+            var markdown = await File.ReadAllTextAsync(filePath, cancellationToken);
+            var (frontmatter, content) = ContentHelpers.ExtractFrontmatter(markdown);
+
+            content = m_contentParser.StripComponentsForStaticHtml(content);
+            var htmlContent = m_markdown.ToHtml(content);
+            var pageHtml = GenerateStaticPage(
+                title: frontmatter?.Title ?? slug,
+                description: frontmatter?.Description ?? frontmatter?.Summary ?? "",
+                htmlContent: htmlContent,
+                canonicalUrl: $"{m_siteUrl}/{urlPath}/",
+                ogType: "article",
+                publishDate: frontmatter?.PublishDate,
+                tags: frontmatter?.Tags);
+
+            var outputDir = Path.Combine(m_config.OutputPath, Path.Combine(urlPath.Split('/')));
+            Directory.CreateDirectory(outputDir);
+            await File.WriteAllTextAsync(Path.Combine(outputDir, "index.html"), pageHtml, cancellationToken);
+
+            stats.SectionItems++;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"    Warning: Failed to process {file}: {ex.Message}");
+        }
+    }
+
     #endregion
 
     #region Home Page
@@ -196,6 +263,12 @@ public partial class StaticPageGenerator
 
         foreach (var (sectionName, files) in contentIndex.Sections)
         {
+            // Landing sections render their lead page at the root, so there is no
+            // separate listing page for them.
+            var section = m_siteConfig?.ContentSections?.FirstOrDefault(s => s.Folder == sectionName);
+            if (section?.LandingPage == true)
+                continue;
+
             var title = char.ToUpperInvariant(sectionName[0]) + sectionName[1..];
             await GenerateContentListPageAsync(title, $"{title} content.", sectionName, sectionName, sectionName, files, stats, cancellationToken);
         }

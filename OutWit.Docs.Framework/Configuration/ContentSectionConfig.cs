@@ -20,7 +20,8 @@ public class ContentSectionConfig : ModelBase
         return Folder.Is(other.Folder)
             && Route.Is(other.Route)
             && MenuTitle.Is(other.MenuTitle)
-            && Type.Is(other.Type);
+            && Type.Is(other.Type)
+            && LandingPage.Is(other.LandingPage);
     }
 
     public override ContentSectionConfig Clone()
@@ -30,7 +31,8 @@ public class ContentSectionConfig : ModelBase
             Folder = Folder,
             Route = Route,
             MenuTitle = MenuTitle,
-            Type = Type
+            Type = Type,
+            LandingPage = LandingPage
         };
     }
 
@@ -61,6 +63,16 @@ public class ContentSectionConfig : ModelBase
     /// Default: "article"
     /// </summary>
     public string Type { get; set; } = "article";
+
+    /// <summary>
+    /// When true, the section's lead (first) page is served at the short section
+    /// route itself (<c>/{route}/</c>) instead of <c>/{route}/{lead-slug}/</c>, and
+    /// no separate listing page is generated for the root. Remaining pages keep
+    /// <c>/{route}/{slug}/</c>. This gives each page exactly one canonical URL and
+    /// makes the human-navigable paths match the sitemap. Default: false (the root
+    /// is a card listing and every page lives under <c>/{route}/{slug}/</c>).
+    /// </summary>
+    public bool LandingPage { get; set; } = false;
 
     #endregion
 }
