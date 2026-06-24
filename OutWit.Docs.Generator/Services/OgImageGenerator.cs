@@ -18,9 +18,12 @@ public partial class OgImageGenerator : IAsyncDisposable
     private const int OG_IMAGE_HEIGHT = 630;
     private const int MAX_DESCRIPTION_LENGTH = 150;
 
-    // Default colors (fallback if theme.css not found)
+    // Default colors (fallback if theme.css not found) — dark-theme defaults.
     private const string DEFAULT_ACCENT_COLOR = "#39FF14";
     private const string DEFAULT_BG_COLOR = "#0D1626";
+    private const string DEFAULT_TEXT_COLOR = "#F5F7FA";
+    private const string DEFAULT_DESC_COLOR = "#A9B4C2";
+    private const string DEFAULT_URL_COLOR = "#6B7A8F";
 
     #endregion
 
@@ -32,8 +35,18 @@ public partial class OgImageGenerator : IAsyncDisposable
     private readonly string m_siteName;
     private string m_accentColor = DEFAULT_ACCENT_COLOR;
     private string m_bgColor = DEFAULT_BG_COLOR;
+    private string m_textColor = DEFAULT_TEXT_COLOR;
+    private string m_descColor = DEFAULT_DESC_COLOR;
+    private string m_urlColor = DEFAULT_URL_COLOR;
     private IPlaywright? m_playwright;
     private IBrowser? m_browser;
+
+    /// <summary>
+    /// OG images render in the site's default theme: light → <c>:root</c> colors and
+    /// light logo; dark (default) → <c>[data-theme="dark"]</c> colors and dark logo.
+    /// </summary>
+    private bool IsDarkTheme =>
+        !string.Equals(m_siteConfig?.DefaultTheme, "light", StringComparison.OrdinalIgnoreCase);
 
     #endregion
 
@@ -118,32 +131,40 @@ public partial class OgImageGenerator : IAsyncDisposable
         try
         {
             var css = await File.ReadAllTextAsync(themeCssPath, cancellationToken);
-            
-            // Extract dark theme section if exists (for OG images we prefer dark theme)
-            var darkThemeMatch = DarkThemeSectionRegex().Match(css);
-            var cssToSearch = darkThemeMatch.Success ? darkThemeMatch.Groups[1].Value : css;
-            
-            // Try to find accent color
-            var accentMatch = CssVariableRegex().Match(cssToSearch);
-            if (accentMatch.Success)
+
+            // Pick the CSS scope matching the site's default theme. Dark → the
+            // [data-theme="dark"] block; light → the whole file, whose first matches
+            // are the :root (light) defaults.
+            var cssToSearch = css;
+            var themeLabel = "light :root";
+            if (IsDarkTheme)
             {
-                m_accentColor = accentMatch.Groups[1].Value.Trim();
+                var darkThemeMatch = DarkThemeSectionRegex().Match(css);
+                if (darkThemeMatch.Success)
+                {
+                    cssToSearch = darkThemeMatch.Groups[1].Value;
+                    themeLabel = "dark";
+                }
             }
 
-            // Try to find background color
-            var bgMatch = CssBackgroundVariableRegex().Match(cssToSearch);
-            if (bgMatch.Success)
-            {
-                m_bgColor = bgMatch.Groups[1].Value.Trim();
-            }
+            Assign(CssVariableRegex().Match(cssToSearch), ref m_accentColor);
+            Assign(CssBackgroundVariableRegex().Match(cssToSearch), ref m_bgColor);
+            Assign(CssTextHeadingRegex().Match(cssToSearch), ref m_textColor);
+            Assign(CssTextBodyRegex().Match(cssToSearch), ref m_descColor);
+            Assign(CssTextSecondaryRegex().Match(cssToSearch), ref m_urlColor);
 
-            Console.WriteLine($"  Theme colors: accent={m_accentColor}, bg={m_bgColor}" + 
-                (darkThemeMatch.Success ? " (dark theme)" : " (root)"));
+            Console.WriteLine($"  Theme colors ({themeLabel}): accent={m_accentColor}, bg={m_bgColor}, text={m_textColor}");
         }
         catch (Exception ex)
         {
             Console.WriteLine($"  Warning: Failed to read theme.css: {ex.Message}");
         }
+    }
+
+    private static void Assign(Match match, ref string target)
+    {
+        if (match.Success)
+            target = match.Groups[1].Value.Trim();
     }
 
     private async Task InitializeBrowserAsync()
@@ -283,6 +304,9 @@ public partial class OgImageGenerator : IAsyncDisposable
             .Replace("{{BG_COLOR}}", m_bgColor)
             .Replace("{{BG_COLOR_DARK}}", bgColorDark)
             .Replace("{{ACCENT_COLOR}}", m_accentColor)
+            .Replace("{{TEXT_COLOR}}", m_textColor)
+            .Replace("{{DESC_COLOR}}", m_descColor)
+            .Replace("{{URL_COLOR}}", m_urlColor)
             .Replace("{{CONTENT_TYPE}}", string.IsNullOrEmpty(safeType) ? "" : $"<div class=\"type\">{safeType}</div>")
             .Replace("{{TITLE}}", safeTitle)
             .Replace("{{DESCRIPTION}}", string.IsNullOrEmpty(safeDescription) ? "" : $"<p class=\"description\">{safeDescription}</p>")
@@ -308,17 +332,12 @@ public partial class OgImageGenerator : IAsyncDisposable
 
     private string GetLogoHtml()
     {
-        // Try to find logo in site directory
-        // Prioritize dark versions since OG images use dark background
-        var logoPaths = new[]
-        {
-            Path.Combine(m_config.OutputPath, "images", "logo-dark.png"),
-            Path.Combine(m_config.OutputPath, "images", "logo-dark.svg"),
-            Path.Combine(m_config.OutputPath, "images", "logo.png"),
-            Path.Combine(m_config.OutputPath, "images", "logo.svg"),
-            Path.Combine(m_config.OutputPath, "images", "logo-light.png"),
-            Path.Combine(m_config.OutputPath, "images", "logo-light.svg")
-        };
+        // Pick the logo variant for the rendered theme: dark OG → light-on-dark
+        // artwork (logo-dark); light OG → dark-on-light artwork (logo-light).
+        string Img(string name) => Path.Combine(m_config.OutputPath, "images", name);
+        var logoPaths = IsDarkTheme
+            ? new[] { Img("logo-dark.png"), Img("logo-dark.svg"), Img("logo.png"), Img("logo.svg"), Img("logo-light.png"), Img("logo-light.svg") }
+            : new[] { Img("logo-light.png"), Img("logo-light.svg"), Img("logo.png"), Img("logo.svg"), Img("logo-dark.png"), Img("logo-dark.svg") };
 
         foreach (var logoPath in logoPaths)
         {
@@ -398,6 +417,15 @@ public partial class OgImageGenerator : IAsyncDisposable
 
     [GeneratedRegex(@"--color-background:\s*([^;]+);")]
     private static partial Regex CssBackgroundVariableRegex();
+
+    [GeneratedRegex(@"--color-text-heading:\s*([^;]+);")]
+    private static partial Regex CssTextHeadingRegex();
+
+    [GeneratedRegex(@"--color-text-body:\s*([^;]+);")]
+    private static partial Regex CssTextBodyRegex();
+
+    [GeneratedRegex(@"--color-text-secondary:\s*([^;]+);")]
+    private static partial Regex CssTextSecondaryRegex();
 
     [GeneratedRegex(@"\[data-theme=""dark""\]\s*\{([^}]+)\}", RegexOptions.Singleline)]
     private static partial Regex DarkThemeSectionRegex();

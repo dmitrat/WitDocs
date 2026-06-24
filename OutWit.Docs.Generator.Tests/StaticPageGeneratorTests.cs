@@ -214,6 +214,10 @@ public class StaticPageGeneratorTests
             Assert.That(rootHtml, Does.Contain("The Ultracomputer"));
             Assert.That(rootHtml, Does.Contain("https://example.com/vision/")); // canonical
 
+            // og:image points to the lead page's own image ({folder}-{slug}), not the
+            // default — even though its canonical URL has a single path segment.
+            Assert.That(rootHtml, Does.Contain("https://example.com/og-images/vision-the-ultracomputer.png"));
+
             // Lead page is NOT duplicated under /vision/{lead-slug}/
             Assert.That(File.Exists(Path.Combine(tempDir, "vision", "the-ultracomputer", "index.html")), Is.False);
 

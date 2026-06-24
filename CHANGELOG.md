@@ -5,6 +5,18 @@ OutWit.Docs.Generator, OutWit.Docs.Templates) are documented here.
 
 ## 2.2.0
 
+### OG images — follow the site's default theme + per-landing image (Generator)
+- OG images now render in the site's **default theme** instead of always dark:
+  `defaultTheme: "light"` → light background, dark text, the `logo-light` artwork;
+  `dark` (default) → the previous dark treatment. Colors (background, accent, text)
+  are read from the matching `theme.css` scope (`:root` vs `[data-theme="dark"]`);
+  the OG HTML template's text colors are now themed (`{{TEXT_COLOR}}`/`{{DESC_COLOR}}`/
+  `{{URL_COLOR}}`).
+- **Landing pages get their own OG image.** A section lead page served at the short
+  route (`/{route}/`, see 2.1.0) now references its generated
+  `og-images/{section}-{slug}.png` instead of falling back to the default image (its
+  single-segment canonical URL previously defeated the URL-based lookup).
+
 ### Footer — Reddit social icon
 
 - `SocialIcon` now renders the official **Reddit** logo for `platform: "reddit"`

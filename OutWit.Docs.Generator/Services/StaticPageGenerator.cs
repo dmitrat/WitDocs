@@ -198,7 +198,10 @@ public partial class StaticPageGenerator
                 canonicalUrl: $"{m_siteUrl}/{urlPath}/",
                 ogType: "article",
                 publishDate: frontmatter?.PublishDate,
-                tags: frontmatter?.Tags);
+                tags: frontmatter?.Tags,
+                // OG image is named {folder}-{slug} by OgImageGenerator; reference it
+                // explicitly so a landing page (/{route}/) gets its own, not the default.
+                ogImageUrlOverride: $"{m_siteUrl}/og-images/{folderName}-{slug}.png");
 
             var outputDir = Path.Combine(m_config.OutputPath, Path.Combine(urlPath.Split('/')));
             Directory.CreateDirectory(outputDir);
@@ -424,7 +427,8 @@ public partial class StaticPageGenerator
         string ogType = "website",
         DateTime? publishDate = null,
         List<string>? tags = null,
-        string? bodyOverride = null)
+        string? bodyOverride = null,
+        string? ogImageUrlOverride = null)
     {
         var html = m_templateHtml;
         var pageTitle = string.IsNullOrEmpty(title) ? m_siteName : $"{title} - {m_siteName}";
@@ -491,8 +495,10 @@ public partial class StaticPageGenerator
             html = html.Replace("</head>", $"    <meta name=\"description\" content=\"{metaDescription}\" />\n</head>");
         }
 
-        // Build OG image URL (auto-detect based on URL pattern)
-        var ogImageUrl = GetOgImageUrl(canonicalUrl);
+        // Build OG image URL (explicit override, else auto-detect from URL pattern).
+        // The override is needed for landing pages whose canonical URL (/{route}/)
+        // has a single segment and would otherwise fall back to the default image.
+        var ogImageUrl = ogImageUrlOverride ?? GetOgImageUrl(canonicalUrl);
 
         // Get logo URL for og:logo
         var logoUrl = m_siteConfig != null && !string.IsNullOrEmpty(m_siteConfig.LogoDark)
