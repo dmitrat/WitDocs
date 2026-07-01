@@ -84,6 +84,46 @@ public class StaticPageGeneratorTests
     }
 
     [Test]
+    public async Task GenerateAsyncContentPageReferencesFolderNamedOgImageTest()
+    {
+        // Arrange — a "projects" content page lives at the singular route /project/{slug}/,
+        // but OgImageGenerator names its file after the (plural) folder: projects-{slug}.png.
+        // The page must reference that folder-named file, not project-{slug}.png (which the
+        // singular canonical URL would otherwise imply and which does not exist).
+        var tempDir = CreateTempDirectory();
+        CreateTemplate(tempDir);
+        SetupContentDirectory(tempDir, "projects", "03-omnibus-cloud.md", """
+            ---
+            title: OmnibusCloud
+            summary: A crowdcomputing platform.
+            ---
+
+            # OmnibusCloud
+            Body.
+            """);
+
+        var config = new GeneratorConfig { OutputPath = tempDir };
+        var generator = new StaticPageGenerator(config, null, "https://example.com", "Test Site");
+        var index = new ContentIndex { Projects = ["03-omnibus-cloud.md"] };
+
+        try
+        {
+            // Act
+            await generator.GenerateAsync(index);
+
+            // Assert — the page sits at the singular route but points at the folder-named image
+            var page = await File.ReadAllTextAsync(Path.Combine(tempDir, "project", "omnibus-cloud", "index.html"));
+            Assert.That(page, Does.Contain("https://example.com/project/omnibus-cloud/")); // canonical (singular)
+            Assert.That(page, Does.Contain("https://example.com/og-images/projects-omnibus-cloud.png"));
+            Assert.That(page, Does.Not.Contain("/og-images/project-omnibus-cloud.png"));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Test]
     public async Task GenerateAsyncGeneratesIndexPagesTest()
     {
         // Arrange

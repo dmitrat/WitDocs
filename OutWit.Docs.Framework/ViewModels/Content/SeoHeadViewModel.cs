@@ -82,10 +82,11 @@ public class SeoHeadViewModel : ViewModelBase
 
     /// <summary>
     /// Generate OG image path based on current URL.
-    /// Maps URL patterns to generated image filenames:
+    /// Maps the URL's route prefix to the generated image filename, which is named
+    /// after the content <em>folder</em> (plural), not the singular route:
     /// - /blog/{slug} -> /og-images/blog-{slug}.png
-    /// - /project/{slug} -> /og-images/project-{slug}.png
-    /// - /article/{slug} -> /og-images/article-{slug}.png
+    /// - /project/{slug} -> /og-images/projects-{slug}.png
+    /// - /article/{slug} -> /og-images/articles-{slug}.png
     /// - /docs/{slug} -> /og-images/docs-{slug}.png
     /// - / (homepage) -> /og-images/default.png
     /// </summary>
@@ -106,12 +107,13 @@ public class SeoHeadViewModel : ViewModelBase
         var contentType = segments[0].ToLowerInvariant();
         var slug = segments[1];
 
-        // Map content types to OG image prefixes
+        // Map the singular route prefix to the (plural) content-folder name the
+        // OG image file is named after: /project/{slug} -> projects-{slug}.png.
         var prefix = contentType switch
         {
             "blog" => "blog",
-            "project" => "project",
-            "article" => "article",
+            "project" => "projects",
+            "article" => "articles",
             "docs" => "docs",
             _ => null
         };

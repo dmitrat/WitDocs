@@ -3,6 +3,25 @@
 All notable changes to the WitDocs packages (OutWit.Docs.Framework,
 OutWit.Docs.Generator, OutWit.Docs.Templates) are documented here.
 
+## 2.2.1
+
+### OG images — fix content-page `og:image` for singular routes (Generator + Framework)
+
+- **Bug:** content pages in a section whose route is singular but whose folder is
+  plural (`projects` → `/project/{slug}`, `articles` → `/article/{slug}`) pointed
+  `og:image` at `project-{slug}.png` / `article-{slug}.png`, but `OgImageGenerator`
+  names the file after the folder — `projects-{slug}.png` / `articles-{slug}.png`.
+  The referenced image did not exist, so social share previews (Facebook, LinkedIn,
+  Slack, WhatsApp, Twitter) showed a broken/empty image. `blog` and `docs` were
+  unaffected (their route prefix equals the folder name). This is the two-segment
+  companion to the 2.2.0 landing-page fix.
+- **Generator:** `StaticPageGenerator` now emits an explicit `og:image` override
+  (`/og-images/{folder}-{slug}.png`) for content pages instead of auto-detecting it
+  from the singular canonical URL.
+- **Framework:** `SeoHeadViewModel` maps the singular route prefix to the plural
+  folder name (`project` → `projects`, `article` → `articles`) when resolving the
+  runtime `og:image`.
+
 ## 2.2.0
 
 ### OG images — follow the site's default theme + per-landing image (Generator)

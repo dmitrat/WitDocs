@@ -152,7 +152,12 @@ public partial class StaticPageGenerator
                     canonicalUrl: $"{m_siteUrl}/{routePrefix}/{slug}/",
                     ogType: "article",
                     publishDate: frontmatter?.PublishDate,
-                    tags: frontmatter?.Tags);
+                    tags: frontmatter?.Tags,
+                    // OG image is named {folder}-{slug} by OgImageGenerator. Reference it
+                    // explicitly: the canonical URL uses the singular route prefix
+                    // (projects -> /project), so auto-detection would look for
+                    // project-{slug}.png and miss the folder-named projects-{slug}.png.
+                    ogImageUrlOverride: $"{m_siteUrl}/og-images/{folderName}-{slug}.png");
 
                 var outputDir = Path.Combine(m_config.OutputPath, routePrefix, slug);
                 Directory.CreateDirectory(outputDir);
