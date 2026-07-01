@@ -139,6 +139,27 @@ public class SitemapGenerator
         var robotsPath = Path.Combine(m_config.OutputPath, "robots.txt");
         await WriteRobotsAsync(robotsPath, cancellationToken);
         Console.WriteLine($"  Created: {robotsPath}");
+
+        // Write the IndexNow key file (opt-in via seo.indexNowKey)
+        await WriteIndexNowKeyFileAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Write the IndexNow verification file (<c>{key}.txt</c>) to the site root
+    /// when <see cref="SeoConfig.IndexNowKey"/> is configured. The file content is
+    /// the key itself, as required by the IndexNow spec. No-op when the key is unset
+    /// (feature is opt-in).
+    /// </summary>
+    private async Task WriteIndexNowKeyFileAsync(CancellationToken cancellationToken)
+    {
+        var key = m_siteConfig?.Seo?.IndexNowKey?.Trim();
+        if (string.IsNullOrEmpty(key))
+            return;
+
+        // The key file name and its content must both be the key (IndexNow spec).
+        var keyFilePath = Path.Combine(m_config.OutputPath, $"{key}.txt");
+        await File.WriteAllTextAsync(keyFilePath, key, cancellationToken);
+        Console.WriteLine($"  Created: {keyFilePath} (IndexNow key file)");
     }
 
     #endregion

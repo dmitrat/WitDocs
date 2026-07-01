@@ -3,6 +3,18 @@
 All notable changes to the WitDocs packages (OutWit.Docs.Framework,
 OutWit.Docs.Generator, OutWit.Docs.Templates) are documented here.
 
+## 2.2.2
+
+### IndexNow — opt-in verification key file (Generator + Framework)
+
+- **New opt-in SEO feature.** Set `seo.indexNowKey` in `site.config.json` to a public
+  IndexNow key (a–z, A–Z, 0–9, dash; 8–128 chars) and the generator writes the required
+  `{key}.txt` verification file to the site root next to `sitemap.xml`/`robots.txt`.
+  When the key is unset the feature is a no-op — nothing is emitted.
+- The generated `sitemap.xml` is the URL source for the deploy pipeline's IndexNow
+  submission step (Bing, Yandex, Seznam, Naver participate; Google does not).
+- `SeoConfig` gains an `IndexNowKey` property (nullable, off by default).
+
 ## 2.2.1
 
 ### OG images — fix content-page `og:image` for singular routes (Generator + Framework)

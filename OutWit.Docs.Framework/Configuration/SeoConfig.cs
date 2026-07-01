@@ -18,7 +18,8 @@ public class SeoConfig : ModelBase
         return DefaultImage.Is(other.DefaultImage)
             && Description.Is(other.Description)
             && TwitterHandle.Is(other.TwitterHandle)
-            && FacebookAppId.Is(other.FacebookAppId);
+            && FacebookAppId.Is(other.FacebookAppId)
+            && IndexNowKey.Is(other.IndexNowKey);
     }
 
     public override SeoConfig Clone()
@@ -28,7 +29,8 @@ public class SeoConfig : ModelBase
             DefaultImage = DefaultImage,
             Description = Description,
             TwitterHandle = TwitterHandle,
-            FacebookAppId = FacebookAppId
+            FacebookAppId = FacebookAppId,
+            IndexNowKey = IndexNowKey
         };
     }
 
@@ -44,8 +46,18 @@ public class SeoConfig : ModelBase
     public string? Description { get; set; }
     
     public string? TwitterHandle { get; set; }
-    
+
     public string? FacebookAppId { get; set; }
+
+    /// <summary>
+    /// IndexNow key (opt-in). When set, the generator writes a
+    /// <c>{key}.txt</c> verification file to the site root so search engines
+    /// that support IndexNow (Bing, Yandex, Seznam, Naver) can verify
+    /// ownership; the deploy pipeline submits changed URLs using this key.
+    /// The key is public by design (allowed chars: a–z, A–Z, 0–9, dash; 8–128 long).
+    /// Leave null/empty to disable IndexNow.
+    /// </summary>
+    public string? IndexNowKey { get; set; }
 
     #endregion
 
