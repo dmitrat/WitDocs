@@ -3,6 +3,27 @@
 All notable changes to the WitDocs packages (OutWit.Docs.Framework,
 OutWit.Docs.Generator, OutWit.Docs.Templates) are documented here.
 
+## 2.3.0
+
+### Analytics — opt-in tracker snippet injection (Generator + Framework)
+
+- **New opt-in `analytics` section in `site.config.json`.** When `scriptUrl` and
+  `websiteId` are both set, the generator injects a provider-agnostic tracker
+  snippet before `</head>` of every prerendered page (including the root
+  `index.html`):
+  `<script defer src="{scriptUrl}" data-website-id="{websiteId}" ...></script>`.
+- Optional `domains` (rendered as `data-domains` — drops events from
+  localhost/previews client-side) and `excludeSearch` (rendered as
+  `data-exclude-search`, **default true** — path-only tracking, query strings never
+  leave the browser).
+- The contract is deliberately minimal (script URL + website id + data attributes),
+  so the analytics backend can be swapped — e.g. self-hosted Umami today, another
+  collector tomorrow — by changing two config values, or nothing at all if the
+  backend keeps the same script path.
+- When the section is absent or incomplete the feature is a no-op — nothing is
+  injected, zero payload cost.
+- `SiteConfig` gains an `Analytics` property (`AnalyticsConfig`).
+
 ## 2.2.2
 
 ### IndexNow — opt-in verification key file (Generator + Framework)

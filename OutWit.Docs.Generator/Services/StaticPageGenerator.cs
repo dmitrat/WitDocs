@@ -528,6 +528,10 @@ public partial class StaticPageGenerator
         if (!html.Contains("<!-- Open Graph (SSG) -->"))
             html = html.Replace("</head>", $"{ogTags}\n</head>");
 
+        // Inject the opt-in analytics snippet — same funnel as the OG tags, so every
+        // generated page (including the root index.html) carries it.
+        html = InjectAnalyticsSnippet(html);
+
         // Pre-rendered content is VISIBLE by default, so the page is readable without
         // JavaScript and by crawlers straight from the HTML source — no "JavaScript
         // required" dead-end. The inline script below hides it and reveals the loading
@@ -553,6 +557,36 @@ public partial class StaticPageGenerator
     #endregion
 
     #region Tools
+
+    /// <summary>
+    /// Inject the opt-in analytics tracker snippet before &lt;/head&gt;.
+    /// Provider-agnostic contract: script URL + <c>data-website-id</c>
+    /// (+ optional <c>data-domains</c>, <c>data-exclude-search</c>).
+    /// No-op when the analytics section is absent or incomplete.
+    /// </summary>
+    private string InjectAnalyticsSnippet(string html)
+    {
+        var analytics = m_siteConfig?.Analytics;
+        if (analytics == null ||
+            string.IsNullOrWhiteSpace(analytics.ScriptUrl) ||
+            string.IsNullOrWhiteSpace(analytics.WebsiteId))
+            return html;
+
+        if (html.Contains("<!-- Analytics (SSG) -->"))
+            return html;
+
+        var domainsAttr = string.IsNullOrWhiteSpace(analytics.Domains)
+            ? ""
+            : $" data-domains=\"{EscapeHtmlAttribute(analytics.Domains)}\"";
+        var excludeSearchAttr = analytics.ExcludeSearch ? " data-exclude-search=\"true\"" : "";
+
+        var snippet =
+            "\n        <!-- Analytics (SSG) -->\n" +
+            $"        <script defer src=\"{EscapeHtmlAttribute(analytics.ScriptUrl)}\"" +
+            $" data-website-id=\"{EscapeHtmlAttribute(analytics.WebsiteId)}\"{domainsAttr}{excludeSearchAttr}></script>";
+
+        return html.Replace("</head>", $"{snippet}\n</head>");
+    }
 
     /// <summary>
     /// Replace the inner content of the &lt;div id="app"&gt; element, correctly

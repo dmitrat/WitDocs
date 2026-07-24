@@ -309,6 +309,90 @@ public class StaticPageGeneratorTests
         }
     }
 
+    [Test]
+    public async Task GenerateAsyncInjectsAnalyticsSnippetWhenConfiguredTest()
+    {
+        // Arrange
+        var tempDir = CreateTempDirectory();
+        CreateTemplate(tempDir);
+        SetupContentDirectory(tempDir, "blog", "2024-01-15-test-post.md", """
+            ---
+            title: Test Blog Post
+            description: Test description
+            publishDate: 2024-01-15
+            ---
+
+            # Hello World
+            """);
+
+        var config = new GeneratorConfig { OutputPath = tempDir };
+        var siteConfig = new SiteConfig
+        {
+            Analytics = new AnalyticsConfig
+            {
+                ScriptUrl = "https://stats.example.com/u.js",
+                WebsiteId = "abc-123",
+                Domains = "example.com"
+            }
+        };
+        var generator = new StaticPageGenerator(config, siteConfig, "https://example.com", "Test Site");
+        var index = new ContentIndex { Blog = ["2024-01-15-test-post.md"] };
+
+        try
+        {
+            // Act
+            await generator.GenerateAsync(index);
+
+            // Assert
+            var content = await File.ReadAllTextAsync(Path.Combine(tempDir, "blog", "test-post", "index.html"));
+            Assert.That(content, Does.Contain("<!-- Analytics (SSG) -->"));
+            Assert.That(content, Does.Contain("src=\"https://stats.example.com/u.js\""));
+            Assert.That(content, Does.Contain("data-website-id=\"abc-123\""));
+            Assert.That(content, Does.Contain("data-domains=\"example.com\""));
+            Assert.That(content, Does.Contain("data-exclude-search=\"true\""));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Test]
+    public async Task GenerateAsyncOmitsAnalyticsSnippetWhenNotConfiguredTest()
+    {
+        // Arrange
+        var tempDir = CreateTempDirectory();
+        CreateTemplate(tempDir);
+        SetupContentDirectory(tempDir, "blog", "2024-01-15-test-post.md", """
+            ---
+            title: Test Blog Post
+            description: Test description
+            publishDate: 2024-01-15
+            ---
+
+            # Hello World
+            """);
+
+        var config = new GeneratorConfig { OutputPath = tempDir };
+        var generator = new StaticPageGenerator(config, new SiteConfig(), "https://example.com", "Test Site");
+        var index = new ContentIndex { Blog = ["2024-01-15-test-post.md"] };
+
+        try
+        {
+            // Act
+            await generator.GenerateAsync(index);
+
+            // Assert — default AnalyticsConfig (no ScriptUrl) must inject nothing
+            var content = await File.ReadAllTextAsync(Path.Combine(tempDir, "blog", "test-post", "index.html"));
+            Assert.That(content, Does.Not.Contain("<!-- Analytics (SSG) -->"));
+            Assert.That(content, Does.Not.Contain("data-website-id"));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
     #endregion
 
     #region Tools

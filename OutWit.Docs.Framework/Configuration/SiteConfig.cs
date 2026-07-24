@@ -29,6 +29,7 @@ public class SiteConfig : ModelBase
             && Contact.Is(other.Contact)
             && Search.Is(other.Search)
             && Seo.Is(other.Seo)
+            && Analytics.Is(other.Analytics)
             && ContentSections.Is(other.ContentSections)
             && AllowRawHtml.Is(other.AllowRawHtml);
     }
@@ -47,6 +48,7 @@ public class SiteConfig : ModelBase
             Contact = Contact.Clone(),
             Search = Search.Clone(),
             Seo = Seo.Clone(),
+            Analytics = Analytics.Clone(),
             ContentSections = ContentSections.Select(s => s.Clone()).ToList(),
             AllowRawHtml = AllowRawHtml
         };
@@ -107,6 +109,11 @@ public class SiteConfig : ModelBase
     /// SEO configuration.
     /// </summary>
     public SeoConfig Seo { get; set; } = new();
+
+    /// <summary>
+    /// Web analytics configuration (opt-in tracker snippet injection).
+    /// </summary>
+    public AnalyticsConfig Analytics { get; set; } = new();
 
     /// <summary>
     /// Custom content sections (like docs/articles but with custom names).

@@ -193,6 +193,76 @@ public class SiteConfigLoaderTests
         }
     }
 
+    [Test]
+    public async Task LoadAsyncParsesAnalyticsSectionTest()
+    {
+        // Arrange
+        var tempDir = CreateTempDirectory();
+        var configPath = Path.Combine(tempDir, "site.config.json");
+
+        await File.WriteAllTextAsync(configPath, """
+            {
+              "siteName": "Test Site",
+              "analytics": {
+                "scriptUrl": "https://stats.example.com/u.js",
+                "websiteId": "abc-123",
+                "domains": "example.com"
+              }
+            }
+            """);
+
+        var loader = new SiteConfigLoader(configPath);
+
+        try
+        {
+            // Act
+            var config = await loader.LoadAsync();
+
+            // Assert
+            Assert.That(config, Is.Not.Null);
+            Assert.That(config!.Analytics.ScriptUrl, Is.EqualTo("https://stats.example.com/u.js"));
+            Assert.That(config.Analytics.WebsiteId, Is.EqualTo("abc-123"));
+            Assert.That(config.Analytics.Domains, Is.EqualTo("example.com"));
+            Assert.That(config.Analytics.ExcludeSearch, Is.True);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Test]
+    public async Task LoadAsyncDefaultsAnalyticsWhenSectionAbsentTest()
+    {
+        // Arrange
+        var tempDir = CreateTempDirectory();
+        var configPath = Path.Combine(tempDir, "site.config.json");
+
+        await File.WriteAllTextAsync(configPath, """
+            {
+              "siteName": "Test Site"
+            }
+            """);
+
+        var loader = new SiteConfigLoader(configPath);
+
+        try
+        {
+            // Act
+            var config = await loader.LoadAsync();
+
+            // Assert — section absent: analytics present but disabled (no ScriptUrl)
+            Assert.That(config, Is.Not.Null);
+            Assert.That(config!.Analytics, Is.Not.Null);
+            Assert.That(config.Analytics.ScriptUrl, Is.Null);
+            Assert.That(config.Analytics.WebsiteId, Is.Null);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
     #endregion
 
     #region Tools
