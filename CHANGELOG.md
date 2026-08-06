@@ -3,6 +3,30 @@
 All notable changes to the WitDocs packages (OutWit.Docs.Framework,
 OutWit.Docs.Generator, OutWit.Docs.Templates) are documented here.
 
+## 2.3.1
+
+### Fix (Generator — hosting config): stylesheets were cached immutably
+
+- **Bug:** `/css/*` was emitted as `public, max-age=31536000, immutable` for
+  Cloudflare, Netlify and Vercel, but a site's stylesheets (`css/site.css`,
+  `css/theme.css`) carry **no content hash** in their names. `immutable` tells the
+  browser never to revalidate, so anyone who had loaded the site before a style
+  change kept the old stylesheet against the new markup — for up to a year — while
+  a first-time visitor saw the site correctly. Found on witrpc.io after a redesign:
+  the hero's code block rendered centred because the rule that left-aligns it did
+  not exist in the cached css.
+- **Fix:** `/css/*` is now `no-cache` (stored, but revalidated — a 304 when
+  unchanged), the same treatment the boot loaders got in 1.4.2–1.4.4 for exactly
+  this reason. `immutable` now applies only to content-hashed assets
+  (`_framework/*.wasm`, `_framework/*.dat`) and `/images/*` keeps its bounded
+  `max-age=86400`.
+- Framework is unchanged and stays at 2.3.0; this is a generator-only release.
+
+> After upgrading the generator and redeploying, purge the CDN cache once so the
+> edge stops serving the previously-immutable stylesheet. Returning visitors whose
+> browser already cached the old css will keep it until its year expires unless the
+> site also changes the stylesheet URL (e.g. `css/site.css?v=2`) once.
+
 ## 2.3.0
 
 ### Analytics — opt-in tracker snippet injection (Generator + Framework)

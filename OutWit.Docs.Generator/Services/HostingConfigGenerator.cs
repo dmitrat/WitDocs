@@ -75,8 +75,12 @@ public class HostingConfigGenerator
             /_framework/*.dat
               Cache-Control: public, max-age=31536000, immutable
 
+            # Site stylesheets are NOT content-hashed (css/site.css, css/theme.css),
+            # so the boot-loader reasoning applies to them too: marked immutable, a
+            # browser that loaded the site before a redesign keeps the old stylesheet
+            # against the new markup for the whole max-age and never revalidates.
             /css/*
-              Cache-Control: public, max-age=31536000, immutable
+              Cache-Control: no-cache
 
             /images/*
               Cache-Control: public, max-age=86400
@@ -154,8 +158,9 @@ public class HostingConfigGenerator
             /_framework/*.dat
               Cache-Control: public, max-age=31536000, immutable
 
+            # Not content-hashed — see the note in the Cloudflare block.
             /css/*
-              Cache-Control: public, max-age=31536000, immutable
+              Cache-Control: no-cache
 
             /images/*
               Cache-Control: public, max-age=86400
@@ -209,7 +214,7 @@ public class HostingConfigGenerator
                 {
                   "source": "/css/(.*)",
                   "headers": [
-                    { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+                    { "key": "Cache-Control", "value": "no-cache" }
                   ]
                 },
                 {
