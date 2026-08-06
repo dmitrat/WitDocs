@@ -199,6 +199,9 @@ public class HostingConfigGenerator
     {
         // Vercel uses vercel.json for configuration
         // The regex excludes static asset paths from the SPA rewrite
+        // Cache rules follow the Cloudflare shape (see 1.4.4): no broad /_framework/*
+        // immutable rule, because it would also pin the stable-named boot loaders.
+        // Hashed assets are marked by extension instead, so rule precedence never matters.
         var jsonContent = """
             {
               "rewrites": [
@@ -206,7 +209,25 @@ public class HostingConfigGenerator
               ],
               "headers": [
                 {
-                  "source": "/_framework/(.*)",
+                  "source": "/_framework/dotnet.js",
+                  "headers": [
+                    { "key": "Cache-Control", "value": "no-cache" }
+                  ]
+                },
+                {
+                  "source": "/_framework/blazor.webassembly.js",
+                  "headers": [
+                    { "key": "Cache-Control", "value": "no-cache" }
+                  ]
+                },
+                {
+                  "source": "/_framework/(.*)\\.wasm",
+                  "headers": [
+                    { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+                  ]
+                },
+                {
+                  "source": "/_framework/(.*)\\.dat",
                   "headers": [
                     { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
                   ]

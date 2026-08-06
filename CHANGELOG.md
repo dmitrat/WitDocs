@@ -20,6 +20,15 @@ OutWit.Docs.Generator, OutWit.Docs.Templates) are documented here.
   this reason. `immutable` now applies only to content-hashed assets
   (`_framework/*.wasm`, `_framework/*.dat`) and `/images/*` keeps its bounded
   `max-age=86400`.
+### Fix (Generator — hosting config): Vercel pinned the boot loaders too
+
+- The stale-app fix of 1.4.2–1.4.4 reshaped the Cloudflare and Netlify rules but
+  left `vercel.json` with a single broad `/_framework/(.*)` marked immutable, which
+  also covers the stable-named `dotnet.js` and `blazor.webassembly.js` — the exact
+  files that release was about. Vercel now follows the Cloudflare shape: the two
+  boot loaders are `no-cache` and hashed assets are marked by extension
+  (`*.wasm`, `*.dat`), so no broad rule exists and rule precedence never matters.
+
 - Framework is unchanged and stays at 2.3.0; this is a generator-only release.
 
 > After upgrading the generator and redeploying, purge the CDN cache once so the
