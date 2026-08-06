@@ -3,6 +3,34 @@
 All notable changes to the WitDocs packages (OutWit.Docs.Framework,
 OutWit.Docs.Generator, OutWit.Docs.Templates) are documented here.
 
+## 2.3.2
+
+### Cross-domain canonical URLs (Framework + Generator)
+
+- **New optional `canonicalUrl` in frontmatter.** When the same text is published on
+  more than one site, the secondary copy can now point at the primary one:
+
+  ```yaml
+  ---
+  title: 'Comparing RPC Frameworks in .NET Applications'
+  canonicalUrl: 'https://ratner.io/article/comparing-rpc-frameworks-in-dotnet/'
+  ---
+  ```
+
+  Without it nothing changes — the canonical stays the page's own URL.
+- Supported on **blog posts** and **articles** (including dynamic sections, which use
+  the article path); those are the types that get syndicated. `BlogPost` and
+  `ArticleCard` gain a `CanonicalUrl` property, and `FrontmatterData` carries it.
+- Applies to both renderers, so the prerendered HTML and the hydrated SPA agree:
+  `BlogPostPage` and `ArticlePage` pass it to `SeoHead`, and `StaticPageGenerator`
+  uses it instead of the computed URL for content and section pages.
+- **Known limitation:** `sitemap.xml` still lists the page under its own URL. A
+  sitemap entry for a page that declares a different canonical is a soft
+  inconsistency rather than an error — search engines treat `rel="canonical"` as the
+  stronger signal — but `SitemapGenerator` builds URLs from the content index without
+  opening the files, so honouring the override there is a larger change and is not
+  part of this release.
+
 ## 2.3.1
 
 ### Fix (Generator — hosting config): stylesheets were cached immutably
@@ -20,6 +48,7 @@ OutWit.Docs.Generator, OutWit.Docs.Templates) are documented here.
   this reason. `immutable` now applies only to content-hashed assets
   (`_framework/*.wasm`, `_framework/*.dat`) and `/images/*` keeps its bounded
   `max-age=86400`.
+
 ### Fix (Generator — hosting config): Vercel pinned the boot loaders too
 
 - The stale-app fix of 1.4.2–1.4.4 reshaped the Cloudflare and Netlify rules but
@@ -29,7 +58,7 @@ OutWit.Docs.Generator, OutWit.Docs.Templates) are documented here.
   boot loaders are `no-cache` and hashed assets are marked by extension
   (`*.wasm`, `*.dat`), so no broad rule exists and rule precedence never matters.
 
-- Framework is unchanged and stays at 2.3.0; this is a generator-only release.
+- Framework was unchanged in this release and stayed at 2.3.0.
 
 > After upgrading the generator and redeploying, purge the CDN cache once so the
 > edge stops serving the previously-immutable stylesheet. Returning visitors whose

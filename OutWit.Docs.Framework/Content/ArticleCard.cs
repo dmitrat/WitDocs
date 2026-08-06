@@ -20,6 +20,7 @@ public class ArticleCard : ModelBase
             && Order.Is(other.Order)
             && Title.Is(other.Title)
             && Description.Is(other.Description)
+            && CanonicalUrl.Is(other.CanonicalUrl)
             && PublishDate.Is(other.PublishDate)
             && Tags.Is(other.Tags)
             && MenuTitle.Is(other.MenuTitle)
@@ -39,6 +40,7 @@ public class ArticleCard : ModelBase
             Order = Order,
             Title = Title,
             Description = Description,
+            CanonicalUrl = CanonicalUrl,
             PublishDate = PublishDate,
             Tags = Tags,
             MenuTitle = MenuTitle,
@@ -59,6 +61,13 @@ public class ArticleCard : ModelBase
     public int Order { get; set; }
     public string Title { get; set; } = "";
     public string Description { get; set; } = "";
+    /// <summary>
+    /// Canonical URL for this page when it differs from the page's own address —
+    /// set on a copy that is republished from another site. Empty means "use my
+    /// own URL".
+    /// </summary>
+    public string CanonicalUrl { get; set; } = string.Empty;
+
     public DateTime PublishDate { get; set; }
     public List<string> Tags { get; set; } = new();
     public string MenuTitle { get; set; } = "";

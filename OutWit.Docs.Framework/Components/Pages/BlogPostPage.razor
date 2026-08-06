@@ -1,7 +1,8 @@
 @* BlogPostPage - Reusable blog post detail page component *@
 @inherits BlogPostPageViewModel
 
-<SeoHead Title="@PageTitle" Description="@(Post?.Description ?? "")" />
+<SeoHead Title="@PageTitle" Description="@(Post?.Description ?? "")"
+         CanonicalUrl="@(string.IsNullOrEmpty(Post?.CanonicalUrl) ? null : Post!.CanonicalUrl)" />
 
 <article class="container blog-post">
     <LoadingState IsLoading="Loading"

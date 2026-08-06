@@ -25,6 +25,7 @@ public class FrontmatterData : ModelBase
             && FeaturedImage.Is(other.FeaturedImage)
             && Author.Is(other.Author)
             && Url.Is(other.Url)
+            && CanonicalUrl.Is(other.CanonicalUrl)
             && MenuTitle.Is(other.MenuTitle)
             && ShowInMenu.Is(other.ShowInMenu)
             && ShowInHeader.Is(other.ShowInHeader)
@@ -47,6 +48,7 @@ public class FrontmatterData : ModelBase
             FeaturedImage = FeaturedImage,
             Author = Author,
             Url = Url,
+            CanonicalUrl = CanonicalUrl,
             MenuTitle = MenuTitle,
             ShowInMenu = ShowInMenu,
             ShowInHeader = ShowInHeader,
@@ -71,6 +73,14 @@ public class FrontmatterData : ModelBase
     public string? FeaturedImage { get; set; }
     public string? Author { get; set; }
     public string? Url { get; set; }
+    /// <summary>
+    /// Overrides the page's canonical URL, including across domains. Set it on the
+    /// secondary copy when the same text is published on more than one site, so the
+    /// copies point at one address instead of competing. Absolute URL; when unset the
+    /// canonical is the page's own URL, as before.
+    /// </summary>
+    public string? CanonicalUrl { get; set; }
+
     public string? MenuTitle { get; set; }
     public bool ShowInMenu { get; set; } = true;
     public bool ShowInHeader { get; set; } = false;

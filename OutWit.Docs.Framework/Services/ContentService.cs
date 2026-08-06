@@ -175,6 +175,7 @@ public partial class ContentService
             PublishDate = frontmatter.PublishDate,
             Tags = frontmatter.Tags ?? new List<string>(),
             FeaturedImage = frontmatter.FeaturedImage ?? "",
+            CanonicalUrl = frontmatter.CanonicalUrl ?? "",
             Author = frontmatter.Author ?? "",
             RawContent = content,
             HtmlContent = html,
@@ -527,6 +528,7 @@ public partial class ContentService
                 ? MarkdownService.ToHtmlInline(frontmatter.Description)
                 : "",
             PublishDate = frontmatter.PublishDate,
+            CanonicalUrl = frontmatter.CanonicalUrl ?? "",
             Tags = frontmatter.Tags ?? new List<string>(),
             MenuTitle = frontmatter.MenuTitle ?? "",
             ShowInMenu = frontmatter.ShowInMenu,

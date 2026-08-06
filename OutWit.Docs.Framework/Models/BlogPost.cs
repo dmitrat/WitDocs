@@ -27,6 +27,7 @@ public class BlogPost : ModelBase
             && Author.Is(other.Author)
             && Tags.Is(other.Tags)
             && ReadingTimeMinutes.Is(other.ReadingTimeMinutes)
+            && CanonicalUrl.Is(other.CanonicalUrl)
             && FeaturedImage.Is(other.FeaturedImage)
             && RawContent.Is(other.RawContent)
             && HtmlContent.Is(other.HtmlContent)
@@ -47,6 +48,7 @@ public class BlogPost : ModelBase
             Author = Author,
             Tags = Tags.ToList(),
             ReadingTimeMinutes = ReadingTimeMinutes,
+            CanonicalUrl = CanonicalUrl,
             FeaturedImage = FeaturedImage,
             RawContent = RawContent,
             HtmlContent = HtmlContent,
@@ -108,6 +110,13 @@ public class BlogPost : ModelBase
     /// <summary>
     /// Featured image URL.
     /// </summary>
+    /// <summary>
+    /// Canonical URL for this page when it differs from the page's own address —
+    /// set on a copy that is republished from another site. Empty means "use my
+    /// own URL".
+    /// </summary>
+    public string CanonicalUrl { get; set; } = string.Empty;
+
     public string? FeaturedImage { get; set; }
 
     /// <summary>

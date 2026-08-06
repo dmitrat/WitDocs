@@ -149,7 +149,11 @@ public partial class StaticPageGenerator
                     title: frontmatter?.Title ?? slug,
                     description: frontmatter?.Description ?? frontmatter?.Summary ?? "",
                     htmlContent: htmlContent,
-                    canonicalUrl: $"{m_siteUrl}/{routePrefix}/{slug}/",
+                    // A page may declare its canonical elsewhere (a copy republished
+                    // from another site); fall back to its own URL.
+                    canonicalUrl: string.IsNullOrWhiteSpace(frontmatter?.CanonicalUrl)
+                        ? $"{m_siteUrl}/{routePrefix}/{slug}/"
+                        : frontmatter!.CanonicalUrl!.Trim(),
                     ogType: "article",
                     publishDate: frontmatter?.PublishDate,
                     tags: frontmatter?.Tags,
@@ -200,7 +204,9 @@ public partial class StaticPageGenerator
                 title: frontmatter?.Title ?? slug,
                 description: frontmatter?.Description ?? frontmatter?.Summary ?? "",
                 htmlContent: htmlContent,
-                canonicalUrl: $"{m_siteUrl}/{urlPath}/",
+                canonicalUrl: string.IsNullOrWhiteSpace(frontmatter?.CanonicalUrl)
+                    ? $"{m_siteUrl}/{urlPath}/"
+                    : frontmatter!.CanonicalUrl!.Trim(),
                 ogType: "article",
                 publishDate: frontmatter?.PublishDate,
                 tags: frontmatter?.Tags,

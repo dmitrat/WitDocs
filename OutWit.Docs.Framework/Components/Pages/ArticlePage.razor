@@ -3,6 +3,7 @@
 
 <SeoHead Title="@(Article?.Title ?? "Article")" 
          Description="@(Article?.Description ?? "")"
+         CanonicalUrl="@(string.IsNullOrEmpty(Article?.CanonicalUrl) ? null : Article!.CanonicalUrl)"
          OgType="article" />
 
 <div class="container article-page">
