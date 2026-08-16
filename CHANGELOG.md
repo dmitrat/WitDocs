@@ -3,6 +3,30 @@
 All notable changes to the WitDocs packages (OutWit.Docs.Framework,
 OutWit.Docs.Generator, OutWit.Docs.Templates) are documented here.
 
+## 2.3.3
+
+### Fix (Framework — header): two menu entries highlighted at once
+
+- **Bug:** `IsActive` asked whether the current path *starts with* the link's href,
+  so inside a dropdown every ancestor entry lit up alongside the current page. A
+  landing section (2.1.0) makes this the normal case: its lead article is served at
+  the bare section route, so an "Overview" entry pointing at `/quick-start` matched
+  `/quick-start/first-database` and both went green. Found on witdatabase.io.
+- **Fix:** dropdown entries now highlight only the **most specific** matching
+  sibling. `Header.razor` calls the new `IsActiveChild(parent, child)`, which keeps
+  an entry active unless a sibling with a longer matching href describes the page
+  better. Top-level items are unchanged and still highlight for everything beneath
+  them, so `/blog` stays lit on `/blog/some-post`.
+- Matching also became segment-aware and tolerant of the URL's tail: `/blog` no
+  longer matches `/blogroll`, trailing slashes on either side are ignored, and a
+  query string or fragment (`/search?query=x`) no longer has to be part of the
+  prefix. The root is active only on the root, as before.
+- `HeaderViewModel` gains `IsActiveChild`, plus `IsMatch` and `IsMostSpecificMatch`
+  as internal statics with test coverage. No configuration changes; sites pick the
+  fix up by upgrading the package.
+
+- The generator was unchanged in this release and stays at 2.3.2.
+
 ## 2.3.2
 
 ### Cross-domain canonical URLs (Framework + Generator)

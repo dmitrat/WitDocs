@@ -40,8 +40,8 @@
                                         }
                                         else
                                         {
-                                            <a href="@child.Href" 
-                                               class="header__dropdown-link @(IsActive(child.Href) ? "header__dropdown-link--active" : "")">
+                                            <a href="@child.Href"
+                                               class="header__dropdown-link @(IsActiveChild(navItem, child) ? "header__dropdown-link--active" : "")">
                                                 @child.Title
                                             </a>
                                         }

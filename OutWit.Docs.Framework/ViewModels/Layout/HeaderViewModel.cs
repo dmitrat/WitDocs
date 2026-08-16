@@ -306,19 +306,72 @@ public class HeaderViewModel : ViewModelBase, IDisposable
 
     protected bool IsActive(string href)
     {
-        var currentPath = GetCurrentPath();
-        if (href == "/" && (currentPath == "/" || currentPath == ""))
-            return true;
-        if (href != "/" && currentPath.StartsWith(href))
-            return true;
-        return false;
+        return IsMatch(GetCurrentPath(), href);
     }
-    
+
+    /// <summary>
+    /// Whether a dropdown entry is the one the current page belongs to.
+    /// A landing section serves its lead article at the bare section route, so an
+    /// "Overview" entry pointing at <c>/witsql</c> matches every page under it by
+    /// prefix. Only the most specific matching sibling is active.
+    /// </summary>
+    protected bool IsActiveChild(NavItem parent, NavItem child)
+    {
+        return IsMostSpecificMatch(GetCurrentPath(), parent.Children, child);
+    }
+
+    /// <summary>
+    /// Whether <paramref name="child"/> is the closest of its siblings to the current
+    /// path. A sibling with a longer matching href describes the page better.
+    /// </summary>
+    internal static bool IsMostSpecificMatch(string currentPath, IReadOnlyList<NavItem>? siblings, NavItem child)
+    {
+        if (!IsMatch(currentPath, child.Href))
+            return false;
+
+        return siblings == null || !siblings.Any(sibling =>
+            !ReferenceEquals(sibling, child) &&
+            sibling.Href.Length > child.Href.Length &&
+            IsMatch(currentPath, sibling.Href));
+    }
+
     protected bool IsActiveDropdown(NavItem navItem)
     {
         if (navItem.Children?.Count > 0)
-            return navItem.Children.Any(child => IsActive(child.Href));
+            return navItem.Children.Any(child => IsMatch(GetCurrentPath(), child.Href));
         return IsActive(navItem.Href);
+    }
+
+    /// <summary>
+    /// Path matching for navigation highlighting. A link is active on its own page
+    /// and on anything below it, comparing whole segments so that <c>/blog</c> does
+    /// not light up on <c>/blogroll</c>. The root is active only on the root.
+    /// </summary>
+    internal static bool IsMatch(string currentPath, string href)
+    {
+        if (string.IsNullOrEmpty(href))
+            return false;
+
+        var path = NormalizePath(currentPath);
+        var target = NormalizePath(href);
+
+        if (target.Length == 0)
+            return path.Length == 0;
+
+        return path.Equals(target, StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith(target + "/", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string NormalizePath(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return "";
+
+        var value = path.Split('?')[0].Split('#')[0];
+        if (!value.StartsWith('/'))
+            value = "/" + value;
+
+        return value.TrimEnd('/');
     }
 
     protected void ToggleMobileMenu()
