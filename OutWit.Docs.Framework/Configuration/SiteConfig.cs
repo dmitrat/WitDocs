@@ -25,6 +25,7 @@ public class SiteConfig : ModelBase
             && LogoDark.Is(other.LogoDark)
             && DefaultTheme.Is(other.DefaultTheme)
             && Navigation.Is(other.Navigation)
+            && Header.Is(other.Header)
             && Footer.Is(other.Footer)
             && Contact.Is(other.Contact)
             && Search.Is(other.Search)
@@ -44,6 +45,7 @@ public class SiteConfig : ModelBase
             LogoDark = LogoDark,
             DefaultTheme = DefaultTheme,
             Navigation = Navigation.Select(item => item.Clone()).ToList(),
+            Header = Header.Clone(),
             Footer = Footer.Clone(),
             Contact = Contact.Clone(),
             Search = Search.Clone(),
@@ -89,6 +91,12 @@ public class SiteConfig : ModelBase
     /// Navigation menu items.
     /// </summary>
     public List<NavItem> Navigation { get; set; } = [];
+
+    /// <summary>
+    /// Header configuration. Carries the width at which the navigation gives way
+    /// to the mobile menu, which depends on how many entries the site has.
+    /// </summary>
+    public HeaderConfig Header { get; set; } = new();
 
     /// <summary>
     /// Footer configuration.

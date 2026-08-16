@@ -2,6 +2,11 @@
 @* Dropdown menus are populated dynamically from content (Articles, Projects) *@
 @inherits HeaderViewModel
 
+@* Responsive ladder for this site's menu. The width it collapses at depends on
+   how many entries there are, so it comes from site.config.json rather than
+   from a constant in the stylesheet. *@
+@ResponsiveStyle
+
 <header class="header">
     <div class="header__container container">
         <a href="/" class="header__logo">
@@ -159,8 +164,8 @@
                             }
                             else
                             {
-                                <a href="@child.Href" 
-                                   class="header__mobile-link header__mobile-link--sub @(IsActive(child.Href) ? "header__mobile-link--active" : "")" 
+                                <a href="@child.Href"
+                                   class="header__mobile-link header__mobile-link--sub @(IsActiveChild(navItem, child) ? "header__mobile-link--active" : "")"
                                    @onclick="CloseMobileMenu">
                                     @child.Title
                                 </a>

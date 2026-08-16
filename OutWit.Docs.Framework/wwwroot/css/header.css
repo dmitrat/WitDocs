@@ -52,7 +52,7 @@
 
 /* Navigation */
 .header__nav {
-    flex: 1;
+    flex: 1 1 auto;
 }
 
 .header__nav-list {
@@ -157,6 +157,8 @@
     border-radius: 999px;
     padding: 0.4rem 1rem;
     gap: 0.5rem;
+    flex: 0 1 auto;
+    min-width: 0;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -171,6 +173,7 @@
     color: var(--color-text-primary);
     font-size: 0.875rem;
     width: 140px;
+    min-width: 0;
     outline: none;
 }
 
@@ -274,7 +277,27 @@
     color: var(--color-accent-green);
 }
 
+/* Section pages sit under the section they belong to. The markup has always
+   carried this modifier; without a rule for it the menu read as one flat list
+   where a section and its pages looked the same. */
+.header__mobile-link--sub {
+    padding-left: 2.25rem;
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+}
+
 /* Responsive */
+
+/* A site with many top-level entries runs out of room well before 768px.
+   Nothing in the row can shrink on its own: the links do not wrap and the
+   search field has a fixed width, so the header would push the page into a
+   horizontal scroll and take the theme toggle off-screen with it.
+
+   How much room the row needs depends on the menu, so the ladder it gives way
+   in is written by the Header component from `header.collapseBreakpoint` in
+   site.config.json. A media query cannot read a custom property, which is why
+   it is not a variable here. What stays below is the floor: whatever a site
+   configures, a phone always gets the mobile menu. */
 @media (max-width: 768px) {
     .header__nav {
         display: none;
@@ -285,6 +308,10 @@
     }
 
     .header__mobile-toggle {
+        display: block;
+    }
+
+    .header__mobile-menu {
         display: block;
     }
 }

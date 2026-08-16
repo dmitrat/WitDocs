@@ -3,6 +3,56 @@
 All notable changes to the WitDocs packages (OutWit.Docs.Framework,
 OutWit.Docs.Generator, OutWit.Docs.Templates) are documented here.
 
+## 2.3.4
+
+### Fix (Framework — header): the row overflowed instead of giving way
+
+- **Bug:** nothing in the header row could shrink. The links do not wrap and are
+  `white-space: nowrap`, the search field is a fixed 140px, and the only
+  responsive rule was the mobile breakpoint at 768px. A site with eight
+  top-level entries therefore ran out of room well above that and pushed the
+  whole document into a horizontal scroll, clipping the search field and taking
+  the theme toggle off-screen with it. Every window between 768px and roughly
+  1250px was affected, which covers a maximised 1024x768 laptop and any
+  half-screen window on a 1080p display. Found on witdatabase.io.
+- **Fix:** the row gives way in stages instead: the container gap, link padding,
+  link size and search field tighten, then the search is dropped, then the
+  mobile menu takes over.
+- **New optional `header.collapseBreakpoint` in `site.config.json`.** How much
+  room the row needs depends on the menu, so the width it collapses at is a
+  per-site number rather than one constant for everybody. Eight entries with
+  dropdowns run out of room around 1000px; three short ones hold on past 700px.
+
+  ```json
+  "header": { "collapseBreakpoint": 1000 }
+  ```
+
+  Default **1000**, clamped to 480..1600. The other two steps are derived from
+  it, so one number configures the whole ladder: the row tightens 300px above it
+  and the search is dropped 150px above it. The `Header` component writes the
+  rules out, because a media query cannot read a custom property. `SiteConfig`
+  gains a `Header` property (`HeaderConfig`).
+- **Behaviour change:** the nav now hands over to the burger at the configured
+  width, 1000px by default, rather than at a fixed 768px. A site with a short
+  menu that wants the old behaviour sets `collapseBreakpoint` to 768. The 768px
+  rule stays in the stylesheet as a floor, so a phone always gets the mobile
+  menu whatever the site configures.
+- `header__container` in `outwit-framework.css` had a fixed `height: 4rem`, which
+  clipped anything taller than one row; it is now `min-height`.
+- `.header__mobile-menu` is revealed at the new breakpoint too. Its visibility
+  lived only in `outwit-framework.css` at 768px, so between 768 and 1000 the
+  toggle would have opened nothing.
+
+### Fix (Framework — header): the mobile menu was one flat list
+
+- `header__mobile-link--sub` has always been emitted for a section's pages and
+  was styled nowhere, so a section and the pages under it were indistinguishable.
+  Sub-entries are now indented and set slightly smaller and quieter.
+- Sub-entries also used the old prefix match for their highlight, so the 2.3.3
+  fix reached the desktop dropdown but not the mobile menu, where a section, its
+  overview and the current page all lit up together. They now use the same
+  `IsActiveChild` rule.
+
 ## 2.3.3
 
 ### Fix (Framework — header): two menu entries highlighted at once

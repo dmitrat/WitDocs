@@ -1,3 +1,4 @@
+using OutWit.Docs.Framework.Configuration;
 using OutWit.Docs.Framework.Models;
 using OutWit.Docs.Framework.ViewModels.Layout;
 
@@ -114,6 +115,73 @@ public class HeaderViewModelTests
         var child = new NavItem { Title = "Blog", Href = "/blog" };
 
         Assert.That(HeaderViewModel.IsMostSpecificMatch("/blog/some-post", null, child), Is.True);
+    }
+
+    #endregion
+
+    #region Collapse Breakpoint Tests
+
+    [Test]
+    public void ResolveCollapseBreakpointFallsBackToTheDefaultTest()
+    {
+        Assert.That(HeaderViewModel.ResolveCollapseBreakpoint(null),
+            Is.EqualTo(HeaderConfig.DEFAULT_COLLAPSE_BREAKPOINT));
+
+        Assert.That(HeaderViewModel.ResolveCollapseBreakpoint(new SiteConfig()),
+            Is.EqualTo(HeaderConfig.DEFAULT_COLLAPSE_BREAKPOINT));
+    }
+
+    [Test]
+    public void ResolveCollapseBreakpointTakesTheConfiguredWidthTest()
+    {
+        var config = new SiteConfig { Header = new HeaderConfig { CollapseBreakpoint = 780 } };
+
+        Assert.That(HeaderViewModel.ResolveCollapseBreakpoint(config), Is.EqualTo(780));
+    }
+
+    [Test]
+    public void ResolveCollapseBreakpointClampsBothEndsTest()
+    {
+        var tooNarrow = new SiteConfig { Header = new HeaderConfig { CollapseBreakpoint = 10 } };
+        var tooWide = new SiteConfig { Header = new HeaderConfig { CollapseBreakpoint = 9000 } };
+
+        Assert.That(HeaderViewModel.ResolveCollapseBreakpoint(tooNarrow),
+            Is.EqualTo(HeaderConfig.MIN_COLLAPSE_BREAKPOINT));
+        Assert.That(HeaderViewModel.ResolveCollapseBreakpoint(tooWide),
+            Is.EqualTo(HeaderConfig.MAX_COLLAPSE_BREAKPOINT));
+    }
+
+    [Test]
+    public void BuildResponsiveCssDerivesTheLadderFromOneWidthTest()
+    {
+        var css = HeaderViewModel.BuildResponsiveCss(1000);
+
+        // Tighten 300 above, drop the search 150 above, collapse at the width itself.
+        Assert.That(css, Does.Contain("@media (max-width:1300px)"));
+        Assert.That(css, Does.Contain("@media (max-width:1150px)"));
+        Assert.That(css, Does.Contain("@media (max-width:1000px)"));
+    }
+
+    [Test]
+    public void BuildResponsiveCssCollapsesTheNavAndOpensTheMenuTest()
+    {
+        var css = HeaderViewModel.BuildResponsiveCss(820);
+
+        // The panel's visibility lives in outwit-framework.css at 768px, so the
+        // collapse step has to turn it on or the toggle would open nothing.
+        Assert.That(css, Does.Contain("@media (max-width:820px)"));
+        Assert.That(css, Does.Contain(".header__nav{display:none}"));
+        Assert.That(css, Does.Contain(".header__mobile-toggle{display:block}"));
+        Assert.That(css, Does.Contain(".header__mobile-menu{display:block}"));
+    }
+
+    [Test]
+    public void BuildResponsiveCssIsAStyleElementTest()
+    {
+        var css = HeaderViewModel.BuildResponsiveCss(1000);
+
+        Assert.That(css, Does.StartWith("<style>"));
+        Assert.That(css, Does.EndWith("</style>"));
     }
 
     #endregion

@@ -320,7 +320,9 @@ a:hover {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 4rem;
+    /* Not a fixed height: a nav that wraps onto a second line has to be able to
+       make the header taller, or it spills out of the top of it. */
+    min-height: 4rem;
 }
 
 .header__logo {

@@ -304,6 +304,59 @@ public class HeaderViewModel : ViewModelBase, IDisposable
         return "/" + NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
     }
 
+    #endregion
+
+    #region Responsive
+
+    /// <summary>
+    /// The header's responsive ladder as a stylesheet. A media query cannot read
+    /// a custom property, so a per-site breakpoint has to be written into rules
+    /// rather than passed to the stylesheet as a variable.
+    /// </summary>
+    protected MarkupString ResponsiveStyle =>
+        new(BuildResponsiveCss(ResolveCollapseBreakpoint(m_config)));
+
+    /// <summary>
+    /// The configured collapse width, clamped to what makes sense.
+    /// </summary>
+    internal static int ResolveCollapseBreakpoint(SiteConfig? config)
+    {
+        var value = config?.Header?.CollapseBreakpoint ?? HeaderConfig.DEFAULT_COLLAPSE_BREAKPOINT;
+
+        return Math.Clamp(value,
+            HeaderConfig.MIN_COLLAPSE_BREAKPOINT,
+            HeaderConfig.MAX_COLLAPSE_BREAKPOINT);
+    }
+
+    /// <summary>
+    /// Build the three steps the header gives way in, from the one width the
+    /// site configures: tighten, drop the search, hand over to the mobile menu.
+    /// </summary>
+    internal static string BuildResponsiveCss(int collapse)
+    {
+        var tighten = collapse + 300;
+        var dropSearch = collapse + 150;
+
+        return
+            "<style>" +
+            $"@media (max-width:{tighten}px){{" +
+                ".header__container{gap:1rem}" +
+                ".header__nav-link{padding:0.5rem 0.5rem;font-size:0.9rem}" +
+                ".header__search{padding:0.4rem 0.75rem}" +
+                ".header__search input{width:90px}" +
+            "}" +
+            $"@media (max-width:{dropSearch}px){{" +
+                ".header__search{display:none}" +
+                ".header__nav-link{padding:0.5rem 0.4rem}" +
+            "}" +
+            $"@media (max-width:{collapse}px){{" +
+                ".header__nav{display:none}" +
+                ".header__mobile-toggle{display:block}" +
+                ".header__mobile-menu{display:block}" +
+            "}" +
+            "</style>";
+    }
+
     protected bool IsActive(string href)
     {
         return IsMatch(GetCurrentPath(), href);
