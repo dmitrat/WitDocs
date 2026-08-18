@@ -3,6 +3,36 @@
 All notable changes to the WitDocs packages (OutWit.Docs.Framework,
 OutWit.Docs.Generator, OutWit.Docs.Templates) are documented here.
 
+## 2.4.1
+
+### Fix (Generator — SSG): every local build nested another copy of the home page
+
+- **Bug:** the template is read from the output directory's own `index.html`, and
+  the home page is written back to that same file. The loading indicator was
+  taken from the template's `<div id="app">` verbatim, so on the second run the
+  indicator *was* the first run's entire injection, and each run nested another
+  copy of the home page inside the last.
+
+  Found on witdatabase.io: after eleven local `dotnet build -c Release` runs its
+  `index.html` had grown from 2.6KB to **45.6KB with eleven nested copies** of
+  the home page, and was one `git add` away from being committed. CI was never
+  affected — it builds from a clean checkout, so it always ran exactly once.
+
+- **Fix:** the indicator is now recovered rather than copied. Every injection
+  keeps the original in its `.ssg-loading` div, so unwrapping that as many times
+  as it has been wrapped recovers the template's own markup however many times
+  the generator has already run over the file. It is trimmed as well, because the
+  injection puts a newline either side and otherwise each run would keep the
+  previous run's whitespace.
+
+- **Generating twice now produces the same file, byte for byte** — asserted by a
+  test, along with one that runs four times and checks a single `ssg-prerender`
+  block survives, and one that starts from an already-nested `index.html` and
+  checks the stale copies are dropped rather than added to.
+
+- **For a site that already has a nested `index.html`:** running 2.4.1 over it
+  repairs it. Nothing to undo by hand.
+
 ## 2.4.0
 
 ### Feature (Framework — content): an image in markdown can be opened at its own size

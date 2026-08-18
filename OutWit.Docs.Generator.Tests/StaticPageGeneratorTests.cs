@@ -397,6 +397,150 @@ public class StaticPageGeneratorTests
 
     #region Tools
 
+    [Test]
+    public async Task GenerateAsyncTwiceLeavesTheHomePageUnchangedTest()
+    {
+        // The template is read from the output directory's own index.html and the home
+        // page is written back to it, so the second run reads the first run's output.
+        // Taking its app inner verbatim made the whole previous injection the new
+        // loading indicator, and every run nested another copy of the home page inside
+        // the last: witdatabase.io reached 11 nested copies and 45KB from a 2.6KB shell.
+        var tempDir = CreateTempDirectory();
+        CreateTemplate(tempDir);
+        SetupContentDirectory(tempDir, "blog", "2024-01-15-test-post.md", """
+            ---
+            title: Test Blog Post
+            description: Test description
+            publishDate: 2024-01-15
+            ---
+
+            # Hello World
+            Body.
+            """);
+
+        var config = new GeneratorConfig { OutputPath = tempDir };
+        var index = new ContentIndex { Blog = ["2024-01-15-test-post.md"] };
+        var home = Path.Combine(tempDir, "index.html");
+
+        try
+        {
+            await new StaticPageGenerator(config, null, "https://example.com", "Test Site").GenerateAsync(index);
+            var afterFirst = await File.ReadAllTextAsync(home);
+
+            await new StaticPageGenerator(config, null, "https://example.com", "Test Site").GenerateAsync(index);
+            var afterSecond = await File.ReadAllTextAsync(home);
+
+            Assert.That(afterSecond, Is.EqualTo(afterFirst),
+                "Generating twice must produce the same home page, not nest the previous one inside it.");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Test]
+    public async Task GenerateAsyncRepeatedRunsKeepOnePrerenderBlockTest()
+    {
+        var tempDir = CreateTempDirectory();
+        CreateTemplate(tempDir);
+        SetupContentDirectory(tempDir, "blog", "2024-01-15-test-post.md", """
+            ---
+            title: Test Blog Post
+            description: Test description
+            publishDate: 2024-01-15
+            ---
+
+            # Hello World
+            Body.
+            """);
+
+        var config = new GeneratorConfig { OutputPath = tempDir };
+        var index = new ContentIndex { Blog = ["2024-01-15-test-post.md"] };
+        var home = Path.Combine(tempDir, "index.html");
+
+        try
+        {
+            for (var run = 0; run < 4; run++)
+                await new StaticPageGenerator(config, null, "https://example.com", "Test Site").GenerateAsync(index);
+
+            var html = await File.ReadAllTextAsync(home);
+
+            Assert.That(Occurrences(html, "class=\"ssg-prerender\""), Is.EqualTo(1));
+            Assert.That(Occurrences(html, "class=\"ssg-loading\""), Is.EqualTo(1));
+
+            // The template's own indicator has to survive: it is what a reader with
+            // JavaScript sees while Blazor boots.
+            Assert.That(html, Does.Contain("Loading..."));
+            Assert.That(Occurrences(html, "Loading..."), Is.EqualTo(1));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Test]
+    public async Task GenerateAsyncRecoversAnAlreadyNestedTemplateTest()
+    {
+        // A site whose index.html was committed after several local builds carries the
+        // nesting already. The next run has to unwrap it rather than add to it.
+        var tempDir = CreateTempDirectory();
+        File.WriteAllText(Path.Combine(tempDir, "index.html"), """
+            <!DOCTYPE html>
+            <html>
+            <head><title>Template</title></head>
+            <body><div id="app">
+                <div class="ssg-prerender"><p>stale home page</p></div>
+                <div class="ssg-loading" style="display:none">
+                <div class="ssg-prerender"><p>older home page</p></div>
+                <div class="ssg-loading" style="display:none">Loading...</div>
+                </div>
+            </div></body>
+            </html>
+            """);
+
+        SetupContentDirectory(tempDir, "blog", "2024-01-15-test-post.md", """
+            ---
+            title: Test Blog Post
+            description: Test description
+            publishDate: 2024-01-15
+            ---
+
+            # Hello World
+            Body.
+            """);
+
+        var config = new GeneratorConfig { OutputPath = tempDir };
+        var index = new ContentIndex { Blog = ["2024-01-15-test-post.md"] };
+
+        try
+        {
+            await new StaticPageGenerator(config, null, "https://example.com", "Test Site").GenerateAsync(index);
+
+            var html = await File.ReadAllTextAsync(Path.Combine(tempDir, "index.html"));
+
+            Assert.That(Occurrences(html, "class=\"ssg-prerender\""), Is.EqualTo(1));
+            Assert.That(html, Does.Not.Contain("stale home page"));
+            Assert.That(html, Does.Not.Contain("older home page"));
+            Assert.That(html, Does.Contain("Loading..."));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    private static int Occurrences(string text, string needle)
+    {
+        var count = 0;
+        for (var i = text.IndexOf(needle, StringComparison.Ordinal); i >= 0;
+             i = text.IndexOf(needle, i + needle.Length, StringComparison.Ordinal))
+            count++;
+
+        return count;
+    }
+
     private static string CreateTempDirectory()
     {
         var path = Path.Combine(Path.GetTempPath(), "OutWit.Test." + Guid.NewGuid().ToString("N")[..8]);

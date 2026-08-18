@@ -543,7 +543,7 @@ public partial class StaticPageGenerator
         // required" dead-end. The inline script below hides it and reveals the loading
         // indicator only when JS is available; Blazor then renders the live UI (same
         // content), so JS users see a spinner → hydrated app with no flash.
-        var loadingIndicator = ExtractAppInner(m_templateHtml);
+        var loadingIndicator = OriginalAppInner(m_templateHtml);
         var appContent =
             "\n                <div class=\"ssg-prerender\">\n" +
             fullContent +
@@ -595,10 +595,43 @@ public partial class StaticPageGenerator
     }
 
     /// <summary>
-    /// Replace the inner content of the &lt;div id="app"&gt; element, correctly
-    /// handling nested &lt;div&gt; elements by counting tag depth (a non-greedy
-    /// regex would stop at the first nested &lt;/div&gt; and corrupt the markup).
+    /// The template's own loading indicator: the inner content of
+    /// &lt;div id="app"&gt;, with any earlier injection of ours unwrapped.
+    ///
+    /// The template is read from the output directory's own index.html, and the home
+    /// page is written back to that same file, so on a second run the "template" is
+    /// the previous run's output. Taking its app inner verbatim would make the whole
+    /// previous injection the new loading indicator, and each run would nest another
+    /// copy of the home page inside the last. Every injection keeps the indicator in
+    /// its <c>.ssg-loading</c> div, so unwrapping that recovers the original however
+    /// many times the generator has already run over the file.
     /// </summary>
+    private static string OriginalAppInner(string html)
+    {
+        var inner = ExtractAppInner(html);
+
+        // One turn per accumulated layer; a file that has never been generated over
+        // exits on the first check.
+        while (inner.Contains("ssg-prerender", StringComparison.OrdinalIgnoreCase))
+        {
+            var loading = LoadingDivOpenRegex().Match(inner);
+            if (!loading.Success)
+                break;
+
+            var unwrapped = ExtractInnerFrom(inner, loading);
+            if (string.IsNullOrEmpty(unwrapped) || unwrapped.Length >= inner.Length)
+                break;
+
+            inner = unwrapped;
+        }
+
+        // Trimmed, so that unwrapping is exactly the inverse of wrapping: the injection
+        // puts a newline either side of the indicator, and without this the second run
+        // would keep those and the third would keep the second's, growing the file by a
+        // little whitespace each time even with the nesting gone.
+        return inner.Trim();
+    }
+
     /// <summary>
     /// Return the original inner content of the &lt;div id="app"&gt; element (the
     /// template's loading indicator), matching the close tag by counting nested div
@@ -607,9 +640,16 @@ public partial class StaticPageGenerator
     private static string ExtractAppInner(string html)
     {
         var open = AppDivOpenRegex().Match(html);
-        if (!open.Success)
-            return "";
+        return open.Success ? ExtractInnerFrom(html, open) : "";
+    }
 
+    /// <summary>
+    /// The inner content of the div whose opening tag is <paramref name="open"/>,
+    /// matching its close tag by counting nested div depth. A non-greedy regex would
+    /// stop at the first nested &lt;/div&gt; and corrupt the markup.
+    /// </summary>
+    private static string ExtractInnerFrom(string html, Match open)
+    {
         var innerStart = open.Index + open.Length;
         var cursor = innerStart;
         var depth = 1;
@@ -713,6 +753,9 @@ public partial class StaticPageGenerator
 
     [GeneratedRegex(@"<div\b[^>]*\bid\s*=\s*[""']app[""'][^>]*>", RegexOptions.IgnoreCase)]
     private static partial Regex AppDivOpenRegex();
+
+    [GeneratedRegex(@"<div\b[^>]*\bclass\s*=\s*[""']ssg-loading[""'][^>]*>", RegexOptions.IgnoreCase)]
+    private static partial Regex LoadingDivOpenRegex();
 
     [GeneratedRegex(@"</?div\b[^>]*>", RegexOptions.IgnoreCase)]
     private static partial Regex DivTagRegex();
