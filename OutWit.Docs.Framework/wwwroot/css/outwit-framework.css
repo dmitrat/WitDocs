@@ -980,6 +980,160 @@ div.code-block pre code {
     background: none;
 }
 
+/* ============================================
+   FIGURES (markdown images, with a full-size view)
+   ============================================ */
+
+/* A paragraph holding nothing but an image is rendered as a figure whose picture
+   opens at its own resolution. Documentation screenshots are wider than the column
+   they are shown in, so the one on the page is a thumbnail whether or not it was
+   meant to be one. */
+
+.ow-figure {
+    margin: var(--spacing-xl) 0;
+}
+
+.ow-figure__zoom {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: zoom-in;
+    border-radius: var(--radius-lg);
+}
+
+.ow-figure__zoom:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+}
+
+.ow-figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.ow-figure__zoom:hover img {
+    border-color: var(--color-border-hover);
+    box-shadow: var(--shadow-md);
+}
+
+.ow-figure__caption {
+    margin-top: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
+    color: var(--color-text-secondary);
+    text-align: center;
+}
+
+/* ============================================
+   LIGHTBOX (the full-size view itself)
+   ============================================ */
+
+.ow-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-modal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl);
+    background-color: rgba(0, 0, 0, 0.85);
+    opacity: 0;
+    transition: opacity var(--transition-base);
+}
+
+/* `display: flex` above outranks the browser's own `[hidden] { display: none }`, so
+   without this the closed overlay stays in the layout - invisible at opacity 0, and
+   over the whole page, swallowing every click. */
+.ow-lightbox[hidden] {
+    display: none;
+}
+
+.ow-lightbox.is-open {
+    opacity: 1;
+}
+
+.ow-lightbox__frame {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-md);
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* The picture is shown at its own size and only shrunk when the window is smaller
+   than it is, which is the whole point of opening it. */
+.ow-lightbox__image {
+    max-width: 100%;
+    max-height: calc(100vh - 8rem);
+    width: auto;
+    height: auto;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    cursor: zoom-out;
+}
+
+.ow-lightbox__caption {
+    max-width: 60rem;
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
+    color: #E5E7EB;
+    text-align: center;
+}
+
+.ow-lightbox__close {
+    position: absolute;
+    top: var(--spacing-md);
+    right: var(--spacing-lg);
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.75rem;
+    line-height: 1;
+    color: #FFFFFF;
+    background: none;
+    border: 0;
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity var(--transition-fast), background-color var(--transition-fast);
+}
+
+.ow-lightbox__close:hover,
+.ow-lightbox__close:focus-visible {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+/* The page behind must not scroll under the overlay. */
+html.ow-lightbox-open,
+html.ow-lightbox-open body {
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .ow-lightbox {
+        padding: var(--spacing-md);
+    }
+
+    .ow-lightbox__image {
+        max-height: calc(100vh - 6rem);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .ow-lightbox,
+    .ow-figure img {
+        transition: none;
+    }
+}
+
 /* Syntax token palette — theme-aware (light/dark). */
 .tok-comment {
     font-style: italic;

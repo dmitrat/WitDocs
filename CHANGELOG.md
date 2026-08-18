@@ -3,6 +3,91 @@
 All notable changes to the WitDocs packages (OutWit.Docs.Framework,
 OutWit.Docs.Generator, OutWit.Docs.Templates) are documented here.
 
+## 2.4.0
+
+### Feature (Framework — content): an image in markdown can be opened at its own size
+
+- **Why:** a documentation screenshot is wider than the column it is shown in.
+  witdatabase.io ships 53 frames captured at 1440px and displayed in an article
+  column of roughly 740px, so every one of them is a thumbnail whether or not it
+  was meant to be one, and the UI text inside is half the size it was taken at.
+  The reader had no way to get to the original short of opening the file by hand.
+- **What:** a paragraph holding nothing but an image is now rendered as a
+  `<figure>` whose picture opens full size in an overlay when clicked. Nothing
+  changes in the markdown: `![alt](/images/shot.webp)` is enough.
+
+  ```html
+  <figure class="ow-figure">
+      <button type="button" class="ow-figure__zoom" aria-label="Open the image at full size: …">
+          <img src="…" alt="…" loading="lazy" decoding="async" />
+      </button>
+      <figcaption class="ow-figure__caption">…</figcaption>
+  </figure>
+  ```
+
+- **Captions are opt-in, per image**, through the title markdown already has:
+
+  ```markdown
+  ![alt text](/images/shot.webp "What the picture shows")
+  ```
+
+  With no title there is no `<figcaption>`, so no existing site changes
+  appearance. The alt text stays where it belongs, on the image, and is also
+  used as the accessible name of the zoom button.
+
+- **Click, not hover.** Hover fires while a reader is scrolling past, cannot be
+  dismissed deliberately, does not exist on a touchscreen, and gives no way to
+  study the picture once it is up. The overlay closes on `Escape`, on a click
+  anywhere outside the picture, and on its own close button; focus returns to the
+  image that was clicked.
+
+- **What is not a figure**, because turning these into blocks would break the
+  page around them:
+
+  | Markdown | Rendered as |
+  |---|---|
+  | An image alone in a paragraph | `<figure>`, zoomable |
+  | An image in a sentence — a badge, an icon | inline `<img>`, untouched |
+  | A linked image `[![…](…)](url)` | the link the author wrote |
+  | Two images in one paragraph | two inline `<img>` |
+  | An image in a tight list item | inline `<img>` |
+
+- **Implementation.** `ImageZoomExtension` replaces Markdig's `ParagraphRenderer`
+  (`Services/MarkdownImageZoom.cs`), the same shape as the existing code-block
+  extension. The markup is static, so the generated pages carry the figure and
+  the caption for crawlers, and one delegated listener in `framework.js` — beside
+  the one for the code copy button — builds the overlay lazily on first use. No
+  per-image interop, no component to write, nothing to opt into.
+- **Styles** land in `outwit-framework.css`, which had no `img` rules at all
+  before this: `.ow-figure`, `.ow-figure__zoom`, `.ow-figure__caption`,
+  `.ow-lightbox`. They use the existing tokens, including the `--z-modal` that
+  had been reserved and unused. A site that already styles `.prose img` keeps
+  winning, since its own stylesheet loads later.
+- One of those rules is load-bearing and easy to lose: `.ow-lightbox` is laid out
+  with `display: flex`, which outranks the browser's own `[hidden] { display: none }`,
+  so without `.ow-lightbox[hidden] { display: none }` the *closed* overlay stays over
+  the whole page at opacity 0 and swallows every click. Caught on witdatabase.io,
+  where the nav stopped responding after closing a picture. `StylesheetTests` now
+  asserts that rule and three others against the shipped sheet.
+
+### Fix (Framework — build): `dotnet build` failed wherever the generator was installed globally
+
+- **Bug:** the content-generation target ran `dotnet witdocs-generate`. That form
+  only ever resolves a tool from a local manifest; a globally installed one lives
+  on PATH under its own name. No site repository carries a
+  `.config/dotnet-tools.json`, so `dotnet build` failed on every one of them with
+  "The 'witdocs-generate' tool is missing or errored" even though the tool was
+  installed and worked when invoked directly. CI was unaffected, because the
+  workflow calls `witdocs-generate` itself.
+- **Fix:** when the manifest call fails, the target now retries with the global
+  name before reporting the error. Both paths keep their exit code, so a genuine
+  generator failure still stops the build with the same message.
+
+### Generator 2.4.0
+
+- Rebuilt against Framework 2.4.0, so generated pages carry the new figure markup.
+  No behaviour of its own changed.
+
 ## 2.3.4
 
 ### Fix (Framework — header): the row overflowed instead of giving way

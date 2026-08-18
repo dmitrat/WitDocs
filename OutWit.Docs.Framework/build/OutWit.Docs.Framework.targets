@@ -158,13 +158,29 @@
     </PropertyGroup>
     
     <!--
-      Run the .NET Generator tool. Resolves a local-manifest tool first, then a
-      global tool. Capture the exit code so a missing/failed tool produces an
-      actionable error instead of a bare MSB3073.
+      Run the .NET Generator tool through the local tool manifest. Capture the exit
+      code rather than failing here, so a missing manifest falls through to the
+      global tool below instead of producing a bare MSB3073.
     -->
     <Exec Command="dotnet witdocs-generate $(_GeneratorArgs)"
           WorkingDirectory="$(MSBuildProjectDirectory)"
-          ContinueOnError="true">
+          IgnoreExitCode="true"
+          StandardOutputImportance="low"
+          StandardErrorImportance="low">
+      <Output TaskParameter="ExitCode" PropertyName="_OutWitGenExitCode" />
+    </Exec>
+
+    <!--
+      `dotnet <command>` only ever resolves a tool from a local manifest; a globally
+      installed one is on PATH under its own name and is invoked directly. A site
+      without a manifest therefore fails the call above no matter how the tool was
+      installed, so try the global name before giving up. The first call is quiet
+      about failing for that reason; whatever this one has to say is not.
+    -->
+    <Exec Condition="'$(_OutWitGenExitCode)' != '0'"
+          Command="witdocs-generate $(_GeneratorArgs)"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          IgnoreExitCode="true">
       <Output TaskParameter="ExitCode" PropertyName="_OutWitGenExitCode" />
     </Exec>
 

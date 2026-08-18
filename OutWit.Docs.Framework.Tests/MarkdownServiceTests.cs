@@ -54,6 +54,126 @@ public class MarkdownServiceTests
 
     #endregion
 
+    #region Image Figure Tests
+
+    [Test]
+    public void ToHtmlWrapsStandaloneImageInFigureTest()
+    {
+        var html = m_service.ToHtml("![The create table dialog](/images/studio/s-40.webp)");
+
+        Assert.That(html, Does.Contain("<figure class=\"ow-figure\""));
+        Assert.That(html, Does.Contain("class=\"ow-figure__zoom\""));
+        Assert.That(html, Does.Contain("src=\"/images/studio/s-40.webp\""));
+        Assert.That(html, Does.Contain("alt=\"The create table dialog\""));
+        Assert.That(html, Does.Contain("loading=\"lazy\""));
+
+        // The paragraph is replaced rather than wrapped: a figure inside a <p> is
+        // markup the browser has to repair.
+        Assert.That(html, Does.Not.Contain("<p>"));
+    }
+
+    [Test]
+    public void ToHtmlImageTitleBecomesCaptionTest()
+    {
+        var html = m_service.ToHtml("![alt text](/img/a.webp \"What the picture shows\")");
+
+        Assert.That(html, Does.Contain("<figcaption class=\"ow-figure__caption\">What the picture shows</figcaption>"));
+        Assert.That(html, Does.Contain("alt=\"alt text\""));
+    }
+
+    [Test]
+    public void ToHtmlImageWithoutTitleHasNoCaptionTest()
+    {
+        var html = m_service.ToHtml("![alt text](/img/a.webp)");
+
+        Assert.That(html, Does.Contain("ow-figure"));
+        Assert.That(html, Does.Not.Contain("figcaption"));
+    }
+
+    [Test]
+    public void ToHtmlInlineImageStaysInlineTest()
+    {
+        var html = m_service.ToHtml("Build status ![badge](/img/badge.svg) as of today.");
+
+        // An image used in a sentence is not a figure; it keeps flowing with the text.
+        Assert.That(html, Does.Not.Contain("ow-figure"));
+        Assert.That(html, Does.Contain("<p>"));
+        Assert.That(html, Does.Contain("<img src=\"/img/badge.svg\""));
+    }
+
+    [Test]
+    public void ToHtmlLinkedImageIsNotAFigureTest()
+    {
+        var html = m_service.ToHtml("[![badge](/img/badge.svg)](https://example.com)");
+
+        // A button inside an anchor is not something a browser can be asked to make
+        // sense of, so a linked image is left as the link the author wrote.
+        Assert.That(html, Does.Not.Contain("ow-figure"));
+        Assert.That(html, Does.Contain("<a href=\"https://example.com\""));
+    }
+
+    [Test]
+    public void ToHtmlTwoImagesInOneParagraphAreNotFiguresTest()
+    {
+        var html = m_service.ToHtml("![one](/img/1.webp) ![two](/img/2.webp)");
+
+        Assert.That(html, Does.Not.Contain("ow-figure"));
+        Assert.That(html, Does.Contain("<img src=\"/img/1.webp\""));
+        Assert.That(html, Does.Contain("<img src=\"/img/2.webp\""));
+    }
+
+    [Test]
+    public void ToHtmlFigureEscapesAltAndCaptionTest()
+    {
+        var html = m_service.ToHtml("![\"><script>alert(1)</script>](/img/a.webp \"<b>caption</b>\")");
+
+        Assert.That(html, Does.Not.Contain("<script>alert(1)</script>"));
+        Assert.That(html, Does.Not.Contain("<b>caption</b>"));
+        Assert.That(html, Does.Contain("&lt;"));
+    }
+
+    [Test]
+    public void ToHtmlFigureFlattensEmphasisInAltTest()
+    {
+        var html = m_service.ToHtml("![a *bold* claim](/img/a.webp)");
+
+        // An alt attribute cannot carry markup, so the words survive and the tags do not.
+        Assert.That(html, Does.Contain("alt=\"a bold claim\""));
+        Assert.That(html, Does.Not.Contain("<em>"));
+    }
+
+    [Test]
+    public void ToHtmlFigureLabelsTheZoomButtonWithTheAltTest()
+    {
+        var html = m_service.ToHtml("![The Database tab](/img/a.webp)");
+
+        Assert.That(html, Does.Contain("aria-label=\"Open the image at full size: The Database tab\""));
+    }
+
+    [Test]
+    public void ToHtmlImageInListItemIsNotAFigureTest()
+    {
+        var html = m_service.ToHtml("- ![one](/img/1.webp)\n- ![two](/img/2.webp)");
+
+        // A tight list item has no paragraph of its own; a figure there would turn a
+        // list into a stack of blocks.
+        Assert.That(html, Does.Not.Contain("ow-figure"));
+        Assert.That(html, Does.Contain("<li>"));
+    }
+
+    [Test]
+    public void ToHtmlKeepsHeadingsAndParagraphsAroundAFigureTest()
+    {
+        var html = m_service.ToHtml("## Creating a table\n\nBefore.\n\n![shot](/img/a.webp)\n\nAfter.");
+
+        Assert.That(html, Does.Contain("<h2"));
+        Assert.That(html, Does.Contain("<p>Before.</p>"));
+        Assert.That(html, Does.Contain("ow-figure"));
+        Assert.That(html, Does.Contain("<p>After.</p>"));
+    }
+
+    #endregion
+
     #region Raw HTML Policy Tests
 
     [Test]

@@ -44,6 +44,109 @@ document.addEventListener('click', function (e) {
 });
 
 /**
+ * Full-size view for images in markdown content.
+ *
+ * A screenshot is almost always wider than the column it is shown in, so the
+ * picture on the page is a thumbnail whether or not it was meant to be one. One
+ * delegated listener - the same shape as the copy button above - opens whichever
+ * figure was clicked, including figures Blazor renders after this file has run.
+ *
+ * The overlay is built once, on first use: a site with no images never pays for it.
+ */
+(function () {
+    var overlay = null;
+    var picture = null;
+    var caption = null;
+    var opener = null;
+
+    function build() {
+        overlay = document.createElement('div');
+        overlay.className = 'ow-lightbox';
+        overlay.setAttribute('role', 'dialog');
+        overlay.setAttribute('aria-modal', 'true');
+        overlay.hidden = true;
+
+        var close = document.createElement('button');
+        close.type = 'button';
+        close.className = 'ow-lightbox__close';
+        close.setAttribute('aria-label', 'Close');
+        close.innerHTML = '&times;';
+
+        picture = document.createElement('img');
+        picture.className = 'ow-lightbox__image';
+
+        caption = document.createElement('figcaption');
+        caption.className = 'ow-lightbox__caption';
+
+        var frame = document.createElement('figure');
+        frame.className = 'ow-lightbox__frame';
+        frame.appendChild(picture);
+        frame.appendChild(caption);
+
+        overlay.appendChild(close);
+        overlay.appendChild(frame);
+        document.body.appendChild(overlay);
+
+        // Anywhere outside the picture closes, which is what the backdrop is for.
+        overlay.addEventListener('click', function (e) {
+            if (e.target !== caption) hide();
+        });
+    }
+
+    function show(figure) {
+        var img = figure.querySelector('img');
+        if (!img) return;
+
+        if (!overlay) build();
+
+        picture.src = img.currentSrc || img.src;
+        picture.alt = img.alt || '';
+
+        var text = figure.querySelector('.ow-figure__caption');
+        caption.textContent = text ? text.textContent : (img.alt || '');
+        caption.hidden = !caption.textContent;
+
+        overlay.setAttribute('aria-label', caption.textContent || 'Image');
+        overlay.hidden = false;
+        // A frame later, so the transition has a state to start from.
+        requestAnimationFrame(function () { overlay.classList.add('is-open'); });
+
+        document.documentElement.classList.add('ow-lightbox-open');
+        overlay.querySelector('.ow-lightbox__close').focus();
+    }
+
+    function hide() {
+        if (!overlay || overlay.hidden) return;
+
+        overlay.classList.remove('is-open');
+        overlay.hidden = true;
+        document.documentElement.classList.remove('ow-lightbox-open');
+
+        // Back to the picture that was clicked, so the keyboard does not lose its place.
+        if (opener && document.contains(opener)) opener.focus();
+        opener = null;
+    }
+
+    document.addEventListener('click', function (e) {
+        var zoom = e.target.closest('.ow-figure__zoom');
+        if (!zoom) return;
+
+        var figure = zoom.closest('.ow-figure');
+        if (!figure) return;
+
+        opener = zoom;
+        show(figure);
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') hide();
+    });
+
+    // Leaving the page with the overlay up would otherwise keep the body locked.
+    window.addEventListener('popstate', hide);
+})();
+
+/**
  * Get system theme preference (dark/light)
  * @returns {boolean} True if system prefers dark mode
  */

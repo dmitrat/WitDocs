@@ -69,6 +69,10 @@ public partial class MarkdownService
         // with a language label + copy button.
         builder = builder.Use(new CodeHighlightExtension());
 
+        // Turn a paragraph that is nothing but an image into a figure that can be
+        // opened at full size, with the markdown title as its caption.
+        builder = builder.Use(new ImageZoomExtension());
+
         // Strip raw inline/block HTML so markdown like <script> renders as text.
         if (!allowRawHtml)
             builder = builder.DisableHtml();
