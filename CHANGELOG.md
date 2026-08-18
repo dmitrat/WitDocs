@@ -33,6 +33,32 @@ OutWit.Docs.Generator, OutWit.Docs.Templates) are documented here.
 - **For a site that already has a nested `index.html`:** running 2.4.1 over it
   repairs it. Nothing to undo by hand.
 
+### Fix (Templates): a site created from the template could not restore its tool
+
+- **Bug:** `templates/witdocs/.config/dotnet-tools.json` pinned
+  `outwit.docs.generator` at **1.4.4**, a version that does not exist under that
+  package id — 1.4.4 was the last of the pre-rename `outwit.web.generator`. Every
+  project created from the template therefore failed `dotnet tool restore`, and
+  the manifest the framework's error message points people at was the one thing
+  that could not work.
+- Pinned to **2.4.1**. `dotnet new witdocs` → `dotnet tool restore` →
+  `dotnet build -c Release` now runs through, generation included.
+
+### Templates: versions brought up to date
+
+| Reference | Was | Now |
+|---|---|---|
+| `outwit.docs.generator` (tool manifest) | 1.4.4 | 2.4.1 |
+| `OutWit.Docs.Framework` | 2.0.0 | 2.4.0 |
+| `Microsoft.AspNetCore.Components.WebAssembly` | 10.0.1 | 10.0.11 |
+| `Microsoft.AspNetCore.Components.WebAssembly.DevServer` | 10.0.1 | 10.0.11 |
+| Package version | 2.0.0 | 2.4.1 |
+
+- The template's `.gitignore` gains the prerendered pages — `wwwroot/*/index.html`
+  and `wwwroot/*/*/index.html`. It already covered the generated indexes, the
+  hosting config and the OG images; the pages themselves were the gap, and they
+  are what would otherwise be committed by a new site.
+
 ## 2.4.0
 
 ### Feature (Framework — content): an image in markdown can be opened at its own size

@@ -47,6 +47,11 @@ test-results/
 **/wwwroot/feed.xml
 **/wwwroot/og-images/
 
+# Prerendered pages. Only wwwroot/index.html is source - the generator writes the
+# home page back into it and a page per route beside it.
+**/wwwroot/*/index.html
+**/wwwroot/*/*/index.html
+
 # Hosting provider config (generated from the --hosting option)
 **/wwwroot/_routes.json
 **/wwwroot/_headers
