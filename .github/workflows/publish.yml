@@ -139,7 +139,9 @@ jobs:
             exit 1
           fi
 
-          HAS_SNUPKG=$(ls NuGet/*.snupkg 2>/dev/null | wc -l)
+          # find, not ls: a package without symbols (the templates) has no .snupkg, and
+          # under this step's pipefail a failing ls in the pipe would end the step.
+          HAS_SNUPKG=$(find NuGet -maxdepth 1 -name '*.snupkg' | wc -l)
           echo "hasSnupkg=$([[ $HAS_SNUPKG -gt 0 ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
 
           echo "Collected packages:"
