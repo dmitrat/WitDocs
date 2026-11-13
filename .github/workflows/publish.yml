@@ -1,7 +1,21 @@
 name: Publish Package
-run-name: "Publish: ${{ inputs.project }}"
+run-name: "Publish: ${{ inputs.project || github.ref_name }}"
+
+# Publishes ONE package. Two ways to start it:
+#
+#   - Run workflow (workflow_dispatch): pick the project and the feeds.
+#   - Push a tag <Project>/v<Version>, for example OutWit.Docs.Generator/v2.4.2:
+#     publishes that project to nuget.org and GitHub Packages. The version in the tag
+#     must equal the project's <Version>, or the run stops before anything is pushed.
+#
+# nuget.org is reached through trusted publishing either way: the workflow's OIDC
+# token is exchanged for a short-lived key (policy on nuget.org: owner dmitrat,
+# repository dmitrat/WitDocs, workflow publish.yml). No API key is stored anywhere.
 
 on:
+  push:
+    tags:
+      - 'OutWit.Docs.*/v*'
   workflow_dispatch:
     inputs:
       project:
@@ -31,11 +45,53 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    env:
-      PROJECT: ${{ github.event.inputs.project }}
 
     steps:
       - uses: actions/checkout@v4
+
+      # Project, version and feeds, from the tag or from the dispatch inputs.
+      - name: Resolve what to publish
+        id: target
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_PROJECT: ${{ inputs.project }}
+          INPUT_PUSH_NUGET: ${{ inputs.pushToNuGet }}
+          INPUT_PUSH_GITHUB: ${{ inputs.pushToGitHubPackages }}
+        run: |
+          if [ "$EVENT_NAME" = "push" ]; then
+            PROJECT="${GITHUB_REF_NAME%%/*}"
+            TAG_VERSION="${GITHUB_REF_NAME##*/v}"
+            PUSH_NUGET=true
+            PUSH_GITHUB=true
+          else
+            PROJECT="$INPUT_PROJECT"
+            TAG_VERSION=""
+            PUSH_NUGET="$INPUT_PUSH_NUGET"
+            PUSH_GITHUB="$INPUT_PUSH_GITHUB"
+          fi
+
+          PROJECT_PATH=$(find . -name "$PROJECT.csproj" -not -path "*/bin/*" -not -path "*/obj/*" | head -1)
+          if [ -z "$PROJECT_PATH" ]; then
+            echo "::error::Project $PROJECT.csproj not found"
+            exit 1
+          fi
+
+          VERSION=$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' "$PROJECT_PATH" | head -1)
+          if [ -n "$TAG_VERSION" ] && [ "$TAG_VERSION" != "$VERSION" ]; then
+            echo "::error::The tag asks for $TAG_VERSION, but $PROJECT_PATH is at $VERSION"
+            exit 1
+          fi
+
+          {
+            echo "project=$PROJECT"
+            echo "projectPath=$PROJECT_PATH"
+            echo "projectDir=$(dirname "$PROJECT_PATH")"
+            echo "version=$VERSION"
+            echo "pushNuGet=$PUSH_NUGET"
+            echo "pushGitHub=$PUSH_GITHUB"
+          } >> "$GITHUB_OUTPUT"
+          echo "Publishing $PROJECT $VERSION ($PROJECT_PATH) - nuget.org: $PUSH_NUGET, GitHub Packages: $PUSH_GITHUB"
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -56,42 +112,41 @@ jobs:
       - name: Test (gate publish on green tests)
         run: dotnet test OutWit.slnx -c Release --verbosity minimal
 
-      - name: Resolve project path
-        id: paths
-        shell: bash
-        run: |
-          PROJECT_PATH=$(find . -name "${{ env.PROJECT }}.csproj" | head -1)
-          if [ -z "$PROJECT_PATH" ]; then
-            echo "Project ${{ env.PROJECT }}.csproj not found"
-            exit 1
-          fi
-          echo "projectPath=$PROJECT_PATH" >> $GITHUB_OUTPUT
-          echo "Resolved: $PROJECT_PATH"
-
       - name: Build
-        run: dotnet build "${{ steps.paths.outputs.projectPath }}" -c Release -p:ContinuousIntegrationBuild=true
+        run: dotnet build "${{ steps.target.outputs.projectPath }}" -c Release -p:ContinuousIntegrationBuild=true
 
       - name: Pack
-        run: dotnet pack "${{ steps.paths.outputs.projectPath }}" -c Release --no-build
+        run: dotnet pack "${{ steps.target.outputs.projectPath }}" -c Release --no-build
 
+      # Only the selected project's package. Release builds pack on build
+      # (GeneratePackageOnBuild), so after the test step every packable project has a
+      # .nupkg under its bin/Release, and collecting all of them pushed packages
+      # nobody had asked to release.
       - name: Collect packages
         id: collect
+        shell: bash
+        env:
+          PROJECT: ${{ steps.target.outputs.project }}
+          PROJECT_DIR: ${{ steps.target.outputs.projectDir }}
+          VERSION: ${{ steps.target.outputs.version }}
         run: |
           mkdir -p NuGet
-          find . -path "*/bin/Release/*.nupkg" -exec cp {} NuGet/ \;
-          find . -path "*/bin/Release/*.snupkg" -exec cp {} NuGet/ \;
-          
-          HAS_NUPKG=$(ls NuGet/*.nupkg 2>/dev/null | wc -l)
+          find "$PROJECT_DIR/bin/Release" -maxdepth 1 -name "$PROJECT.$VERSION.nupkg" -exec cp {} NuGet/ \;
+          find "$PROJECT_DIR/bin/Release" -maxdepth 1 -name "$PROJECT.$VERSION.snupkg" -exec cp {} NuGet/ \;
+
+          if [ ! -f "NuGet/$PROJECT.$VERSION.nupkg" ]; then
+            echo "::error::$PROJECT.$VERSION.nupkg was not produced under $PROJECT_DIR/bin/Release"
+            exit 1
+          fi
+
           HAS_SNUPKG=$(ls NuGet/*.snupkg 2>/dev/null | wc -l)
-          
-          echo "hasNupkg=$([[ $HAS_NUPKG -gt 0 ]] && echo true || echo false)" >> $GITHUB_OUTPUT
-          echo "hasSnupkg=$([[ $HAS_SNUPKG -gt 0 ]] && echo true || echo false)" >> $GITHUB_OUTPUT
-          
+          echo "hasSnupkg=$([[ $HAS_SNUPKG -gt 0 ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
           echo "Collected packages:"
           ls -la NuGet/
 
       - name: Add GitHub Packages source
-        if: github.event.inputs.pushToGitHubPackages == 'true'
+        if: steps.target.outputs.pushGitHub == 'true'
         run: |
           dotnet nuget add source \
             --username ${{ github.actor }} \
@@ -105,13 +160,13 @@ jobs:
       # policy on nuget.org (owner + repo dmitrat/WitDocs + workflow publish.yml).
       - name: NuGet trusted-publishing login
         id: nugetlogin
-        if: github.event.inputs.pushToNuGet == 'true' && steps.collect.outputs.hasNupkg == 'true'
+        if: steps.target.outputs.pushNuGet == 'true'
         uses: NuGet/login@v1
         with:
           user: dmitrat   # <-- must match your nuget.org username
 
       - name: Push to nuget.org
-        if: github.event.inputs.pushToNuGet == 'true' && steps.collect.outputs.hasNupkg == 'true'
+        if: steps.target.outputs.pushNuGet == 'true'
         run: |
           dotnet nuget push "NuGet/*.nupkg" \
             --api-key ${{ steps.nugetlogin.outputs.NUGET_API_KEY }} \
@@ -119,7 +174,7 @@ jobs:
             --skip-duplicate
 
       - name: Push symbols to nuget.org
-        if: github.event.inputs.pushToNuGet == 'true' && steps.collect.outputs.hasSnupkg == 'true'
+        if: steps.target.outputs.pushNuGet == 'true' && steps.collect.outputs.hasSnupkg == 'true'
         run: |
           dotnet nuget push "NuGet/*.snupkg" \
             --api-key ${{ steps.nugetlogin.outputs.NUGET_API_KEY }} \
@@ -127,16 +182,16 @@ jobs:
             --skip-duplicate
 
       - name: Push to GitHub Packages
-        if: github.event.inputs.pushToGitHubPackages == 'true' && steps.collect.outputs.hasNupkg == 'true'
+        if: steps.target.outputs.pushGitHub == 'true'
         run: |
           dotnet nuget push "NuGet/*.nupkg" \
             --api-key ${{ secrets.GITHUB_TOKEN }} \
             --source github \
             --skip-duplicate
-          
+
       - name: Upload NuGet artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.PROJECT }}-nuget
+          name: ${{ steps.target.outputs.project }}-nuget
           path: NuGet/*
           retention-days: 7
