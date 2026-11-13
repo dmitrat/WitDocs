@@ -524,11 +524,115 @@ public class StaticPageGeneratorTests
             Assert.That(html, Does.Not.Contain("stale home page"));
             Assert.That(html, Does.Not.Contain("older home page"));
             Assert.That(html, Does.Contain("Loading..."));
+
+            // A file written by 2.4.1 or earlier holds the indicator in a hidden div;
+            // it comes back in the script holder, and the div is gone.
+            Assert.That(html, Does.Not.Contain("<div class=\"ssg-loading\""));
+            Assert.That(Occurrences(html, "<script type=\"text/html\" class=\"ssg-loading\">"), Is.EqualTo(1));
         }
         finally
         {
             Directory.Delete(tempDir, true);
         }
+    }
+
+    [Test]
+    public async Task GenerateAsyncKeepsTheLoadingIndicatorOutOfThePageTextTest()
+    {
+        // A reader that takes the page's text without applying CSS saw the indicator
+        // of the hidden div and ended every page with "Loading...". Held in a script
+        // element, it is dropped by every text extractor and inserted by the page's
+        // own script only when JavaScript runs.
+        var tempDir = CreateTempDirectory();
+        CreateTemplate(tempDir);
+        SetupContentDirectory(tempDir, "blog", "2024-01-15-test-post.md", """
+            ---
+            title: Test Blog Post
+            description: Test description
+            publishDate: 2024-01-15
+            ---
+
+            # Hello World
+            Body.
+            """);
+
+        var config = new GeneratorConfig { OutputPath = tempDir };
+        var index = new ContentIndex { Blog = ["2024-01-15-test-post.md"] };
+
+        try
+        {
+            await new StaticPageGenerator(config, null, "https://example.com", "Test Site").GenerateAsync(index);
+
+            foreach (var page in new[] { "index.html", Path.Combine("blog", "test-post", "index.html") })
+            {
+                var html = await File.ReadAllTextAsync(Path.Combine(tempDir, page));
+
+                Assert.That(WithoutScripts(html), Does.Not.Contain("Loading..."), page);
+                Assert.That(html, Does.Contain("<script type=\"text/html\" class=\"ssg-loading\">\nLoading...\n"), page);
+                Assert.That(html, Does.Contain("insertAdjacentHTML('afterend',s.textContent)"), page);
+            }
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Test]
+    public async Task GenerateAsyncHoldsAnIndicatorThatCarriesItsOwnScriptTest()
+    {
+        // Inside a script element the first "</script" ends it whatever its type, so an
+        // indicator with a script of its own has to be escaped in the holder, and
+        // recovered unescaped on the next run.
+        var tempDir = CreateTempDirectory();
+        File.WriteAllText(Path.Combine(tempDir, "index.html"), """
+            <!DOCTYPE html>
+            <html>
+            <head><title>Template</title></head>
+            <body><div id="app"><script>window.booting = true;</script>Loading...</div></body>
+            </html>
+            """);
+        SetupContentDirectory(tempDir, "blog", "2024-01-15-test-post.md", """
+            ---
+            title: Test Blog Post
+            description: Test description
+            publishDate: 2024-01-15
+            ---
+
+            # Hello World
+            Body.
+            """);
+
+        var config = new GeneratorConfig { OutputPath = tempDir };
+        var index = new ContentIndex { Blog = ["2024-01-15-test-post.md"] };
+        var home = Path.Combine(tempDir, "index.html");
+
+        try
+        {
+            await new StaticPageGenerator(config, null, "https://example.com", "Test Site").GenerateAsync(index);
+            var afterFirst = await File.ReadAllTextAsync(home);
+
+            await new StaticPageGenerator(config, null, "https://example.com", "Test Site").GenerateAsync(index);
+            var afterSecond = await File.ReadAllTextAsync(home);
+
+            Assert.That(afterFirst, Does.Contain("<script>window.booting = true;<\\/script>Loading..."));
+            Assert.That(WithoutScripts(afterFirst), Does.Not.Contain("Loading..."));
+            Assert.That(afterSecond, Is.EqualTo(afterFirst));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    /// <summary>
+    /// The page as a reader that drops script elements sees it, which is what every text
+    /// extractor does before taking the text.
+    /// </summary>
+    private static string WithoutScripts(string html)
+    {
+        return System.Text.RegularExpressions.Regex.Replace(html, @"<script\b[^>]*>.*?</script\s*>", "",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Singleline);
     }
 
     private static int Occurrences(string text, string needle)

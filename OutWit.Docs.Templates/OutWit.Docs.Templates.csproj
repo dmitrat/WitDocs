@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <PackageType>Template</PackageType>
-    <Version>2.4.1</Version>
+    <Version>2.4.2</Version>
     <Title>WitDocs Site Templates</Title>
     <Description>WitDocs Templates: Project templates for creating static websites with Blazor WebAssembly, markdown content, skeleton loading, and SEO optimization. Part of https://witdocs.io</Description>
     <PackageTags>witdocs;dotnet-new;templates;blazor;webassembly;static-site;markdown;skeleton</PackageTags>
@@ -29,5 +29,39 @@
   <ItemGroup>
     <Compile Remove="**\*" />
   </ItemGroup>
+
+  <!--
+    A new site's tool manifest pins the generator, and a tool manifest takes an exact
+    version only. Stamp the pin from the Generator project before every build and pack,
+    so a template release always carries the generator released with it. Written by
+    hand, the pin fell behind: it once named 1.4.4, which does not exist under the
+    renamed package id, and every new site failed `dotnet tool restore`.
+  -->
+  <PropertyGroup>
+    <_GeneratorProjectPath>$(MSBuildThisFileDirectory)..\OutWit.Docs.Generator\OutWit.Docs.Generator.csproj</_GeneratorProjectPath>
+    <_TemplateToolManifestPath>$(MSBuildThisFileDirectory)templates\witdocs\.config\dotnet-tools.json</_TemplateToolManifestPath>
+  </PropertyGroup>
+
+  <Target Name="StampTemplateGeneratorVersion" BeforeTargets="BeforeBuild;GenerateNuspec">
+    <XmlPeek XmlInputPath="$(_GeneratorProjectPath)" Query="/Project/PropertyGroup/Version/text()">
+      <Output TaskParameter="Result" PropertyName="_GeneratorVersion" />
+    </XmlPeek>
+
+    <PropertyGroup>
+      <_ToolManifestText>$([System.IO.File]::ReadAllText('$(_TemplateToolManifestPath)'))</_ToolManifestText>
+      <_StampedToolManifestText>$([System.Text.RegularExpressions.Regex]::Replace('$(_ToolManifestText)', '(?i)("outwit\.docs\.generator"\s*:\s*\{\s*"version"\s*:\s*")[^"]*', '${1}$(_GeneratorVersion)').TrimEnd())</_StampedToolManifestText>
+      <_ToolManifestStamped>$([System.Text.RegularExpressions.Regex]::IsMatch('$(_StampedToolManifestText)', '"version"\s*:\s*"$(_GeneratorVersion)"'))</_ToolManifestStamped>
+    </PropertyGroup>
+
+    <Error Condition="'$(_GeneratorVersion)' == ''"
+           Text="Could not read the generator version from $(_GeneratorProjectPath)." />
+    <Error Condition="'$(_ToolManifestStamped)' != 'True'"
+           Text="Could not pin outwit.docs.generator $(_GeneratorVersion) in $(_TemplateToolManifestPath)." />
+
+    <WriteLinesToFile File="$(_TemplateToolManifestPath)"
+                      Lines="$(_StampedToolManifestText)"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="true" />
+  </Target>
 
 </Project>
